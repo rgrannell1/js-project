@@ -1,0 +1,25 @@
+
+I set up the directory roughly as suggested by require.js, underscore and lemonad.
+
+If the directory structure is so egregious we need a reboot, then I can restart the repo, and you can reclone from GitHub. 
+
+Conventions: 
+	tabs, camel/pascal-case. 
+	egyptian-braces only (sc insertion),
+	semicolons would be appreciated
+
+	unix-line endings please, I think that
+	non-unix lines can total a program
+
+	http://stackoverflow.com/questions/10418975/how-to-change-line-ending-settings
+
+depends on require.js (possibly a testing framework like 
+jasmine too, at a later date).
+
+Merging Changes;
+
+	merge from your personal branch to dev, and then from dev to master for releases. 
+	commits to dev should actually work, or be suspected to work. merge with dev frequently enough,
+	to avoid horrible merge conflicts.
+
+Enjoy!
