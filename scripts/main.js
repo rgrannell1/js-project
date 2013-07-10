@@ -1,42 +1,45 @@
-(function() {
+(function(window) {
 	"use strict"
 
 	var size = {},
-	canvas = "",
-	theme = "default";
 
-	// main Object
-	window.Col = {};
+		canvas = "",
 
-	var setCanvas = function(ele, obj) {
-		if(document.getElementById(ele) !== undefined) {
-			canvas = document.getElementById(ele);
-			size.width = obj.width;
-			size.height = obj.height;
-		} else {
-			throw new Error();
-		}
-	};
+		theme = "default",
 
-	Col.canvas = function(canvasId, dimensions) {
+		// override global object if it already exists
+		_CPjs = window.CPjs,
+
+		CPjs = {},
+
+		setCanvas = function(ele, obj) {
+			if(document.getElementById(ele) !== undefined) {
+				canvas = document.getElementById(ele);
+				size.width = obj.width;
+				size.height = obj.height;
+			} else {
+				throw new Error();
+			}
+		};
+
+	CPjs.canvas = function(canvasId, dimensions) {
 		setCanvas(canvasId, dimensions);
 	};
 
-	Col.data = function(json) {
+	CPjs.data = function(json) {
 		// parse json
 	};
 
-	Col.theme = function(theme) {
+	CPjs.theme = function(theme) {
 		// set theme on layout
 		this.theme = theme;
 	};
 
-	Col.start = function() {
+	CPjs.start = function() {
 		// call algorithm
 		// render pretty
 	};
 	
-	console.log(Col);
-	return Col;
-})();
+	window.CPjs = CPjs;
+})(window);
 
