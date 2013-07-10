@@ -29,8 +29,53 @@ var Matrix = function (array) {
 	this.rows = array.length;
 	this.columns = rowLengths[0]
 }
+
+Matrix.prototype.map = function (func) {
+	// map a function over each element of the matrix.
+	// useful for elementwise addition
+
+	var product = this.value
+
+	for (var ith = 0; ith < this.rows; ith++) {
+		for (var jth = 0; jth < this.columns; jth++) {
+
+			product[ith][jth] = func(product[ith][jth]);
+		}
+	}
+
+	return new Matrix(product);
+}
+Matrix.prototype.transpose = function () {
+	// transpose a matrix
+}
+
 Matrix.prototype.multiply = function (matrix) {
-	// implement matrix multiplication
+	// multiply two matrices (non-elementwise)
+
+	var seqLen = function (len) {
+		var result = [];
+		for (var i = 0; i < len; i ++) {
+			result[i] = i;
+		}
+		return result
+	}
+
+	console.log(
+		this.rows === matrix.columns &&
+		this.columns === matrix.rows,
+		"error in Matrix.multiply: matrix was wrong dimension");
+
+	for (ith in seqLen(this.rows)) {
+		for (jth in seqLen(matrix.columns)) {
+
+			var row = this.value[ith]
+
+			product[ith][jth] = // sum of scalar multiplication of
+			// ith row by the jth column
+
+		}
+	}
+	return product;
 }
 
 
