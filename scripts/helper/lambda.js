@@ -28,5 +28,34 @@ var lambda = {
 			result[ith] = func(val, ith)
 		}
 		return result
+	},
+	reduce: function (func, iter) {
+		// inject an infix binary function func
+		// into the sequence iter[0] func iter[2] func .... iter[n],
+		// returning a single value
+		
+		console.assert(
+			is.function(func),
+			"error in reduce: func must be a function");
+		console.assert(
+			is.array(iter) || is.object(iter),
+			"error in reduce: func must be an object or array")
+		console.assert(
+			func.length === 2,
+			"error in reduce: binary function required")
+
+		var first = true;
+		for (elem in iter) {
+			if (!iter.hasOwnProperty(elem)) {
+				continue;
+			}
+			if (first) {
+				var res = iter[0];
+				first = false;
+			} else {
+				res = func(res, elem);
+			}
+		}
+		return res;
 	}
 }
