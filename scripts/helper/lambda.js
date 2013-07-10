@@ -1,9 +1,8 @@
 
-// TODO: add to define function
+define(["is"], function (is) {
+	// functional utility functions
 
-var lambda = {
-	// functional utilities
-	indMap: function (func, iter) {
+	var indMap: function (func, iter) {
 		"apply a binary function to each element of 
 		an array or object, with the left argument being
 		the value iter[ith] and the right argument being the index ith"
@@ -22,17 +21,18 @@ var lambda = {
 		var result = [];
 		for (val in iter) {
 			if (!iter.hasOwnProperty(val)) {
-				continue
+				continue;
 			}
-			ith = ith + 1
-			result[ith] = func(val, ith)
+			ith = ith + 1;
+			result[ith] = func(val, ith);
 		}
-		return result
-	},
-	reduce: function (func, iter) {
+		return result;
+	}
+
+	var reduce = function (func, iter) {
 		// inject an infix binary function func
 		// into the sequence iter[0] func iter[2] func .... iter[n],
-		// returning a single value
+		// returning a single value.
 		
 		console.assert(
 			is.function(func),
@@ -57,5 +57,10 @@ var lambda = {
 			}
 		}
 		return res;
-	}
-}
+	};
+
+	return {
+		indMap: indMap
+		reduce: reduce
+	};
+});
