@@ -30,11 +30,12 @@
 		properties.width = width;
 		properties.height = height;
 
-		properties.options.greyscale = props.greyscale || false;
-		properties.options.curved = props.curved || false;
-		properties.options.background = props.background || null;
-
-		// continue....
+		if(props !== undefined) {
+			properties.options.greyscale = props.greyscale || false;
+			properties.options.curved = props.curved || false;
+			properties.options.background = props.background || null;
+			// continue....
+		}
 
 	};
 
