@@ -26,15 +26,16 @@
 		// parse json property with path
 	};
 
-	CPjs.style = function(props) {
-		if(options.width && options.height) {
-			properties.width = props.width;
-			properties.height = props.height;
+	CPjs.style = function(width, height, props) {
+		properties.width = width;
+		properties.height = height;
 
-			// now parse options 
-		} else {
-			throw "width and height must be supplied";
-		}
+		properties.options.greyscale = props.greyscale || false;
+		properties.options.curved = props.curved || false;
+		properties.options.background = props.background || null;
+
+		// continue....
+
 	};
 
 	CPjs.start = function() {
@@ -42,7 +43,6 @@
 		// render pretty
 	};
 	
-	console.log(CPjs);
 	window.CPjs = CPjs;
 })(window);
 
