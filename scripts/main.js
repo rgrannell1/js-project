@@ -1,11 +1,13 @@
 (function(window) {
 	"use strict"
 
-	var size = {},
+	var properties = {},
 
 		canvas = "",
 
 		theme = "default",
+
+		themes = [],
 
 		// override global object if it already exists
 		_CPjs = window.CPjs,
@@ -13,26 +15,26 @@
 		CPjs = {},
 
 		setCanvas = function(ele, obj) {
-			if(document.getElementById(ele) !== undefined) {
-				canvas = document.getElementById(ele);
-				size.width = obj.width;
-				size.height = obj.height;
-			} else {
-				throw new Error();
-			}
+			canvas = document.getElementById(ele);
 		};
 
-	CPjs.canvas = function(canvasId, dimensions) {
-		setCanvas(canvasId, dimensions);
+	CPjs.canvas = function(canvasId) {
+		setCanvas(canvasId);
 	};
 
 	CPjs.data = function(json) {
-		// parse json
+		// parse json property with path
 	};
 
-	CPjs.theme = function(theme) {
-		// set theme on layout
-		this.theme = theme;
+	CPjs.style = function(props) {
+		if(options.width && options.height) {
+			properties.width = props.width;
+			properties.height = props.height;
+
+			// now parse options 
+		} else {
+			throw "width and height must be supplied";
+		}
 	};
 
 	CPjs.start = function() {
@@ -40,6 +42,7 @@
 		// render pretty
 	};
 	
+	console.log(CPjs);
 	window.CPjs = CPjs;
 })(window);
 
