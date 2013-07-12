@@ -14,22 +14,26 @@ var is = {
 			match(/\s([a-zA-Z]+)/)[1].toLowerCase()
 	},
 	function: function (val) {
-		return toType(val) === "function";
+		return this.toType(val) === "function";
 	},
 	array: function (val) {
-		return toType(val) === 'array';
+		return this.toType(val) === 'array';
 	},
 	object: function (val) {
-		toType(val) === 'object'
+		return this.toType(val) === 'object';
 	},
 	undefined: function (val) {
-		toType(val) === 'undefined'
+		return this.toType(val) === 'undefined';
+	},
+	string: function (val) {
+		return this.toType(val) === 'string';
 	}
 };
 
 // lambda
 // this object contains higher order functions for the
-// terse manipulation of arrays AND objects
+// terse manipulation of arrays AND objects; all methods implemented
+// here should work on both if possible
 
 var lambda = {
 	indMap: function (func, iter) {
@@ -38,13 +42,13 @@ var lambda = {
 		// an array or object, with the left argument being
 		// the value iter[ith] and the right argument being the index ith
 
-		assert(
+		console.assert(
 			is.function(func),
 			"error in indMap: func must be a function");
-		assert(
+		console.assert(
 			is.array(iter) || is.object(iter),
 			"error in indMap: func must be an object or array")
-		assert(
+		console.assert(
 			func.length === 2,
 			"error in indMap: binary function required")
 
@@ -61,6 +65,7 @@ var lambda = {
 		return result;
 	},
 	reduce: function (func, iter) {
+		// (b -> b -> a) -> [b] -> a
 		// inject an infix binary function func
 		// into the sequence iter[0] func iter[2] func .... iter[n],
 		// returning a single value.
@@ -92,11 +97,22 @@ var lambda = {
 }
 
 // OBJECT PROTOTYPES
+// (Rectangle, and Matrix)
 
 // Matrix Prototype
 // only implemented functions for 2 x 2 matrices, since all 
 // functions will be applied to xy points.
 // Ryan Grannell
+
+if (!is.function(Object.beget)) {
+	// a Crockfordian method!
+
+	Object.beget = function (obj) {
+		var F = function () {};
+		F.prototype = obj;
+		return new F();
+	}
+}
 
 var Matrix = {
 
@@ -106,10 +122,11 @@ var Matrix = {
 	ncols: 2,
 
 	map: function (func) {
+		// (a - > b) -> Matrix a -> Matrix b
 		// element-wise mapping over matrix,
 		// so that matrix is a Functor
 
-		assert(
+		console.assert(
 			is.function(func),
 			"error in Matrix.map: func must be a function");
 
@@ -119,6 +136,8 @@ var Matrix = {
 		];
 	},
 	transpose: function () {
+		// Matrix -> Matrix
+		// get the transpose of a matrix 
 
 		return [
 			[this.xs[0], this.ys[0]],
@@ -126,6 +145,7 @@ var Matrix = {
 		];
 	},
 	by: function (number) {
+		// (integer) -> Matrix integer
 		// scalar multiplication; linearly scale a point
 
 		return this.map( function (x) {
@@ -133,6 +153,7 @@ var Matrix = {
 		} );
 	},
 	add: function (number) {
+		// (integer) -> Matrix integer
 		// scalar addition; translate a point
 
 		return this.map( function (x) {
@@ -140,9 +161,10 @@ var Matrix = {
 		} );	
 	},
 	multiply: function (matrix) {
+		// Matrix a -> Matrix -> a
 		// non-scalar multiplication.
-		// implemented directly for efficiency (canvas needs redraw on
-		// resize).
+		// implemented directly for efficiency 
+		// (canvas needs redraw on every resize).
 
 		console.assert(
 			m.nrows === 2 && m.ncols === 2,
@@ -159,29 +181,69 @@ var Matrix = {
 	}
 }
 
+var Rectangle = {
+	// left, right. bottom, top.
+	// easier to work with mathematical notation
+
+	xMinus: 0,
+	xPlus: 0,
+	yMinus: 0,
+	yPlus: 0,
+
+	asMatrix: function () {
+		// converts rectangle to a matrix,
+		// with each row giving a component x, y
+		// and each column giving a coordinate
+
+		var converted = Object.beget(Matrix);
+		converted.xs = [this.xMinus, this.xPlus];
+		converted.ys = [this.yMinus, this.yPlus];
+
+		return converted;
+	}
+}
 
 // CORE ALGORITHMS
-
-// partition divides a rectangle into 
-// subrectangles, and maps an image to each
-// rectangle. 
-
-//partitionRectangle: function () {
-	// gets the four xy pairs denoting the screen boundaries
-	// at the moment. depending on the number of images present, 
-	// partition the window into subrectanges. Do not recursively
-	// partition, there is a minimum size that images will have.
-
-	// rectangle sizes: N x N | N x 2N | 2N x N
-	// images are mapped in order to the rectanges, so any
-	// shuffling is done outside this function. 
-
-	// returns an array of Rectangle objects, which can 
-	// then be drawn to the canvas or whatevs
-	// use matrix transformations for efficiency
-
-
-//}
+// (partition, and )
 
 
 
+var splitRectangle = function (urls, dimensions) {
+	// [string] -> {integer} -> [Rectangle]
+	//
+	// takes an array of url strings, and an object
+	// whose .width and .height fields are positive integers.
+	// returns an array of rectangles of the same length
+	// as the array of url's
+
+	// an initial value to iteratively subdivide
+	var start = Object.beget(Rectangle);
+	start.xPlus = dimensions.width;
+	start.yPlus = dimensions.height;
+
+	var rectangles = [initial];
+	
+
+	/*
+		context free grammar for rectangles
+
+		Start: (a*n x a*n)
+		Nonterminals:
+		Production Rules: 
+			 ->
+			 ->  
+		Terminals: (n x n) | (n x 2*n) | (2*n x n)
+	*/
+
+	var grammar = {
+
+
+
+
+	}
+
+	// iteratively divide the rectangle, in a pretty way.
+
+
+	return rectangles;
+}
