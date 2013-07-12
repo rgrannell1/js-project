@@ -299,6 +299,7 @@ var tilePlane = function (n, dimensions) {
 	} )();
 	
 	// iteratively divide the rectangle, in a pretty way.
+	// possibly start from group up (all tiles present.)
 
 	// multiply each rectangles underyling matrix by a scale-matrix, 
 	// so that the super-rectangle has the right height/width
@@ -315,5 +316,5 @@ var assignLinks = function (urls, rectangles) {
 	// greedy find the mapping f(urls, rectangles) that minimises
 	// sum (percentage cropping needed per image)
 
-
+ 	
 }
