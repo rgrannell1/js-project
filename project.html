@@ -3,8 +3,14 @@
 		<script src="scripts/main.js" type="text/javascript"></script>
 	</head>
 	<body>
+		<canvas id="mycanvasid">sorry, your browser does not support canvas :-(</canvas>
 		<script type="text/javascript">
-			CPjs.style({width : "200px", height : "200px"});
+			//basic idea of what we expect from the user
+			var cpjs = 
+				CPjs.dimensions(200, 200).attributes({ greyscale : true, crop: true}).canvas("mycanvasid");
+			
+			cpjs.start();
+
 		</script>
 		this file is for testing out css stylesheets and js-scripts
 	</body>

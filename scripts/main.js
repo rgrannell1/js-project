@@ -1,49 +1,77 @@
+// TODO: find a better way to return the object
 (function(window) {
-	"use strict"
+"use strict"
 
-	var properties = {},
+// private variables
+var canvas = "",
 
-		canvas = "",
+	width,
 
-		theme = "default",
+	height,
 
-		themes = [],
+	options = {},
 
-		// override global object if it already exists
-		_CPjs = window.CPjs,
+	// override global object if it already exists and create fresh namespace object
+	_CPjs = window.CPjs,
 
-		CPjs = {},
+	CPjs = {};
 
-		setCanvas = function(ele, obj) {
-			canvas = document.getElementById(ele);
-		};
-
-	CPjs.canvas = function(canvasId) {
-		setCanvas(canvasId);
+	// gets canvas element return and sets it to the canvas attribute
+	function setCanvasPropery(ele) {
+		if(document.getElementById(ele) !== null) {
+			var element = document.getElementById(ele);
+			
+			if(element.tagName === 'CANVAS') {
+				console.log("success");
+			}
+		}
 	};
 
-	CPjs.data = function(json) {
-		// parse json property with path
+	// sets style options supplied by the user
+	function setCanvasOptions(additionalProps) {
+		options.greyscale = additionalProps.greyscale || false;
+		options.crop = additionalProps.crop || false;
+		options.background = additionalProps.canvasTransparent || false;
 	};
 
-	CPjs.style = function(width, height, props) {
-		properties.width = width;
-		properties.height = height;
+	// takes in a canvas id
+	CPjs.canvas =	function(canvasId) {
+		setCanvasPropery(canvasId);
 
-		if(props !== undefined) {
-			properties.options.greyscale = props.greyscale || false;
-			properties.options.curved = props.curved || false;
-			properties.options.background = props.background || null;
-			// continue....
+		return this;
+	};
+
+	// parse json property with path
+	CPjs.data =	function(json) {
+		return this;
+	};
+
+	// take in canvas dimensions to be used by algorithm
+	CPjs.dimensions	=	function(w, h)	{
+		// check arguments supplied are Integers
+		if(typeof h === "number" && typeof w === "number" 
+			&&	h%1 == 0 && w%1 == 0) {
+			width = w;
+			height = h;
+		}else {
+			console.error("Integers must be supplied");
 		}
 
+		return this;
+	}
+	// takes width and height parameters & optional additonal styling object
+	CPjs.attributes =	function(props) {
+		setCanvasOptions(props);
+
+		return this;
 	};
 
-	CPjs.start = function() {
-		// call algorithm
-		// render pretty
-	};
+	// begin algorithm and render onto canvas
+	CPjs.start =	function() {
+		console.log(this);
+	}
 	
 	window.CPjs = CPjs;
+
 })(window);
 
