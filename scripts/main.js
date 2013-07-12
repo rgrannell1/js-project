@@ -99,13 +99,8 @@ var lambda = {
 // OBJECT PROTOTYPES
 // (Rectangle, and Matrix)
 
-// Matrix Prototype
-// only implemented functions for 2 x 2 matrices, since all 
-// functions will be applied to xy points.
-// Ryan Grannell
-
 if (!is.function(Object.beget)) {
-	// a Crockfordian method!
+	// a Crockfordian method for object instantiation.
 
 	Object.beget = function (obj) {
 		var F = function () {};
@@ -113,6 +108,14 @@ if (!is.function(Object.beget)) {
 		return new F();
 	}
 }
+
+// Matrix Prototype
+// only implemented functions for 2 x 2 matrices, since all 
+// functions will be applied to xy points.
+// Ryan Grannell
+
+//# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+//# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 
 var Matrix = {
 
@@ -178,8 +181,22 @@ var Matrix = {
 				( (this.xs[1] * matrix.xs[0]) + (this.xs[1] * matrix.xs[1]) ),
 				( (this.xs[1] * matrix.ys[0]) + (this.xs[1] * matrix.ys[1]) )]
 		];
+	},
+	asRectangle: function () {
+		// for two-way conversion from Rectange <-> Matrix
+
+		var converted = Object.beget(Rectangle)
+		converted.xMinus = this.xs[0];
+		converted.xPlus = this.xs[1];
+		converted.yMinus = this.ys[0];
+		converted.yPlus = this.ys[1];
+
+		return converted
 	}
 }
+
+//# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+//# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 
 var Rectangle = {
 	// left, right. bottom, top.
@@ -189,6 +206,9 @@ var Rectangle = {
 	xPlus: 0,
 	yMinus: 0,
 	yPlus: 0,
+
+	width: Math.abs(this.xPlus - this.xMinus),
+	height: Math.abs(this.xPlus - this.xMinus),
 
 	asMatrix: function () {
 		// converts rectangle to a matrix,
@@ -208,42 +228,92 @@ var Rectangle = {
 
 
 
-var splitRectangle = function (urls, dimensions) {
-	// [string] -> {integer} -> [Rectangle]
+var tilePlane = function (n, dimensions) {
+	// integer -> {integer} -> [Rectangle]
 	//
-	// takes an array of url strings, and an object
+	// takes an integer n and an object
 	// whose .width and .height fields are positive integers.
 	// returns an array of rectangles of the same length
 	// as the array of url's
 
-	// an initial value to iteratively subdivide
-	var start = Object.beget(Rectangle);
-	start.xPlus = dimensions.width;
-	start.yPlus = dimensions.height;
+	var isDivisible = function (rect) {
+		// Rectangle -> boolean
+		return rect.width > 1 && rect.height > 1
+	}
 
+	// magic numbers, for the moment
+	var units = {
+		x: 6,
+		y: 6
+	}; 
+
+	console.assert(
+		n > units.x * units.y,
+		"too many images to tile canvas with")
+
+	// the initial rectangle to subdivide
+	var start = Object.beget(Rectangle);
+	start.xPlus = units.x;
+	start.yPlus = units.y;
+	
 	var rectangles = [initial];
 	
+	var splitGrammar = ( function () {
+		/* nondeterministic context-free grammar for deciding
+		how to divide the rectangles. Allows fine grained control
+		over rectangle subdivision.
 
-	/*
-		context free grammar for rectangles
+		There must always exist a composition f_i o f_j ... f_k of 
+		productions in the grammar of length n,
+		otherwise no guarantees of tiling plane
+		
+		each product is an element of 
+		{ (a*n x a*n), (2a*n x a*n), (a*n x 2*a*n) }, for some number 1,2,..
 
 		Start: (a*n x a*n)
 		Nonterminals:
-		Production Rules: 
-			 ->
-			 ->  
+			Production Rules: 
+				 ->
+				 ->  
 		Terminals: (n x n) | (n x 2*n) | (2*n x n)
-	*/
+		*/
 
-	var grammar = {
-
-
-
-
-	}
-
+		return [
+			{
+				pattern: function (rect) {
+					return isDivisible(rect);
+				},
+				production: function (rect) {
+					return 
+				}
+			},
+			{
+				pattern: function (rect) {
+					return isDivisible(rect);
+				},
+				production: function (rect) {
+					return 
+				}
+			}
+		];
+	} )();
+	
 	// iteratively divide the rectangle, in a pretty way.
 
+	// multiply each rectangles underyling matrix by a scale-matrix, 
+	// so that the super-rectangle has the right height/width
+	// then translate each matrix so it fits neately on the window.
 
 	return rectangles;
+}
+
+var assignLinks = function (urls, rectangles) {
+	// [string] -> [Rectangles] -> [Objects]
+	// returns an array of objects which are bijective maps from 
+	// a url onto a rectangle.
+
+	// greedy find the mapping f(urls, rectangles) that minimises
+	// sum (percentage cropping needed per image)
+
+
 }
