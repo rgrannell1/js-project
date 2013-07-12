@@ -1,84 +1,57 @@
 
-( function () { 
-	"use strict"
-} )()
+// Matrix Prototype
+// only implemented functions for 2 x 2 matrices, since all 
+// functions will be applied to xy points. 
+// Ryan Grannell
 
-var Matrix = function (array) {
+var Matrix = {
+	// constructor for matrices
 
-	console.assert(
-		is.array,
-		"error: the argument given to array must be a matrix"
-	);
+	xs: [0, 0],
+	ys: [0, 0],
+	nrows: this.xs.length,
+	ncols: this.ys.length,
 
-	var rowLengths = lambda.indMap(
-		function (row, ind) {
-			return row.length;
-		},
-		array);
+	map: function (f) {
+		// element-wise mapping over matrix
 
-	console.assert(
-		lambda.reduce(
-			function (a, b) {
-				a === b
-			},
-			rowLength),
-		"error: every row given to Matrix() must have an equal length"
-	)
+		return [
+			[f( this.xs[0] ), f( this.xs[1] )],
+			[f( this.ys[0] ), f( this.ys[1] )]
+		];
+	},
+	transpose: function () {
 
-	this.value = array;
-	this.rows = array.length;
-	this.columns = rowLengths[0]
-}
+		return [
+			[this.xs[0], this.ys[0]],
+			[this.xs[1], this.ys[1]]
+		];
+	},
+	by: function (a) {
+		// scalar multiplication; linearly scale a point
 
-Matrix.prototype.map = function (func) {
-	// map a function over each element of the matrix.
-	// useful for elementwise addition
+		return this.map( function (x) {
+			return x * a
+		} );
+	},
+	add: function (a) {
+		// scalar addition; translate a point
 
-	var product = this.value
+		return this.map( function (x) {
+			return x + a
+		} );	
+	},
+	multiply: function (m) {
+		// non-scalar multiplication
 
-	for (var ith = 0; ith < this.rows; ith++) {
-		for (var jth = 0; jth < this.columns; jth++) {
-
-			product[ith][jth] = func(product[ith][jth]);
-		}
+		return [
+			[
+				( (this.xs[0] * m.xs[0]) + (this.xs[0] * m.xs[1]) ),
+				( (this.xs[0] * m.ys[0]) + (this.xs[0] * m.ys[1]) )],
+			[
+				( (this.xs[1] * m.xs[0]) + (this.xs[1] * m.xs[1]) ),
+				( (this.xs[1] * m.ys[0]) + (this.xs[1] * m.ys[1]) )]
+		];
 	}
-
-	return new Matrix(product);
 }
-Matrix.prototype.transpose = function () {
-	// transpose a matrix
-}
-
-Matrix.prototype.multiply = function (matrix) {
-	// multiply two matrices (non-elementwise)
-
-	var seqLen = function (len) {
-		var result = [];
-		for (var i = 0; i < len; i ++) {
-			result[i] = i;
-		}
-		return result
-	}
-
-	console.log(
-		this.rows === matrix.columns &&
-		this.columns === matrix.rows,
-		"error in Matrix.multiply: matrix was wrong dimension");
-
-	for (ith in seqLen(this.rows)) {
-		for (jth in seqLen(matrix.columns)) {
-
-			var row = this.value[ith]
-
-			product[ith][jth] = // sum of scalar multiplication of
-			// ith row by the jth column
-
-		}
-	}
-	return product;
-}
-
-
-
-
 
