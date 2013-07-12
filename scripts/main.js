@@ -61,6 +61,7 @@ var lambda = {
 		return result;
 	},
 	reduce: function (func, iter) {
+		// (b -> b -> a) -> [b] -> a
 		// inject an infix binary function func
 		// into the sequence iter[0] func iter[2] func .... iter[n],
 		// returning a single value.
@@ -92,6 +93,7 @@ var lambda = {
 }
 
 // OBJECT PROTOTYPES
+// (Rectangle, and Matrix)
 
 // Matrix Prototype
 // only implemented functions for 2 x 2 matrices, since all 
@@ -106,6 +108,8 @@ var Matrix = {
 	ncols: 2,
 
 	map: function (func) {
+		// (a - > b) -> Matrix a -> Matrix b
+
 		// element-wise mapping over matrix,
 		// so that matrix is a Functor
 
@@ -119,6 +123,7 @@ var Matrix = {
 		];
 	},
 	transpose: function () {
+		// Matrix -> Matrix
 
 		return [
 			[this.xs[0], this.ys[0]],
@@ -126,6 +131,7 @@ var Matrix = {
 		];
 	},
 	by: function (number) {
+		// (integer) -> Matrix integer
 		// scalar multiplication; linearly scale a point
 
 		return this.map( function (x) {
@@ -133,6 +139,7 @@ var Matrix = {
 		} );
 	},
 	add: function (number) {
+		// (integer) -> Matrix integer
 		// scalar addition; translate a point
 
 		return this.map( function (x) {
@@ -161,6 +168,7 @@ var Matrix = {
 
 
 // CORE ALGORITHMS
+// (partition, and )
 
 // partition divides a rectangle into 
 // subrectangles, and maps an image to each
