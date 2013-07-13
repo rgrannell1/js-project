@@ -1,3 +1,7 @@
+( function () {
+	"use strict";
+} )()
+
 
 // is
 // this object contains tests for various properties;
@@ -13,23 +17,27 @@ var is = {
 		return ({}).toString.call(val).
 			match(/\s([a-zA-Z]+)/)[1].toLowerCase()
 	},
-	function: function (val) {
-		return toType(val) === "function";
+	closure: function (val) {
+		return this.toType(val) === "function";
 	},
 	array: function (val) {
-		return toType(val) === 'array';
+		return this.toType(val) === 'array';
 	},
 	object: function (val) {
-		toType(val) === 'object'
+		return this.toType(val) === 'object';
 	},
-	undefined: function (val) {
-		toType(val) === 'undefined'
+	undefn: function (val) {
+		return this.toType(val) === 'undefined';
+	},
+	string: function (val) {
+		return this.toType(val) === 'string';
 	}
 };
 
 // lambda
 // this object contains higher order functions for the
-// terse manipulation of arrays AND objects
+// terse manipulation of arrays AND objects; all methods implemented
+// here should work on both if possible
 
 var lambda = {
 	indMap: function (func, iter) {
@@ -38,13 +46,13 @@ var lambda = {
 		// an array or object, with the left argument being
 		// the value iter[ith] and the right argument being the index ith
 
-		assert(
-			is.function(func),
+		console.assert(
+			is.closure(func),
 			"error in indMap: func must be a function");
-		assert(
+		console.assert(
 			is.array(iter) || is.object(iter),
 			"error in indMap: func must be an object or array")
-		assert(
+		console.assert(
 			func.length === 2,
 			"error in indMap: binary function required")
 
@@ -67,7 +75,7 @@ var lambda = {
 		// returning a single value.
 		
 		console.assert(
-			is.function(func),
+			is.closure(func),
 			"error in reduce: func must be a function");
 		console.assert(
 			is.array(iter) || is.object(iter),
@@ -89,16 +97,100 @@ var lambda = {
 			}
 		}
 		return res;
+	},
+	which: function (func, iter) {
+		// for what indices did func(iter) return true?
+
+		var result = [];
+		for (var ith = 0; ith < iter.length; ith++) {
+			if (!hasOwnProperty(ith)) {
+				continue;
+			}
+			if ( func(iter(ith)) ) {
+				result = result.push(ith)
+			}
+		}
+		return result;
+	},
+	negate: function (f) {
+		return function (x) {
+			return !f(x)
+		}
+	},
+	concatMap: function (func, iter) {
+		// (a -> b) -> a -> [b]
+
+		console.assert(
+			is.closure(func),
+			"error in indMap: func must be a function");
+		console.assert(
+			is.array(iter) || is.object(iter),
+			"error in indMap: func must be an object or array")
+		console.assert(
+			func.length === 1,
+			"error in concatMap: unary function required")
+
+		var ith = 0;
+		var result = [];
+
+		for (val in iter) {
+			if (!iter.hasOwnProperty(val)) {
+				continue;
+			}
+			ith = ith + 1;
+			result = result.concat(func(val, ith));
+		}
+		return result;
+	},
+	select: function (func, iter) {
+		// (a -> boolean) -> a -> [a]
+
+		console.assert(
+			is.closure(func),
+			"error in select: func must be a function");
+		console.assert(
+			is.array(iter) || is.object(iter),
+			"error in select: func must be an object or array")
+		console.assert(
+			func.length === 1,
+			"error in concatMap: unary function required")
+
+		var ith = 0;
+		var result = [];
+
+		for (val in iter) {
+			if (!iter.hasOwnProperty(val)) {
+				continue;
+			}
+			ith = ith + 1;
+			if (func(val)) {
+				result = result.concat(val);
+			}
+		}
+		return result;		
 	}
 }
 
 // OBJECT PROTOTYPES
 // (Rectangle, and Matrix)
 
+if (!is.closure(Object.beget)) {
+	// a Crockfordian method for object instantiation.
+
+	Object.beget = function (obj) {
+		var F = function () {};
+		F.prototype = obj;
+		return new F();
+	}
+}
+
 // Matrix Prototype
 // only implemented functions for 2 x 2 matrices, since all 
 // functions will be applied to xy points.
 // Ryan Grannell
+
+//# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+//# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 
 var Matrix = {
 
@@ -113,8 +205,8 @@ var Matrix = {
 		// element-wise mapping over matrix,
 		// so that matrix is a Functor
 
-		assert(
-			is.function(func),
+		console.assert(
+			is.closure(func),
 			"error in Matrix.map: func must be a function");
 
 		return [
@@ -124,6 +216,7 @@ var Matrix = {
 	},
 	transpose: function () {
 		// Matrix -> Matrix
+		// get the transpose of a matrix 
 
 		return [
 			[this.xs[0], this.ys[0]],
@@ -147,9 +240,10 @@ var Matrix = {
 		} );	
 	},
 	multiply: function (matrix) {
+		// Matrix a -> Matrix -> a
 		// non-scalar multiplication.
-		// implemented directly for efficiency (canvas needs redraw on
-		// resize).
+		// implemented directly for efficiency 
+		// (canvas needs redraw on every resize).
 
 		console.assert(
 			m.nrows === 2 && m.ncols === 2,
@@ -163,33 +257,223 @@ var Matrix = {
 				( (this.xs[1] * matrix.xs[0]) + (this.xs[1] * matrix.xs[1]) ),
 				( (this.xs[1] * matrix.ys[0]) + (this.xs[1] * matrix.ys[1]) )]
 		];
+	},
+	asRectangle: function () {
+		// for two-way conversion from Rectange <-> Matrix
+
+		var converted = Object.beget(Rectangle)
+		converted.xMinus = this.xs[0];
+		converted.xPlus = this.xs[1];
+		converted.yMinus = this.ys[0];
+		converted.yPlus = this.ys[1];
+
+		return converted
 	}
 }
 
-
-// CORE ALGORITHMS
-// (partition, and )
-
-// partition divides a rectangle into 
-// subrectangles, and maps an image to each
-// rectangle. 
-
-//partitionRectangle: function () {
-	// gets the four xy pairs denoting the screen boundaries
-	// at the moment. depending on the number of images present, 
-	// partition the window into subrectanges. Do not recursively
-	// partition, there is a minimum size that images will have.
-
-	// rectangle sizes: N x N | N x 2N | 2N x N
-	// images are mapped in order to the rectanges, so any
-	// shuffling is done outside this function. 
-
-	// returns an array of Rectangle objects, which can 
-	// then be drawn to the canvas or whatevs
-	// use matrix transformations for efficiency
+//# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+//# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 
 
-//}
+var Rectangle = {
+	// left, right. bottom, top.
+	// easier to work with mathematical notation
+
+	xMinus: 0,
+	xPlus: 0,
+	yMinus: 0,
+	yPlus: 0,
+
+	width: Math.abs(this.xPlus - this.xMinus),
+	height: Math.abs(this.xPlus - this.xMinus),
+
+	asMatrix: function () {
+		// converts rectangle to a matrix,
+		// with each row giving a component x, y
+		// and each column giving a coordinate
+
+		var converted = Object.beget(Matrix);
+		converted.xs = [this.xMinus, this.xPlus];
+		converted.ys = [this.yMinus, this.yPlus];
+
+		return converted;
+	}
+}
+
+// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
+// = # = # = # = Core Algorithm = # = # = # = # = # = # = # = # = # = # 
+// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
+// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
+
+var tilePlane = function (n, dimensions) {
+	// integer -> {integer} -> [Rectangle]
+	//
+	// takes an integer n and an object
+	// whose .width and .height fields are positive integers.
+	// returns an array of rectangles of the same length
+	// as the array of url's
+
+	var isDivisible = function (rect) {
+		// Rectangle -> boolean
+		// is the rectangle divisible into rectangles with integal
+		// sides?
+
+		return rect.width > 1 && rect.height > 1
+	}
+	var nonTerminals = function (xs, rules) {
+		// [a] -> [{pattern: function production: function}] -> [a]
+		// return the non-terminal values, according to rules.
+
+		return lambda.select(
+			function (x) {
+
+				var isNonTerminal = false
+
+				for (rule in rules) {
+					if (!hasOwnProperty(rule)) {
+						continue
+					}
+					if (rule.pattern(x)) {
+						isNonTerminal = true;
+					}
+				}
+				return isNonTerminal;
+			},
+			xs
+		)
+	};
+	var terminals = function (xs, rules) {
+		// [a] -> [{pattern: function production: function}] -> [a]
+		// return only terminal values
+		
+		// reverse the rules to find the not-non-terminals (terminals)
+		var negated_rules = lambda.indMap(
+			function (rule) {
+				return {
+					pattern: lambda.negate(rule),
+					production: rule.production
+				};
+			},
+			rules
+		);
+		return nonTerminals(xs, negated_rules)
+	}
+
+	// magic numbers, for the moment.
+	// later, units will be dynamically adjusted.
+	// important, determines how many columns/rows of tiles to have {
+	var units = {
+		x: 6,
+		y: 6
+	}; 
+
+	console.assert(
+		n > units.x * units.y,
+		"too many images to tile canvas with")
+	//}
+
+	// the initial rectangle to subdivide
+	var start = Object.beget(Rectangle);
+	start.xPlus = units.x;
+	start.yPlus = units.y;
+	
+	var rectangles = [start];
+	
+	var splitGrammar = ( function () {
+		/* nondeterministic context-free grammar for deciding
+		how to divide the rectangles. Allows fine grained control
+		over rectangle subdivision.
+
+		There must always exist a composition f_i o f_j ... f_k of 
+		productions in the grammar of length n,
+		otherwise no guarantees of tiling plane
+		
+		each product is an element of 
+		{ (n x n), (n x n), (n x 2n) }, for some number 1,2,..?
+
+		Start: (n x n)
+		Nonterminals:
+		Production Rules: 
+			 ->
+			 ->  
+		Terminals: (1 x 1) | (1 x 2) | (2 x 1)
+		*/
+
+		[
+			{
+				pattern: function (rect) {
+					return isDivisible(rect);
+				},
+				production: function (rect) {
+					return // some lovely production of rect
+				}
+			},
+			{
+				pattern: function (rect) {
+					return isDivisible(rect);
+				},
+				production: function (rect) {
+					return // some lovely production of rect
+				}
+			}
+		];
+
+	} )();
+	
+	var partitionTile = function (tile, rules) {
+		// tile -> [{pattern: function, production: function}] -> [tile]
+		// partitions a tile using one of the transformations within rules
 
 
+	}
 
+	// split the tiles into smaller tiles
+	var tiles = lambda.until(
+		function (xs) {
+			// terminate when no non-terminals left
+			xs.nonterminal.length === 0
+		},
+		function (xs) {
+			// [{ nonTerminal: [Rectangle], terminal: [Rectangle] }] ->
+			// [{ nonTerminal: [Rectangle], terminal: [Rectangle] }]
+			//
+			// pop a single tile off the stack.
+			// apply a production rule to it, 
+			// and push both the terminals and non-terminals produced
+			// to their respective stacks in resulting object.
+
+			var tile = xs.nonterminal.pop();
+			var produced = partitionTile(tile, rules);
+
+			return {
+				nonTerminal: 
+					xs.nonTerminal.concat(nonTerminals(produced)),
+				terminal:
+					xs.terminal.concat(terminals(produced))
+			};
+		}, 
+		{
+			nonTerminal: nonTerminals(start, splitGrammar),
+			terminal: []
+		}
+	)
+	
+	// scale each tile up using le matrix algebras
+
+	return tiles
+}
+
+var assignLinks = function (images, rectangles) {
+	// [ {url: string, dimensions: [x y]} ] -> [Rectangles] -> [{url: string, rectangle: Rectangle}]
+	// returns an array of objects which are bijective maps from 
+	// a url onto a rectangle.
+
+	// greedy find the mapping f(urls, rectangles) that minimises
+	// sum (percentage cropping needed per image)
+
+	// var result = []
+	// for each image get the dimension; find the first hor/vert/square tile to fit it in
+		// push {image: url} into result, remove both the current image and rectangle from the stacks
+
+
+}
