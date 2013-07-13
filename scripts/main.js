@@ -112,6 +112,11 @@ var lambda = {
 		}
 		return result;
 	},
+	negate: function (f) {
+		return function (x) {
+			return !f(x)
+		}
+	},
 	concatMap: function (func, iter) {
 		// (a -> b) -> a -> [b]
 
@@ -169,7 +174,7 @@ var lambda = {
 // OBJECT PROTOTYPES
 // (Rectangle, and Matrix)
 
-if (!is.function(Object.beget)) {
+if (!is.closure(Object.beget)) {
 	// a Crockfordian method for object instantiation.
 
 	Object.beget = function (obj) {
@@ -200,7 +205,7 @@ var Matrix = {
 		// so that matrix is a Functor
 
 		console.assert(
-			is.function(func),
+			is.closure(func),
 			"error in Matrix.map: func must be a function");
 
 		return [
@@ -293,10 +298,10 @@ var Rectangle = {
 	}
 }
 
-// CORE ALGORITHMS
-// (partition, and )
-
-
+// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
+// = # = # = # = Core Algorithm = # = # = # = # = # = # = # = # = # = # 
+// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
+// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
 
 var tilePlane = function (n, dimensions) {
 	// integer -> {integer} -> [Rectangle]
@@ -308,9 +313,12 @@ var tilePlane = function (n, dimensions) {
 
 	var isDivisible = function (rect) {
 		// Rectangle -> boolean
+		// is the rectangle divisible into rectangles with integal
+		// sides?
+
 		return rect.width > 1 && rect.height > 1
 	}
-	var nonTerminals(xs, rules) {
+	var nonTerminals = function (xs, rules) {
 		// [a] -> [{pattern: function production: function}] -> [a]
 		// return the non-terminal values, according to rules.
 
@@ -332,8 +340,26 @@ var tilePlane = function (n, dimensions) {
 			xs
 		)
 	};
+	var terminals = function (xs, rules) {
+		// [a] -> [{pattern: function production: function}] -> [a]
+		// return only terminal values
+		
+		// reverse the rules to find the not-non-terminals (terminals)
+		var negated_rules = lambda.indMap(
+			function (rule) {
+				return {
+					pattern: lambda.negate(rule),
+					production: rule.production
+				};
+			},
+			rules
+		);
+		return nonTerminals(xs, negated_rules)
+	}
 
-	// magic numbers, for the moment {
+	// magic numbers, for the moment.
+	// later, units will be dynamically adjusted.
+	// important, determines how many columns/rows of tiles to have {
 	var units = {
 		x: 6,
 		y: 6
@@ -342,7 +368,7 @@ var tilePlane = function (n, dimensions) {
 	console.assert(
 		n > units.x * units.y,
 		"too many images to tile canvas with")
-	//
+	//}
 
 	// the initial rectangle to subdivide
 	var start = Object.beget(Rectangle);
@@ -361,14 +387,14 @@ var tilePlane = function (n, dimensions) {
 		otherwise no guarantees of tiling plane
 		
 		each product is an element of 
-		{ (a*n x a*n), (2a*n x a*n), (a*n x 2*a*n) }, for some number 1,2,..
+		{ (n x n), (n x n), (n x 2n) }, for some number 1,2,..?
 
-		Start: (a*n x a*n)
+		Start: (n x n)
 		Nonterminals:
 		Production Rules: 
 			 ->
 			 ->  
-		Terminals: (n x n) | (n x 2*n) | (2*n x n)
+		Terminals: (1 x 1) | (1 x 2) | (2 x 1)
 		*/
 
 		[
@@ -392,26 +418,45 @@ var tilePlane = function (n, dimensions) {
 
 	} )();
 	
-	// keep dividing tiles 
+	var partitionTile = function (tile, rules) {
+		// tile -> [{pattern: function, production: function}] -> [tile]
+		// partitions a tile using one of the transformations within rules
+
+
+	}
+
+	// split the tiles into smaller tiles
 	var tiles = lambda.until(
 		function (xs) {
+			// terminate when no non-terminals left
 			xs.nonterminal.length === 0
 		},
 		function (xs) {
-			// pop non-terminal symbol;
-			//   if any rules, make some productions.
-			//   otherwise, pop next symbol
+			// [{ nonTerminal: [Rectangle], terminal: [Rectangle] }] ->
+			// [{ nonTerminal: [Rectangle], terminal: [Rectangle] }]
+			//
+			// pop a single tile off the stack.
+			// apply a production rule to it, 
+			// and push both the terminals and non-terminals produced
+			// to their respective stacks in resulting object.
 
-			var symbol = xs.nonterminal.pop();
-			var 
+			var tile = xs.nonterminal.pop();
+			var produced = partitionTile(tile, rules);
 
+			return {
+				nonTerminal: 
+					xs.nonTerminal.concat(nonTerminals(produced)),
+				terminal:
+					xs.terminal.concat(terminals(produced))
+			};
 		}, 
 		{
-			nonterminal: nonTerminals(start, splitGrammar),
+			nonTerminal: nonTerminals(start, splitGrammar),
 			terminal: []
 		}
 	)
-	// scale each tile up using le matrix
+	
+	// scale each tile up using le matrix algebras
 
 	return tiles
 }
