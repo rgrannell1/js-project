@@ -1,0 +1,10 @@
+{
+	"paths" : [
+		{
+			"url" : "resouces/image1"
+		},
+		{
+			"url" : "resources/image2"
+		}
+	]
+}

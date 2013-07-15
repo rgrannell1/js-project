@@ -9,11 +9,34 @@ var canvas,
 
 	height,
 
+	imagePaths = [],
+
 	options = {},
 
 	_CPjs = window.CPjs,
 
 	CPjs = {};
+
+	// create new Ajax Object (provide cross browser support)
+	function _getXmlHttp() {
+		var ajaxObject;
+
+		try {
+			ajaxObject = new XMLHttpRequest();
+		} catch(e) {
+			try {
+				ajaxObject = new ActiveXObject("Microsoft.XMLHTTP");
+			} catch (E) {
+				try {
+					ajaxObject = new ActiveXObject("Msxml2.XMLHTTP");
+				} catch(ex) {
+					throw "browser does not support XMLHttpRequest";
+				}
+			}
+		}
+
+		return ajaxObject;
+	}
 
 	// gets canvas element return and sets it to the canvas attribute
 	function setCanvasPropery(ele) {
@@ -34,8 +57,12 @@ var canvas,
 	}
 
 	// parse and store the paths to collage image files
-	function storeImagePaths(paths) {
-		// TODO:
+	function storeImagePaths(data) {
+		if(data.paths) {
+			for(var d in data.paths) {
+				imagePaths.push(data.paths[d].url);
+			}
+		}
 	}
 
 	// takes in a canvas id
@@ -46,8 +73,18 @@ var canvas,
 
 	// parse json property with path
 	CPjs.data =	function(json) {
-		if(json.paths) {
-			storeImagePaths(json.paths);
+		// create new XMLHttp object to handle request
+		// Note: must be relative to html filepath
+		var request = _getXmlHttp();
+		request.open('GET', json.toString(), false);
+		request.send();
+		
+		if(request) {
+			var response = JSON.parse(request.responseText)
+
+			if(response) {
+				storeImagePaths(response);
+			}
 		}
 
 		return this;
