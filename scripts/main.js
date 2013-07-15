@@ -15,7 +15,7 @@ var canvas,
 
 	_CPjs = window.CPjs,
 
-	CPjs = {};
+	CPjs = function() {};
 
 	// create new Ajax Object (provide cross browser support)
 	function _getXmlHttp() {
@@ -66,13 +66,13 @@ var canvas,
 	}
 
 	// takes in a canvas id
-	CPjs.canvas =	function(canvasId) {
+	CPjs.prototype.canvas =	function(canvasId) {
 		setCanvasPropery(canvasId);
 		return this;
 	};
 
 	// parse json property with path
-	CPjs.data =	function(json) {
+	CPjs.prototype.data =	function(json) {
 		// create new XMLHttp object to handle request
 		// Note: must be relative to html filepath
 		var request = _getXmlHttp();
@@ -91,12 +91,13 @@ var canvas,
 	};
 
 	// take in canvas dimensions to be used by algorithm
-	CPjs.dimensions	=	function(w, h)	{
+	CPjs.prototype.dimensions = function(w, h)	{
 		// check arguments supplied are Integers
 		if(typeof h === "number" && typeof w === "number" 
 			&&	h%1 == 0 && w%1 == 0) {
 			width = w;
 			height = h;
+
 		}else {
 			console.error("Integers must be supplied");
 		}
@@ -104,19 +105,18 @@ var canvas,
 		return this;
 	}
 	// takes width and height parameters & optional additonal styling object
-	CPjs.attributes = function(props) {
+	CPjs.prototype.attributes = function(props) {
 		setCanvasOptions(props);
-
 		return this;
 	};
 
 	// begin algorithm and render onto canvas
-	CPjs.start = function() {
+	CPjs.prototype.start = function() {
 		console.log(this);
 	}
 	
 	// return globally scoped CPjs object
-	window.CPjs = CPjs;
+	window.CPjs = new CPjs();
 
 })(window);
 
