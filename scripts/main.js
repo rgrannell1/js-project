@@ -3,7 +3,7 @@
 "use strict"
 
 // private variables
-var canvas = "",
+var canvas,
 
 	width,
 
@@ -11,7 +11,6 @@ var canvas = "",
 
 	options = {},
 
-	// override global object if it already exists and create fresh namespace object
 	_CPjs = window.CPjs,
 
 	CPjs = {};
@@ -21,28 +20,36 @@ var canvas = "",
 		if(document.getElementById(ele) !== null) {
 			var element = document.getElementById(ele);
 			
-			if(element.tagName === 'CANVAS') {
-				console.log("success");
+			if(element.tagName !== 'CANVAS') {
+				console.error("element is not a canvas");
 			}
 		}
-	};
+	}
 
 	// sets style options supplied by the user
 	function setCanvasOptions(additionalProps) {
 		options.greyscale = additionalProps.greyscale || false;
 		options.crop = additionalProps.crop || false;
 		options.background = additionalProps.canvasTransparent || false;
-	};
+	}
+
+	// parse and store the paths to collage image files
+	function storeImagePaths(paths) {
+		// TODO:
+	}
 
 	// takes in a canvas id
 	CPjs.canvas =	function(canvasId) {
 		setCanvasPropery(canvasId);
-
 		return this;
 	};
 
 	// parse json property with path
 	CPjs.data =	function(json) {
+		if(json.paths) {
+			storeImagePaths(json.paths);
+		}
+
 		return this;
 	};
 
@@ -60,17 +67,18 @@ var canvas = "",
 		return this;
 	}
 	// takes width and height parameters & optional additonal styling object
-	CPjs.attributes =	function(props) {
+	CPjs.attributes = function(props) {
 		setCanvasOptions(props);
 
 		return this;
 	};
 
 	// begin algorithm and render onto canvas
-	CPjs.start =	function() {
+	CPjs.start = function() {
 		console.log(this);
 	}
 	
+	// return globally scoped CPjs object
 	window.CPjs = CPjs;
 
 })(window);

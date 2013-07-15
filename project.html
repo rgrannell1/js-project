@@ -6,10 +6,10 @@
 		<canvas id="mycanvasid">sorry, your browser does not support canvas :-(</canvas>
 		<script type="text/javascript">
 			//basic idea of what we expect from the user
-			var cpjs = 
-				CPjs.dimensions(200, 200).attributes({ greyscale : true, crop: true}).canvas("mycanvasid");
-			
-			cpjs.start();
+			CPjs.dimensions(200, 200)
+				.attributes({ greyscale : true, crop: true})
+				.canvas("mycanvasid")
+				.start();
 
 		</script>
 		this file is for testing out css stylesheets and js-scripts
