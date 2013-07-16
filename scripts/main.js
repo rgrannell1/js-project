@@ -11,10 +11,14 @@ var assignLinks = function (images, rectangles) {
  	// push {image: url} into result, remove both the current image and rectangle from the stacks
 };
 
+
+
 //create an array of results --> url-rectangle mapping to the result
 //pop each rectangle and image from their stacks 
 //is there an exact number of rectangles for each type? 
 	//If so, why not assign the image to rectangle when the rectangles are generated.
+	
+	//there will not be an equal number of rectangles for each size image, I have to find best fit.
 var assignLinks = function (images, rectangles){
 	
 	var imageType = 0,
@@ -41,12 +45,12 @@ var assignLinks = function (images, rectangles){
 		}
 		j=0;
 		while(notFound){
-			if(rectangles[j].type == imageType){
+			if(rectangles[j].type === imageType){
 				rectangles[j].image = images[i]//assign image to rectangle
 				notFound = false;
 			}
 			j++;
-		}
+		} 1l 
 		notFound = true;
 	}
 	return rectangles;
