@@ -3,6 +3,11 @@
 } )()
 
 
+// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
+// = # = # = # = Lambda and Is = # = # = # = # = # = # = # = # = # = # 
+// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
+// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+
 // is
 // this object contains tests for various properties;
 // if your test is general (undefined, array, NaN) please
@@ -46,15 +51,16 @@ var lambda = {
 		// an array or object, with the left argument being
 		// the value iter[ith] and the right argument being the index ith
 
-		console.assert(
-			is.closure(func),
-			"error in indMap: func must be a function");
-		console.assert(
-			is.array(iter) || is.object(iter),
-			"error in indMap: func must be an object or array")
-		console.assert(
-			func.length === 2,
-			"error in indMap: binary function required")
+		var call = "indMap";
+		if (!is.closure(func)) {
+			throw new TypeError(call + ":" + "func must be a function");
+		}
+		if (!func.length === 2) {
+			throw new TypeError(call + ":" + "func must be a binary function");
+		}
+		if (!is.array(iter) && !is.object (iter)) {
+			throw new TypeError(call + ":" + "iter must be an array or object");
+		}
 
 		var ith = 0;
 		var result = [];
@@ -99,37 +105,33 @@ var lambda = {
 		}
 		return res;
 	},
-	which: function (func, iter) {
-		// for what indices did func(iter) return true?
+	negate: function (func) {
 
-		var result = [];
-		for (var ith = 0; ith < iter.length; ith++) {
-			if (!hasOwnProperty(ith)) {
-				continue;
-			}
-			if ( func(iter(ith)) ) {
-				result = result.push(ith)
-			}
+		var call = "negate";
+		if (!is.closure(func)) {
+			throw new TypeError(call + ":" + "func must be a function");
 		}
-		return result;
-	},
-	negate: function (f) {
+		if (!func.length === 1) {
+			throw new TypeError(call + ":" + "func must be a unary function");
+		}
+
 		return function (x) {
-			return !f(x)
+			return !func(x)
 		}
 	},
 	concatMap: function (func, iter) {
 		// (a -> b) -> a -> [b]
 
-		console.assert(
-			is.closure(func),
-			"error in indMap: func must be a function");
-		console.assert(
-			is.array(iter) || is.object(iter),
-			"error in indMap: func must be an object or array")
-		console.assert(
-			func.length === 1,
-			"error in concatMap: unary function required")
+		var call = "concatMap";
+		if (!is.closure(func)) {
+			throw new TypeError(call + ":" + "func must be a function");
+		}
+		if (!func.length === 1) {
+			throw new TypeError(call + ":" + "func must be a unary function");
+		}
+		if (!is.array(iter) && !is.object (iter)) {
+			throw new TypeError(call + ":" + "iter must be an array or object");
+		}
 
 		var ith = 0;
 		var result = [];
@@ -146,15 +148,16 @@ var lambda = {
 	select: function (func, iter) {
 		// (a -> boolean) -> a -> [a]
 
-		console.assert(
-			is.closure(func),
-			"error in select: func must be a function");
-		console.assert(
-			is.array(iter) || is.object(iter),
-			"error in select: func must be an object or array")
-		console.assert(
-			func.length === 1,
-			"error in concatMap: unary function required")
+		var call = "select";
+		if (!is.closure(func)) {
+			throw new TypeError(call + ":" + "func must be a function");
+		}
+		if (!func.length === 1) {
+			throw new TypeError(call + ":" + "func must be a unary function");
+		}
+		if (!is.array(iter) && !is.object (iter)) {
+			throw new TypeError(call + ":" + "iter must be an array or object");
+		}
 
 		var ith = 0;
 		var result = [];
@@ -169,6 +172,29 @@ var lambda = {
 			}
 		}
 		return result;		
+	},
+	until: function (pred, func, initial) {
+		// (a -> boolean) -> (a -> a) -> a -> a
+
+		var call = "until";
+		if (!is.closure(pred)) {
+			throw new TypeError(call + ":" + "pred must be a function");
+		}
+		if (!is.closure(func)) {
+			throw new TypeError(call + ":" + "func must be a function");
+		}
+		if (!pred.length === 1) {
+			throw new TypeError(call + ":" + "func must be a unary function");
+		}
+		if (!pred.length === 1) {
+			throw new TypeError(call + ":" + "pred must be a unary function");			
+		}
+
+		while (!pred(initial)) {
+			initial = func(initial);
+		}
+		return initial;
+
 	},
 	pickOne: function (iter) {
 		// [a] -> a
