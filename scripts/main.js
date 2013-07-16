@@ -74,15 +74,16 @@ var lambda = {
 		// into the sequence iter[0] func iter[2] func .... iter[n],
 		// returning a single value.
 		
-		console.assert(
-			is.closure(func),
-			"error in reduce: func must be a function");
-		console.assert(
-			is.array(iter) || is.object(iter),
-			"error in reduce: func must be an object or array")
-		console.assert(
-			func.length === 2,
-			"error in reduce: binary function required")
+		var call = "reduce";
+		if (!is.closure(func)) {
+			throw new TypeError(call + ":" + "func must be a function");
+		}
+		if (!func.length === 2) {
+			throw new TypeError(call + ":" + "func must be a binary function");
+		}
+		if (!is.array(iter) && !is.object (iter)) {
+			throw new TypeError(call + ":" + "iter must be an array or object");
+		}
 
 		var first = true;
 		for (elem in iter) {
@@ -168,6 +169,21 @@ var lambda = {
 			}
 		}
 		return result;		
+	},
+	pickOne: function (iter) {
+		// [a] -> a
+		// return a single value from iter
+
+
+	},
+	seqLen: function (n) {
+		// integer -> [integer]
+
+		var result = [];
+		for (var ith = 0; ith < n; ith++) {
+			result[ith] = ith;
+		}
+		return result;
 	}
 }
 
@@ -303,29 +319,112 @@ var Rectangle = {
 // = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
 // = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
 
+var splitGrammar = ( function () {
+	/* nondeterministic context-free grammar for deciding
+	how to divide the rectangles. Allows fine grained control
+	over rectangle subdivision.
+
+	There must always exist a composition f_i o f_j ... f_k of 
+	productions in the grammar of length n,
+	otherwise no guarantees of tiling plane
+	
+	Start: 
+		(n x n)
+	Nonterminals: 
+		a x b, such that a, b > 1 and (a + b) > 3
+
+	Terminals: 
+		(1 x 1) |
+		(1 x 2) |
+		(2 x 1)
+
+	Production Rules: 
+		(1 x n) -> [ (1 x (n-m)), (1 x m) ]
+
+	*/
+
+	return [
+		{
+			pattern: function (tile) {
+				// matches 1 x n tiles
+
+				return isDivisible(tile) && xor(
+					tile.width === 1,
+					tile.height === 1);
+			},
+			production: function (tile) {
+				// split into [ (1 x n-m), (1 x m) ]
+
+				// TODO: ACCOUNT FOR 0 SPLIT,
+				// IMPROVE CLARITY OF THIS RULE
+
+				var boundary = lambda.pickOne(
+					lambda.seqLen( Math.max(tile.width, tile.height) )
+				);
+				var tileOne = Object.beget(tile);
+				var tileTwo = Object.beget(tile);
+
+				if (tile.width === 1) {
+					// dividing a vertical rectangle
+
+					tileOne.bottom = tile.bottom + (
+						tile.height - boundary);
+					tileTwo.top = tile.top + 
+						boundary;
+
+				} else {
+					// dividing a horizontal rectangle
+
+					tileOne.right = tile.right + 
+						(tile.width - boundary);
+					tileTwo.left = tile.right + 
+						boundary;
+
+				}
+				return [tileOne, tileTwo];
+			}
+		},
+		{
+			pattern: function (rect) {
+				return isDivisible(rect)
+			},
+			production: function (rect) {
+				return // some lovely production of rect
+			}
+		}
+	];
+
+} )();
+
 var tilePlane = function (n, dimensions) {
-	// integer -> {integer} -> [Rectangle]
-	//
-	// takes an integer n and an object
-	// whose .width and .height fields are positive integers.
-	// returns an array of rectangles of the same length
-	// as the array of url's
+	/* integer -> {integer} -> [Rectangle]
+	 
+	   takes an integer n and an object
+	   whose .width and .height fields are positive integers.
+	   returns an array of rectangles of the same length
+	   as the array of url's */
 
-	var isDivisible = function (rect) {
-		// Rectangle -> boolean
-		// is the rectangle divisible into rectangles with integal
-		// sides?
-
-		return rect.width > 1 && rect.height > 1
+	var xor = function (a, b) {
+		return (a || b) && !(a && b)
 	}
+
+	var isDivisible = function (tile) {
+		/* Rectangle -> boolean
+		   is the rectangle divisible into rectangles with integal
+		  sides, and is it non-terminal? */
+
+		return (tile.width > 1 && tile.height > 1) &&
+			tile.width + tile.height > 3
+	}
+
 	var nonTerminals = function (xs, rules) {
-		// [a] -> [{pattern: function production: function}] -> [a]
-		// return the non-terminal values, according to rules.
+		/* [a] -> [{pattern: function production: function}] -> [a]
+		   return the non-terminal values in the grammar rules. */
 
 		return lambda.select(
 			function (x) {
 
-				var isNonTerminal = false
+				var isNonTerminal = false;
 
 				for (rule in rules) {
 					if (!hasOwnProperty(rule)) {
@@ -341,10 +440,9 @@ var tilePlane = function (n, dimensions) {
 		)
 	};
 	var terminals = function (xs, rules) {
-		// [a] -> [{pattern: function production: function}] -> [a]
-		// return only terminal values
-		
-		// reverse the rules to find the not-non-terminals (terminals)
+		/* [a] -> [{pattern: function production: function}] -> [a]
+		   return only terminal values */
+
 		var negated_rules = lambda.indMap(
 			function (rule) {
 				return {
@@ -357,9 +455,10 @@ var tilePlane = function (n, dimensions) {
 		return nonTerminals(xs, negated_rules)
 	}
 
-	// magic numbers, for the moment.
-	// later, units will be dynamically adjusted.
-	// important, determines how many columns/rows of tiles to have {
+	/* magic numbers, for the moment.
+	   later, units will be dynamically adjusted.
+	   important, determines how many columns/rows of tiles to have */
+
 	var units = {
 		x: 6,
 		y: 6
@@ -368,97 +467,64 @@ var tilePlane = function (n, dimensions) {
 	console.assert(
 		n > units.x * units.y,
 		"too many images to tile canvas with")
-	//}
 
 	// the initial rectangle to subdivide
 	var start = Object.beget(Rectangle);
 	start.xPlus = units.x;
 	start.yPlus = units.y;
-	
-	var rectangles = [start];
-	
-	var splitGrammar = ( function () {
-		/* nondeterministic context-free grammar for deciding
-		how to divide the rectangles. Allows fine grained control
-		over rectangle subdivision.
-
-		There must always exist a composition f_i o f_j ... f_k of 
-		productions in the grammar of length n,
-		otherwise no guarantees of tiling plane
 		
-		each product is an element of 
-		{ (n x n), (n x n), (n x 2n) }, for some number 1,2,..?
-
-		Start: (n x n)
-		Nonterminals:
-		Production Rules: 
-			 ->
-			 ->  
-		Terminals: (1 x 1) | (1 x 2) | (2 x 1)
-		*/
-
-		[
-			{
-				pattern: function (rect) {
-					return isDivisible(rect);
-				},
-				production: function (rect) {
-					return // some lovely production of rect
-				}
-			},
-			{
-				pattern: function (rect) {
-					return isDivisible(rect);
-				},
-				production: function (rect) {
-					return // some lovely production of rect
-				}
-			}
-		];
-
-	} )();
-	
 	var partitionTile = function (tile, rules) {
-		// tile -> [{pattern: function, production: function}] -> [tile]
-		// partitions a tile using one of the transformations within rules
+		/* tile -> [{pattern: function, production: function}] -> [tile]
+		   partitions a tile using one of the transformations within rules */
 
-
+		// do stuff
 	}
 
 	// split the tiles into smaller tiles
 	var tiles = lambda.until(
-		function (xs) {
-			// terminate when no non-terminals left
-			xs.nonterminal.length === 0
+		function (tileStacks) {
+			tileStacks.nonterminal.length === 0
 		},
-		function (xs) {
-			// [{ nonTerminal: [Rectangle], terminal: [Rectangle] }] ->
-			// [{ nonTerminal: [Rectangle], terminal: [Rectangle] }]
-			//
-			// pop a single tile off the stack.
-			// apply a production rule to it, 
-			// and push both the terminals and non-terminals produced
-			// to their respective stacks in resulting object.
+		function (tileStacks) {
+			/* [{ nonTerminal: [Rectangle], terminal: [Rectangle] }] ->
+			   [{ nonTerminal: [Rectangle], terminal: [Rectangle] }]
+			  
+			   pop a single tile off the stack.
+			   apply a production rule to it, 
+			   and push both the terminals and non-terminals produced
+			   to their respective stacks in resulting object.*/
 
-			var tile = xs.nonterminal.pop();
-			var produced = partitionTile(tile, rules);
+			var tile = tileStacks.nonterminal.pop();
+			var productions = partitionTile(tile, rules);
 
 			return {
 				nonTerminal: 
-					xs.nonTerminal.concat(nonTerminals(produced)),
+					tileStacks.nonTerminal.concat(
+						nonTerminals(productions)),
 				terminal:
-					xs.terminal.concat(terminals(produced))
+					tileStacks.terminal.concat(
+						terminals(productions))
 			};
 		}, 
 		{
-			nonTerminal: nonTerminals(start, splitGrammar),
+			nonTerminal: nonTerminals([start], splitGrammar),
 			terminal: []
 		}
 	)
-	
-	// scale each tile up using le matrix algebras
 
-	return tiles
+	return lambda.indMap(
+		function (tile, ith) {
+			/* tile -> tile
+
+			   scale each tile up using le matrix algebras
+			   do any last minute corrections/adjustments */
+
+
+
+			return tile
+		},
+		tiles
+	);
 }
 
 var assignLinks = function (images, rectangles) {
