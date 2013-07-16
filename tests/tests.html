@@ -13,6 +13,7 @@
 		width: 500px;
 		padding: 20px;
 		margin: 10px;
+		color: white;
 	}
 	.failed {
 		background: #e74c3c;
@@ -23,6 +24,8 @@
 
 </style>
 <script type="text/javascript" src = "../scripts/main.js"></script>
+<script type="text/javascript" src = "./tests.js"></script>
+
 <body>
 
 	<hgroup>
@@ -31,69 +34,42 @@
 	</hgroup>
 
 	<button id = "run-tests" onclick = "testAll()"> Run </button>
-
 	<div id = "test-info"></div>
 
 </body>
 <script type="text/javascript">
-		
-
+	
 	var testAll = function () {
-		// run all tests 
-		var div = document.getElementById('test-info');
-		div.innerHTML = "";
 
-		var test = function (description, func) {
-			return {
-				description: description,
-				func: func
-			};
-		}
-
-		var testSuite = [
-			test("test that indMap works", function () {
-
-				var indices = lambda.indMap(function (val, ind) {
-					return ind
-				}, [1,2,3]);
-				
-				return indices.length === [1,2,3];
-			})
-		];
+	var div = document.getElementById('test-info');
+	div.innerHTML = "";
 
 		var report = function (test, status) {
-			// append some text to the page
 
 			if (status === "passed") {
 				var message = "<div class = 'test passed'>" +
 					test.description + 
-				"</div>"
+				"</div>";
 			} else {
 				var message = "<div class = 'test failed'>" +
 					test.description + 
-				"</div>"			
+				"</div>";		
 			}
 
 			var div = document.getElementById('test-info');
 			div.innerHTML = div.innerHTML + message;
 		}
+		for (var ith = 0; ith < testSuite.length; ith++) {
 
-		for (unitTest in testSuite) {
-			if (!testSuite.hasOwnProperty(unitTest)) {
-				continue
-			}
-			unitTest = testSuite[unitTest]
-
-			var allPassed = unitTest.func()
+			var unitTest = testSuite[ith];
+			var allPassed = unitTest.func();
 
 			if (allPassed) {
-				report(unitTest, status = "passed")
+				report(unitTest, status = "passed");
 			} else {
-				report(unitTest, status = "failed")
+				report(unitTest, status = "failed");
 			}
 		}
 	}
-
-
 </script>
 </html>
