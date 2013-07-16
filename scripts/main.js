@@ -69,8 +69,8 @@ var lambda = {
 			if (!iter.hasOwnProperty(val)) {
 				continue;
 			}
-			ith = ith + 1;
 			result[ith] = func(val, ith);
+			ith = ith + 1;
 		}
 		return result;
 	},
@@ -557,8 +557,6 @@ var tilePlane = function (n, dimensions) {
 
 			   scale each tile up using le matrix algebras
 			   do any last minute corrections/adjustments */
-
-
 
 			return tile
 		},
