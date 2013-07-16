@@ -194,6 +194,7 @@ var lambda = {
 			initial = func(initial);
 		}
 		return initial;
+
 	},
 	pickOne: function (iter) {
 		// [a] -> a
@@ -369,6 +370,15 @@ var splitGrammar = ( function () {
 
 	*/
 
+	var isDivisible = function (tile) {
+		/* Rectangle -> boolean
+		   is the Rectangle divisible into Rectangles with integal
+		  sides, and is it non-terminal? */
+
+		return Math.min(tile.width, tile.height) > 1 && 
+			tile.width + tile.height > 3
+	}
+
 	return [
 		{
 			pattern: function (tile) {
@@ -439,16 +449,6 @@ var tilePlane = function (n, dimensions) {
 	var xor = function (a, b) {
 		return (a || b) && !(a && b)
 	}
-
-	var isDivisible = function (tile) {
-		/* Rectangle -> boolean
-		   is the Rectangle divisible into Rectangles with integal
-		  sides, and is it non-terminal? */
-
-		return Math.min(tile.width, tile.height) > 1 && 
-			tile.width + tile.height > 3
-	}
-
 	var nonTerminals = function (xs, rules) {
 		/* [a] -> [{pattern: function production: function}] -> [a]
 			takes a collection xs and an array rules of pattern : production object pairs
@@ -502,7 +502,6 @@ var tilePlane = function (n, dimensions) {
 			x: 6,
 			y: 6
 		}; 
-
 
 	} )(n, dimensions.width, dimensions.height);
 
@@ -563,7 +562,7 @@ var tilePlane = function (n, dimensions) {
 
 			return tile
 		},
-		tiles
+		tiles.terminal
 	);
 }
 
