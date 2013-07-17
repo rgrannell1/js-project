@@ -399,15 +399,16 @@ var splitGrammar = ( function () {
 				// split an 1 x n tile into [ (1 x n-m), (1 x m) ],
 				// where m is a random number in 2...(n-1)
 
+				// TODO: IMPROVE CLARITY, THIS IS AWFUL!
+
 				var boundary = lambda.pickOne(
 					lambda.sequence(
 						from = 1,
 						to = Math.max(tile.width, tile.height) - 1
 				));
 
-				var production = [
-					Object.beget(tile),
-					Object.beget(tile)];
+				var production = 
+					[Object.beget(tile), Object.beget(tile)];
 
 				if (tile.width === 1) {
 					// dividing a vertical rectangle into two
@@ -417,7 +418,6 @@ var splitGrammar = ( function () {
 					
 					production[1].yPlus = production[1].yPlus - 
 						boundary;
-
 
 				} else {
 					// dividing a horizontal rectangle into two
@@ -434,10 +434,38 @@ var splitGrammar = ( function () {
 		},
 		{
 			pattern: function (rect) {
-				return isDivisible(rect)
+				return isDivisible(rect);
 			},
 			production: function (rect) {
-				return // some lovely production of rect
+				// splits an a x b tile into four tiles,
+				// 
+				// where a, b > 2
+
+				var boundary = {
+					xBoundary: +1111, // fix me
+					yBoundary: +1111
+				}
+
+				var production = [Object.beget(tile), Object.beget(tile),
+					Object.beget(tile), Object.beget(tile)];
+
+				/* // top-left
+				production[0]
+				production[0]
+
+				// top-right
+				production[1]
+				production[1]
+
+				// bottom-left
+				production[2]
+				production[2]
+
+				// bottom-right
+				production[3]
+				production[3] */
+
+				return production;
 			}
 		}
 	];
@@ -459,21 +487,22 @@ var tilePlane = function (n, dimensions) {
 		/* [a] -> [{pattern: function production: function}] -> [a]
 			takes a collection xs and an array rules of pattern : production object pairs
 			returns the xs matching some pattern in rules.
-		    return the non-terminal values in the grammar rules. */
+			return the non-terminal values in the grammar rules. */
 
 		return lambda.select(
 			function (x) {
-				var isNonTerminal = false;
 
-				for (rule in rules) {
-					if (!hasOwnProperty(rule)) {
+				for (ith in rules) {
+					if (!rules.hasOwnProperty(ith)) {
 						continue
 					}
+					var rule = rules[ith];
+
 					if (rule.pattern(x)) {
-						isNonTerminal = true;
+						return true;
 					}
 				}
-				return isNonTerminal;
+				return false;
 			},
 			xs
 		)
@@ -499,10 +528,6 @@ var tilePlane = function (n, dimensions) {
 		/* magic numbers, for the moment.
 		   later, units will be dynamically adjusted.
 		   important, determines how many columns/rows of tiles to have */
-		
-		console.assert(
-			n > units.x * units.y,
-			"too many images to tile canvas with")
 
 		return {
 			x: 6,
@@ -516,7 +541,7 @@ var tilePlane = function (n, dimensions) {
 	start.xPlus = units.x;
 	start.yPlus = units.y;
 		
-	var applyProduction = function (tile, rules) {
+	var produce = function (tile, rules) {
 		/* tile -> [{pattern: function, production: function}] -> [tile]
 		   partitions a tile using one of the transformations within rules */
 
@@ -532,15 +557,15 @@ var tilePlane = function (n, dimensions) {
 
 	var tiles = lambda.until(
 		pred = function (tileStacks) {
-			tileStacks.nonterminal.length === 0
+			return tileStacks.nonTerminal.length === 0
 		},
 		func = function (tileStacks) {
 			/* [{ nonTerminal: [Rectangle], terminal: [Rectangle] }] ->
 			   [{ nonTerminal: [Rectangle], terminal: [Rectangle] }]
 			   */
 
-			var tile = tileStacks.nonterminal.pop();
-			var productions = applyProduction(tile, rules);
+			var tile = tileStacks.nonTerminal.pop();
+			var productions = produce(tile, splitGrammar);
 
 			return {
 				nonTerminal: 
@@ -559,30 +584,8 @@ var tilePlane = function (n, dimensions) {
 
 	return lambda.indMap(
 		function (tile, ith) {
-			/* tile -> tile
-
-			   scale each tile up using le matrix algebras
-			   do any last minute corrections/adjustments */
-
 			return tile;
 		},
 		tiles.terminal
 	);
 }
-
-var assignLinks = function (images, rectangles) {
-	// [ {url: string, dimensions: [x, y]} ] -> [Rectangles] -> [{url: string, rectangle: Rectangle}]
-	// returns an array of objects which are bijective maps from 
-	// a url onto a rectangle.
-
-	// greedy find the mapping f(urls, rectangles) that minimises
-	// sum (percentage cropping needed per image)
-
-	// var result = []
-	// for each image get the dimension; find the first hor/vert/square tile to fit it in
-		// push {image: url} into result, remove both the current image and rectangle from the stacks
-
-
-}
-
- 
