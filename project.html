@@ -3,17 +3,43 @@
 		<script src="scripts/main.js" type="text/javascript"></script>
 	</head>
 	<body>
-		<canvas id="mycanvasid">sorry, your browser does not support canvas :-(</canvas>
+		<div id="myDiv"></div>
 		<script type="text/javascript">
 			//basic idea of what we expect from the user
-			CPjs.dimensions(200, 200)
-				.attributes({ greyscale : true, crop: true})
-				.canvas("mycanvasid")
-				.data("scripts/test/dummyJson.json")
+			CPjs.dimensions('200.00', 200)
+				.id("myDiv")
+				.attributes({ greyscale : true, crop: true, background: '#123456', animation: 'swift'})
+				.images("scripts/test/dummyJson.json")
 				.start();
-
 		</script>
 		this file is for testing out css stylesheets and js-scripts
+		<br />
+		<br />
+		<div id="indexOfTest" style="background-color: red; width: 200px; padding: 100px;"></div>
+		<script type="text/javascript">
+			function unitTest() {
+				var arrayTest = ['1', '2', '3'];
+				var index = document.getElementById('indexOfTest');
+
+				if(arrayTest.indexOf == undefined) {
+					console.log(index);
+					index.style.backgroundColor = 'green';
+				} else {
+					index.style.backgroundColor = 'gold';
+				}
+			}
+
+			Array.prototype.indexOf = undefined;
+
+			// case 1 : test should break -> green result
+			unitTest();
+		</script>
+		<script src="scripts/main.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			// test that indexOf now works with new implementation -> gold result
+			unitTest();
+			
+		</script>
 	</body>
 
 </html>
