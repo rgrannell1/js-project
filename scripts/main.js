@@ -36,13 +36,15 @@ var is = {
 	},
 	string: function (val) {
 		return this.toType(val) === 'string';
+	},
+	number: function (val) {
+		return this.toType(val) === 'number';
 	}
 };
 
 // lambda
 // this object contains higher order functions for the
-// terse manipulation of arrays AND objects; all methods implemented
-// here should work on both if possible
+// terse manipulation of arrays
 
 var lambda = {
 	indMap: function (func, iter) {
@@ -58,19 +60,17 @@ var lambda = {
 		if (!func.length === 2) {
 			throw new TypeError(call + ":" + "func must be a binary function");
 		}
-		if (!is.array(iter) && !is.object (iter)) {
-			throw new TypeError(call + ":" + "iter must be an array or object");
+		if (!is.array(iter)) {
+			throw new TypeError(call + ":" + "iter must be an array ");
 		}
 
-		var ith = 0;
 		var result = [];
 
-		for (val in iter) {
-			if (!iter.hasOwnProperty(val)) {
+		for (ith in iter) {
+			if (!iter.hasOwnProperty(ith)) {
 				continue;
 			}
-			result[ith] = func(val, ith);
-			ith = ith + 1;
+			result[ith] = func(iter[ith], parseInt(ith, 10));
 		}
 		return result;
 	},
@@ -92,12 +92,14 @@ var lambda = {
 		}
 
 		var first = true;
-		for (elem in iter) {
-			if (!iter.hasOwnProperty(elem)) {
+
+		for (ith in iter) {
+			if (!iter.hasOwnProperty(ith)) {
 				continue;
 			}
+			var elem = iter[ith];
 			if (first) {
-				var res = iter[0];
+				var res = elem;
 				first = false;
 			} else {
 				res = func(res, elem);
@@ -133,14 +135,13 @@ var lambda = {
 			throw new TypeError(call + ":" + "iter must be an array or object");
 		}
 
-		var ith = 0;
 		var result = [];
 
-		for (val in iter) {
-			if (!iter.hasOwnProperty(val)) {
+		for (ith in iter) {
+			if (!iter.hasOwnProperty(ith)) {
 				continue;
 			}
-			ith = ith + 1;
+			var val = iter[ith];
 			result = result.concat(func(val, ith));
 		}
 		return result;
@@ -159,14 +160,13 @@ var lambda = {
 			throw new TypeError(call + ":" + "iter must be an array or object");
 		}
 
-		var ith = 0;
 		var result = [];
 
-		for (val in iter) {
-			if (!iter.hasOwnProperty(val)) {
+		for (ith in iter) {
+			if (!iter.hasOwnProperty(ith)) {
 				continue;
 			}
-			ith = ith + 1;
+			var val = iter[ith];
 			if (func(val)) {
 				result = result.concat(val);
 			}
@@ -190,8 +190,15 @@ var lambda = {
 			throw new TypeError(call + ":" + "pred must be a unary function");			
 		}
 
-		while (!pred(initial)) {
-			initial = func(initial);
+		// cut short after 10,000 iterations, 
+		// in case pred was set up badly
+		for (var failSafe = 0; failSafe < 10000; failSafe++) {
+
+			if (pred(initial)) {
+				break;
+			} else {
+				initial = func(initial);				
+			}
 		}
 		return initial;
 
@@ -442,8 +449,7 @@ var tilePlane = function (n, dimensions) {
 	 
 	   takes an integer n and an object
 	   whose .width and .height fields are positive integers.
-	   returns an array of Rectangles of the same length
-	   as the array of url's.
+	   returns an array of Rectangles of length n.
 	   */
 
 	var xor = function (a, b) {
@@ -558,14 +564,14 @@ var tilePlane = function (n, dimensions) {
 			   scale each tile up using le matrix algebras
 			   do any last minute corrections/adjustments */
 
-			return tile
+			return tile;
 		},
 		tiles.terminal
 	);
 }
 
 var assignLinks = function (images, rectangles) {
-	// [ {url: string, dimensions: [x y]} ] -> [Rectangles] -> [{url: string, rectangle: Rectangle}]
+	// [ {url: string, dimensions: [x, y]} ] -> [Rectangles] -> [{url: string, rectangle: Rectangle}]
 	// returns an array of objects which are bijective maps from 
 	// a url onto a rectangle.
 
@@ -578,3 +584,5 @@ var assignLinks = function (images, rectangles) {
 
 
 }
+
+ 
