@@ -1,3 +1,4 @@
+
 ( function () {
 	"use strict";
 } )()
@@ -218,8 +219,8 @@ var lambda = ( function (is) {
 			return result;
 		}
 	}
-} )(is);
 
+} )(is);
 
 // = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
 // = # = # = # = Prototypes = # = # = # = # = # = # = # = # = # = # 
@@ -244,17 +245,17 @@ var Matrix = {
 
 	xs: [0, 0],
 	ys: [0, 0],
-	nrows: 2,
-	ncols: 2,
+	nrows: 2, ncols: 2,
 
 	map: function (func) {
 		// (a - > b) -> Matrix a -> Matrix b
 		// element-wise mapping over matrix,
 		// so that matrix is a Functor
 
-		console.assert(
-			is.closure(func),
-			"error in Matrix.map: func must be a function");
+		var call = "matrix.map";
+		if (!is.closure(func)) {
+			throw new TypeError(call + ":" + "func must be a function");
+		}
 
 		var mapped = Object.beget(Matrix);
 		mapped.xs = [func( this.xs[0] ), func( this.xs[1] )];
@@ -324,10 +325,8 @@ var Rectangle = {
 	// left, right. bottom, top.
 	// easier to work with mathematical notation
 
-	xMinus: 0,
-	xPlus: 0,
-	yMinus: 0,
-	yPlus: 0,
+	xMinus: 0, xPlus: 0,
+	yMinus: 0, yPlus: 0,
 
 	width: function () {
 		return Math.abs(this.xPlus - this.xMinus)
@@ -360,8 +359,7 @@ var splitGrammar = ( function (lambda) {
 	over rectangle subdivision.
 
 	There must always exist a composition f_i o f_j ... f_k of 
-	productions in the grammar of length n,
-	otherwise no guarantees of tiling plane
+	productions in the grammar of length n, otherwise no guarantees of tiling plane
 	
 	Start: 
 		(n x n)
@@ -375,15 +373,19 @@ var splitGrammar = ( function (lambda) {
 
 	Production Rules: 
 		(1 x n) -> [ (1 x (n-m)), (1 x m) ]
+		(a x b) -> [
+			( () x () ), 
+			( () x () ),
+			( () x () )
+			( () x () )
+		]
 
 	*/
 	var xor = function (a, b) {
 		return (a || b) && !(a && b)
 	}
 	var isDivisible = function (tile) {
-		/* Rectangle -> boolean
-		   is the Rectangle divisible into Rectangles with integal
-		  sides, and is it non-terminal? */
+		/* Rectangle -> boolean */
 
 		return tile.width() > 1 && tile.height() > 1 && 
 			(tile.width() + tile.height()) > 3
@@ -435,6 +437,8 @@ var splitGrammar = ( function (lambda) {
 		},
 		{
 			pattern: function (tile) {
+				// matches a x b tiles
+				
 				return isDivisible(tile);
 			},
 			production: function (tile) {
@@ -460,20 +464,20 @@ var splitGrammar = ( function (lambda) {
 					Object.beget(tile), Object.beget(tile)];
 
 				// top-left
-				production[0].xPlus = boundary.xMiddle
-				production[0].yMinus = boundary.yMiddle
+				production[0].xPlus = boundary.xMiddle;
+				production[0].yMinus = boundary.yMiddle;
 
 				// top-right
-				production[1].xMinus = boundary.xMiddle
-				production[1].yMinus = boundary.yMiddle
+				production[1].xMinus = boundary.xMiddle;
+				production[1].yMinus = boundary.yMiddle;
 
 				// bottom-left
-				production[2].xPlus = boundary.xMiddle
-				production[2].yPlus = boundary.yMiddle
+				production[2].xPlus = boundary.xMiddle;
+				production[2].yPlus = boundary.yMiddle;
 
 				// bottom-right
-				production[3].xMinus = boundary.xMiddle
-				production[3].yPlus = boundary.yMiddle
+				production[3].xMinus = boundary.xMiddle;
+				production[3].yPlus = boundary.yMiddle;
 
 				return production;
 			}
@@ -488,7 +492,8 @@ var tilePlane = ( function (is, lambda) {
 		 
 		   takes an integer n and an object
 		   whose .width and .height fields are positive integers.
-		   returns an array of Rectangles of length n.
+		   returns an array of Rectangles of length n. This array of rectangles
+		   will tile a plane of size dimensions.width x dimensions.height. 
 		   */
 
 		var nonTerminals = function (xs, rules) {
@@ -505,7 +510,6 @@ var tilePlane = ( function (is, lambda) {
 							continue
 						}
 						var rule = rules[ith];
-
 						if (rule.pattern(x)) {
 							return true;
 						}
@@ -528,9 +532,8 @@ var tilePlane = ( function (is, lambda) {
 				},
 				rules
 			);
-			return nonTerminals(xs, negated_rules)
+			return nonTerminals(xs, negated_rules);
 		}
-
 
 		var units = ( function (n, width, height) {
 			/* magic numbers, for the moment.
@@ -555,7 +558,6 @@ var tilePlane = ( function (is, lambda) {
 
 			for (ith in rules) {
 				var rule = rules[ith];
-
 				if (!rule.hasOwnProperty(rules)) {
 					continue
 				}
@@ -565,6 +567,7 @@ var tilePlane = ( function (is, lambda) {
 			}
 		};
 
+		// tile -> [tile]
 		var tiles = lambda.until(
 			pred = function (tileStacks) {
 				return tileStacks.nonTerminal.length === 0
@@ -575,8 +578,6 @@ var tilePlane = ( function (is, lambda) {
 
 				var tile = tileStacks.nonTerminal.pop();
 				var productions = produce(tile, splitGrammar);
-
-				console.log(productions)
 
 				return {
 					nonTerminal: 
@@ -595,6 +596,9 @@ var tilePlane = ( function (is, lambda) {
 
 		return lambda.indMap(
 			function (tile, ith) {
+				/* tile -> tile
+				modify a tile by applying matrix transformations */
+
 				return tile;
 			},
 			tiles.terminal
