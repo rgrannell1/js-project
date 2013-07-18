@@ -26,7 +26,7 @@ var imageCanvas,
 
 	images = [],
 
-	options = {},
+	theme = "none",
 
 	_CPjs = window.CPjs,
 
@@ -73,29 +73,28 @@ var imageCanvas,
 		}
 	}
 
-	// set animation for collage
-	function animationSupported(prop) {
-		/*=====================================================
-		* 1) swift will do quick, flashy transitions upon opening
-		* 2) vanilla is just the dault animation style, nothing fancy
-		* 3) focusing uses css3 transitions 
-		*=======================================================*/
-		var animations = ["swift", "vanilla", "focusing"];
-
-		if(animations.indexOf(prop) !== -1) {
-			return true;
-
-		} else {
-			return false;
-		}
-	}
-
 	// callback 
 	// sets style options supplied by the user ( not sure exactly what options woudl be nice?)
-	function _canvasOptions(additionalProps) {
-		options.greyscale = additionalProps.greyscale || false;
-		options.background = additionalProps.background || 'transparent';
-		animationSupported(additionalProps.animation) ? options.animateType = additionalProps.animation.toString : options.animateType = 'vanilla';		
+	function _canvasTheme(t) {
+		var animations = ["swift", "vanilla", "focusing"];
+		// set animation for collage
+		function animationSupported(prop) {
+			/*=====================================================
+			* 1) swift will do quick, flashy transitions upon opening
+			* 2) vanilla is just the dault animation style, nothing fancy
+			* 3) focusing uses css3 transitions 
+			*=======================================================*/
+			if(animations.indexOf(prop) !== -1) {
+				return true;
+
+			} else {
+				return false;
+			}
+		}
+
+		if(animationSupported(t)) {
+			theme = t
+		}		
 	}
 
 	// get images suppled by the user
@@ -134,8 +133,8 @@ var imageCanvas,
 		return this;
 	}
 	// takes width and height parameters & optional additonal styling object
-	CPjs.prototype.attributes = function(props) {
-		_canvasOptions(props);
+	CPjs.prototype.theme = function(theme) {
+		_canvasTheme(theme);
 		return this;
 	};
 
@@ -146,7 +145,7 @@ var imageCanvas,
 				canvas : imageCanvas,
 				width : width,
 				height : height,
-				options : options,
+				theme : theme,
 				images : images
 			};
 		}
