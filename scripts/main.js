@@ -8,216 +8,218 @@
 // = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
 // = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 
-// is
-// this object contains tests for various properties;
-// if your test is general (undefined, array, NaN) please
-// consider extending this object
-
-var is = {
+var is = ( function () {
 	// tests for certain types of values (functions, objects)
-	toType: function (val) {
-		// found online, better than typeof at determining
-		// the class of an object
+	
+	return {
+		toType: function (val) {
+			// found online, better than typeof at determining
+			// the class of an object
 
-		return ({}).toString.call(val).
-			match(/\s([a-zA-Z]+)/)[1].toLowerCase()
-	},
-	closure: function (val) {
-		return this.toType(val) === "function";
-	},
-	array: function (val) {
-		return this.toType(val) === 'array';
-	},
-	object: function (val) {
-		return this.toType(val) === 'object';
-	},
-	undefn: function (val) {
-		return this.toType(val) === 'undefined';
-	},
-	string: function (val) {
-		return this.toType(val) === 'string';
-	},
-	number: function (val) {
-		return this.toType(val) === 'number';
+			return ({}).toString.call(val).
+				match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+		},
+		closure: function (val) {
+			return this.toType(val) === "function";
+		},
+		array: function (val) {
+			return this.toType(val) === 'array';
+		},
+		object: function (val) {
+			return this.toType(val) === 'object';
+		},
+		undefn: function (val) {
+			return this.toType(val) === 'undefined';
+		},
+		string: function (val) {
+			return this.toType(val) === 'string';
+		},
+		number: function (val) {
+			return this.toType(val) === 'number';
+		}
 	}
-};
+} )();
 
 // lambda
 // this object contains higher order functions for the
 // terse manipulation of arrays
 
-var lambda = {
-	indMap: function (func, iter) {
-		// (integer -> a -> b) -> [a] -> [b]
-		// apply a binary function to each element of 
-		// an array or object, with the left argument being
-		// the value iter[ith] and the right argument being the index ith
+var lambda = ( function (is) {
+	
+	return {
+		indMap: function (func, iter) {
+			// (integer -> a -> b) -> [a] -> [b]
+			// apply a binary function to each element of 
+			// an array or object, with the left argument being
+			// the value iter[ith] and the right argument being the index ith
 
-		var call = "indMap";
-		if (!is.closure(func)) {
-			throw new TypeError(call + ":" + "func must be a function");
-		}
-		if (!func.length === 2) {
-			throw new TypeError(call + ":" + "func must be a binary function");
-		}
-		if (!is.array(iter)) {
-			throw new TypeError(call + ":" + "iter must be an array ");
-		}
-
-		var result = [];
-
-		for (ith in iter) {
-			if (!iter.hasOwnProperty(ith)) {
-				continue;
+			var call = "indMap";
+			if (!is.closure(func)) {
+				throw new TypeError(call + ":" + "func must be a function");
 			}
-			result[ith] = func(iter[ith], parseInt(ith, 10));
-		}
-		return result;
-	},
-	reduce: function (func, iter) {
-		// (b -> b -> a) -> [b] -> a
-		// inject an infix binary function func
-		// into the sequence iter[0] func iter[2] func .... iter[n],
-		// returning a single value.
-		
-		var call = "reduce";
-		if (!is.closure(func)) {
-			throw new TypeError(call + ":" + "func must be a function");
-		}
-		if (!func.length === 2) {
-			throw new TypeError(call + ":" + "func must be a binary function");
-		}
-		if (!is.array(iter) && !is.object (iter)) {
-			throw new TypeError(call + ":" + "iter must be an array or object");
-		}
-
-		var first = true;
-
-		for (ith in iter) {
-			if (!iter.hasOwnProperty(ith)) {
-				continue;
+			if (!func.length === 2) {
+				throw new TypeError(call + ":" + "func must be a binary function");
 			}
-			var elem = iter[ith];
-			if (first) {
-				var res = elem;
-				first = false;
-			} else {
-				res = func(res, elem);
+			if (!is.array(iter)) {
+				throw new TypeError(call + ":" + "iter must be an array ");
 			}
-		}
-		return res;
-	},
-	negate: function (func) {
 
-		var call = "negate";
-		if (!is.closure(func)) {
-			throw new TypeError(call + ":" + "func must be a function");
-		}
-		if (!func.length === 1) {
-			throw new TypeError(call + ":" + "func must be a unary function");
-		}
+			var result = [];
 
-		return function (x) {
-			return !func(x)
-		}
-	},
-	concatMap: function (func, iter) {
-		// (a -> b) -> a -> [b]
-
-		var call = "concatMap";
-		if (!is.closure(func)) {
-			throw new TypeError(call + ":" + "func must be a function");
-		}
-		if (!func.length === 1) {
-			throw new TypeError(call + ":" + "func must be a unary function");
-		}
-		if (!is.array(iter) && !is.object (iter)) {
-			throw new TypeError(call + ":" + "iter must be an array or object");
-		}
-
-		var result = [];
-
-		for (ith in iter) {
-			if (!iter.hasOwnProperty(ith)) {
-				continue;
+			for (ith in iter) {
+				if (!iter.hasOwnProperty(ith)) {
+					continue;
+				}
+				result[ith] = func(iter[ith], parseInt(ith, 10));
 			}
-			var val = iter[ith];
-			result = result.concat(func(val, ith));
-		}
-		return result;
-	},
-	select: function (func, iter) {
-		// (a -> boolean) -> a -> [a]
-
-		var call = "select";
-		if (!is.closure(func)) {
-			throw new TypeError(call + ":" + "func must be a function");
-		}
-		if (!func.length === 1) {
-			throw new TypeError(call + ":" + "func must be a unary function");
-		}
-		if (!is.array(iter) && !is.object (iter)) {
-			throw new TypeError(call + ":" + "iter must be an array or object");
-		}
-
-		var result = [];
-
-		for (ith in iter) {
-			if (!iter.hasOwnProperty(ith)) {
-				continue;
+			return result;
+		},
+		reduce: function (func, iter) {
+			// (b -> b -> a) -> [b] -> a
+			// inject an infix binary function func
+			// into the sequence iter[0] func iter[2] func .... iter[n],
+			// returning a single value.
+			
+			var call = "reduce";
+			if (!is.closure(func)) {
+				throw new TypeError(call + ":" + "func must be a function");
 			}
-			var val = iter[ith];
-			if (func(val)) {
-				result = result.concat(val);
+			if (!func.length === 2) {
+				throw new TypeError(call + ":" + "func must be a binary function");
 			}
-		}
-		return result;		
-	},
-	until: function (pred, func, initial) {
-		// (a -> boolean) -> (a -> a) -> a -> a
-
-		var call = "until";
-		if (!is.closure(pred)) {
-			throw new TypeError(call + ":" + "pred must be a function");
-		}
-		if (!is.closure(func)) {
-			throw new TypeError(call + ":" + "func must be a function");
-		}
-		if (!pred.length === 1) {
-			throw new TypeError(call + ":" + "func must be a unary function");
-		}
-		if (!pred.length === 1) {
-			throw new TypeError(call + ":" + "pred must be a unary function");			
-		}
-
-		// cut short after 10,000 iterations, 
-		// in case pred was set up badly
-		for (var failSafe = 0; failSafe < 10000; failSafe++) {
-
-			if (pred(initial)) {
-				break;
-			} else {
-				initial = func(initial);				
+			if (!is.array(iter) && !is.object (iter)) {
+				throw new TypeError(call + ":" + "iter must be an array or object");
 			}
+
+			var first = true;
+
+			for (ith in iter) {
+				if (!iter.hasOwnProperty(ith)) {
+					continue;
+				}
+				var elem = iter[ith];
+				if (first) {
+					var res = elem;
+					first = false;
+				} else {
+					res = func(res, elem);
+				}
+			}
+			return res;
+		},
+		negate: function (func) {
+
+			var call = "negate";
+			if (!is.closure(func)) {
+				throw new TypeError(call + ":" + "func must be a function");
+			}
+			if (!func.length === 1) {
+				throw new TypeError(call + ":" + "func must be a unary function");
+			}
+
+			return function (x) {
+				return !func(x)
+			}
+		},
+		concatMap: function (func, iter) {
+			// (a -> b) -> a -> [b]
+
+			var call = "concatMap";
+			if (!is.closure(func)) {
+				throw new TypeError(call + ":" + "func must be a function");
+			}
+			if (!func.length === 1) {
+				throw new TypeError(call + ":" + "func must be a unary function");
+			}
+			if (!is.array(iter) && !is.object (iter)) {
+				throw new TypeError(call + ":" + "iter must be an array or object");
+			}
+
+			var result = [];
+
+			for (ith in iter) {
+				if (!iter.hasOwnProperty(ith)) {
+					continue;
+				}
+				var val = iter[ith];
+				result = result.concat(func(val, ith));
+			}
+			return result;
+		},
+		select: function (func, iter) {
+			// (a -> boolean) -> a -> [a]
+
+			var call = "select";
+			if (!is.closure(func)) {
+				throw new TypeError(call + ":" + "func must be a function");
+			}
+			if (!func.length === 1) {
+				throw new TypeError(call + ":" + "func must be a unary function");
+			}
+			if (!is.array(iter) && !is.object (iter)) {
+				throw new TypeError(call + ":" + "iter must be an array or object");
+			}
+
+			var result = [];
+
+			for (ith in iter) {
+				if (!iter.hasOwnProperty(ith)) {
+					continue;
+				}
+				var val = iter[ith];
+				if (func(val)) {
+					result = result.concat(val);
+				}
+			}
+			return result;		
+		},
+		until: function (pred, func, initial) {
+			// (a -> boolean) -> (a -> a) -> a -> a
+
+			var call = "until";
+			if (!is.closure(pred)) {
+				throw new TypeError(call + ":" + "pred must be a function");
+			}
+			if (!is.closure(func)) {
+				throw new TypeError(call + ":" + "func must be a function");
+			}
+			if (!pred.length === 1) {
+				throw new TypeError(call + ":" + "func must be a unary function");
+			}
+			if (!pred.length === 1) {
+				throw new TypeError(call + ":" + "pred must be a unary function");			
+			}
+
+			// cut short after 10,000 iterations, 
+			// in case pred was set up badly
+			for (var failSafe = 0; failSafe < 10000; failSafe++) {
+
+				if (pred(initial)) {
+					break;
+				} else {
+					initial = func(initial);				
+				}
+			}
+			return initial;
+
+		},
+		pickOne: function (iter) {
+			// [a] -> a
+			// return a single value from iter
+
+
+		},
+		sequence: function (from, to) {
+
+			var result = [];
+			for (var ith = from; ith <= to; ith++) {
+				result = result.concat(ith);
+			}
+			return result;
 		}
-		return initial;
-
-	},
-	pickOne: function (iter) {
-		// [a] -> a
-		// return a single value from iter
-
-
-	},
-	sequence: function (from, to) {
-
-		var result = [];
-		for (var ith = from; ith <= to; ith++) {
-			result = result.concat(ith);
-		}
-		return result;
 	}
-}
+} )(is);
+
 
 // = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
 // = # = # = # = Prototypes = # = # = # = # = # = # = # = # = # = # 
@@ -237,10 +239,6 @@ if (!is.closure(Object.beget)) {
 // Matrix Prototype
 // only implemented functions for 2 x 2 matrices, since all 
 // functions will be applied to xy points.
-// Ryan Grannell
-
-//# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
-//# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 
 var Matrix = {
 
@@ -295,7 +293,7 @@ var Matrix = {
 		// (canvas needs redraw on every resize).
 
 		console.assert(
-			m.nrows === 2 && m.ncols === 2,
+			matrix.nrows === 2 && matrix.ncols === 2,
 			"Matrix.multiply(m): the matrix m must be 2 x 2");
 
 		return [
@@ -353,7 +351,7 @@ var Rectangle = {
 // = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
 // = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
 
-var splitGrammar = ( function () {
+var splitGrammar = ( function (lambda) {
 	/* context-free grammar for deciding
 	how to divide the rectangles. Allows fine grained control
 	over rectangle subdivision.
@@ -470,9 +468,11 @@ var splitGrammar = ( function () {
 		}
 	];
 
-} )();
+} )(lambda);
 
-var tilePlane = function (n, dimensions) {
+var tilePlane = ( function (is, lambda) {
+
+	return function (n, dimensions) {
 	/* integer -> {integer} -> [Rectangle]
 	 
 	   takes an integer n and an object
@@ -589,3 +589,7 @@ var tilePlane = function (n, dimensions) {
 		tiles.terminal
 	);
 }
+
+} )(is, lambda)
+
+

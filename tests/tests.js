@@ -1,6 +1,7 @@
 
 var allEqual = function (xs, ys) {
 
+	var call = "allEqual";
 	if (!is.array(xs)) {
 		throw new TypeError(call + ":" + "xs must be an array");
 	}
@@ -119,5 +120,20 @@ var testSuite = [
 		);
 
 		return allEqual(oneToTen, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+	}),
+	test("multiplying a matrix by identity yields identity", function () {
+
+		var A = Object.beget(Matrix)
+		A.xs = [1, 2];
+		A.ys = [3, 4];
+
+		var I = Object.beget(Matrix)
+		I.xs = [1, 0];
+		I.ys = [0, 1];
+
+		var res = A.multiply(I);
+
+		return allEqual(A.xs, res.xs) &&
+		allEqual(A.ys, res.ys);
 	})
 ];
