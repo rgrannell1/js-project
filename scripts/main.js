@@ -302,8 +302,6 @@ var Matrix = {
 				( (this.ys[0] * matrix.xs[0]) + (this.ys[1] * matrix.ys[0]) ),
 				( (this.ys[0] * matrix.xs[1]) + (this.ys[1] * matrix.ys[1]) )]
 
-		console.log(product)
-
 		return product;
 	},
 	asRectangle: function () {
@@ -331,8 +329,12 @@ var Rectangle = {
 	yMinus: 0,
 	yPlus: 0,
 
-	width: Math.abs(this.xPlus - this.xMinus),
-	height: Math.abs(this.xPlus - this.xMinus),
+	width: function () {
+		return Math.abs(this.xPlus - this.xMinus)
+	},
+	height: function () {
+		return Math.abs(this.xPlus - this.xMinus)
+	},
 
 	asMatrix: function () {
 		// converts rectangle to a matrix,
@@ -375,14 +377,16 @@ var splitGrammar = ( function (lambda) {
 		(1 x n) -> [ (1 x (n-m)), (1 x m) ]
 
 	*/
-
+	var xor = function (a, b) {
+		return (a || b) && !(a && b)
+	}
 	var isDivisible = function (tile) {
 		/* Rectangle -> boolean
 		   is the Rectangle divisible into Rectangles with integal
 		  sides, and is it non-terminal? */
 
-		return Math.min(tile.width, tile.height) > 1 && 
-			tile.width + tile.height > 3
+		return tile.width() > 1 && tile.height() > 1 && 
+			(tile.width() + tile.height()) > 3
 	}
 
 	return [
@@ -390,9 +394,7 @@ var splitGrammar = ( function (lambda) {
 			pattern: function (tile) {
 				// matches 1 x n tiles
 
-				return isDivisible(tile) && xor(
-					tile.width === 1,
-					tile.height === 1);
+				return isDivisible(tile) && xor(tile.width() === 1, tile.height() === 1);
 			},
 			production: function (tile) {
 				// split an 1 x n tile into [ (1 x n-m), (1 x m) ],
@@ -403,17 +405,17 @@ var splitGrammar = ( function (lambda) {
 				var boundary = lambda.pickOne(
 					lambda.sequence(
 						from = 1,
-						to = Math.max(tile.width, tile.height) - 1
+						to = Math.max(tile.width(), tile.height()) - 1
 				));
 
 				var production = 
 					[Object.beget(tile), Object.beget(tile)];
 
-				if (tile.width === 1) {
+				if (tile.width() === 1) {
 					// dividing a vertical rectangle into two
 
 					production[0].yMinus = production[0].yMinus +
-						(production[0].height - boundary);
+						(production[0].height() - boundary);
 					
 					production[1].yPlus = production[1].yPlus - 
 						boundary;
@@ -422,7 +424,7 @@ var splitGrammar = ( function (lambda) {
 					// dividing a horizontal rectangle into two
 
 					production[0].xMinus = production[0].xMinus +
-						(production[0].width - boundary);
+						(production[0].width() - boundary);
 					
 					production[1].xPlus = production[1].xPlus - 
 						boundary;
@@ -432,37 +434,46 @@ var splitGrammar = ( function (lambda) {
 			}
 		},
 		{
-			pattern: function (rect) {
-				return isDivisible(rect);
+			pattern: function (tile) {
+				return isDivisible(tile);
 			},
-			production: function (rect) {
+			production: function (tile) {
 				// splits an a x b tile into four tiles,
 				// 
 				// where a, b > 2
 
 				var boundary = {
-					xBoundary: +1111, // fix me
-					yBoundary: +1111
-				}
+					// height
+					xMiddle: lambda.pickOne(
+						lambda.sequence(
+							from = tile.yMinus + 1,
+							to = tile.yPlus - 1
+					)),
+					yMiddle: lambda.pickOne(
+						lambda.sequence(
+							from = tile.xMinus + 1,
+							to = tile.xPlus - 1
+					))
+				};
 
 				var production = [Object.beget(tile), Object.beget(tile),
 					Object.beget(tile), Object.beget(tile)];
 
-				/* // top-left
-				production[0]
-				production[0]
+				// top-left
+				production[0].xPlus = boundary.xMiddle
+				production[0].yMinus = boundary.yMiddle
 
 				// top-right
-				production[1]
-				production[1]
+				production[1].xMinus = boundary.xMiddle
+				production[1].yMinus = boundary.yMiddle
 
 				// bottom-left
-				production[2]
-				production[2]
+				production[2].xPlus = boundary.xMiddle
+				production[2].yPlus = boundary.yMiddle
 
 				// bottom-right
-				production[3]
-				production[3] */
+				production[3].xMinus = boundary.xMiddle
+				production[3].yPlus = boundary.yMiddle
 
 				return production;
 			}
@@ -481,9 +492,6 @@ var tilePlane = ( function (is, lambda) {
 	   returns an array of Rectangles of length n.
 	   */
 
-	var xor = function (a, b) {
-		return (a || b) && !(a && b)
-	}
 	var nonTerminals = function (xs, rules) {
 		/* [a] -> [{pattern: function production: function}] -> [a]
 			takes a collection xs and an array rules of pattern : production object pairs
@@ -546,7 +554,9 @@ var tilePlane = ( function (is, lambda) {
 		/* tile -> [{pattern: function, production: function}] -> [tile]
 		   partitions a tile using one of the transformations within rules */
 
-		for (rule in rules) {
+		for (ith in rules) {
+			var rule = rules[ith];
+
 			if (!rule.hasOwnProperty(rules)) {
 				continue
 			}
@@ -562,8 +572,7 @@ var tilePlane = ( function (is, lambda) {
 		},
 		func = function (tileStacks) {
 			/* [{ nonTerminal: [Rectangle], terminal: [Rectangle] }] ->
-			   [{ nonTerminal: [Rectangle], terminal: [Rectangle] }]
-			   */
+			   [{ nonTerminal: [Rectangle], terminal: [Rectangle] }] */
 
 			var tile = tileStacks.nonTerminal.pop();
 			var productions = produce(tile, splitGrammar);
@@ -571,14 +580,14 @@ var tilePlane = ( function (is, lambda) {
 			return {
 				nonTerminal: 
 					tileStacks.nonTerminal.concat(
-						nonTerminals(productions)),
+						nonTerminals(productions, splitGrammar)),
 				terminal:
 					tileStacks.terminal.concat(
-						terminals(productions))
+						terminals(productions, splitGrammar))
 			};
 		}, 
 		initial = {
-			nonTerminal: nonTerminals([start], splitGrammar),
+			nonTerminal: [start],
 			terminal: []
 		}
 	);
@@ -592,5 +601,8 @@ var tilePlane = ( function (is, lambda) {
 }
 
 } )(is, lambda)
+
+console.log( tilePlane(1, 1000, 1000) );
+
 
 
