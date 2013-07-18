@@ -133,5 +133,23 @@ var testSuite = [
 
 		var res = A.multiply(I);
 		return allEqual(A.xs, res.xs) && allEqual(A.ys, res.ys);
+	}),
+	test("double transposing a matrix returns the matrix", function () {
+
+		var A = Object.beget(Matrix)
+		A.xs = [1, 2];
+		A.ys = [3, 4];
+
+		var transpose = {
+			once: A.transpose(),
+			twice: A.transpose().transpose()
+		};
+
+
+		return allEqual(A.xs, transpose.twice.xs) && 
+			allEqual(A.ys, transpose.twice.ys) &&
+			!allEqual(A.xs, transpose.once.xs) &&
+			!allEqual(A.ys, transpose.once.ys);
+
 	})
 ];

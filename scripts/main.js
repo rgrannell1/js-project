@@ -244,12 +244,16 @@ if (!is.closure(Object.beget)) {
 // only implemented functions for 2 x 2 matrices, since all 
 // functions will be applied to xy points.
 
-var Matrix = ( function (is) 
+var Matrix = ( function (is) {
 	return {
 		xs: [0, 0],
 		ys: [0, 0],
-		nrows: 2, ncols: 2,
-
+		nrows: function () {
+			this.xs.length;
+		},
+		ncols: function () {
+			this.ys.length;
+		},
 		map: function (func) {
 			// (a - > b) -> Matrix a -> Matrix b
 			// element-wise mapping over matrix,
@@ -261,6 +265,7 @@ var Matrix = ( function (is)
 			}
 
 			var mapped = Object.beget(Matrix);
+
 			mapped.xs = [func( this.xs[0] ), func( this.xs[1] )];
 			mapped.ys = [func( this.ys[0] ), func( this.ys[1] )]
 
@@ -325,7 +330,7 @@ var Matrix = ( function (is)
 //# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 //# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 
-var Rectangle = ( function () 
+var Rectangle = ( function () {
 	return {
 		// left, right. bottom, top.
 		// easier to work with mathematical notation
@@ -351,7 +356,7 @@ var Rectangle = ( function ()
 			return converted;
 		}
 	}
-}
+} )()
 
 //# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 //# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
@@ -420,8 +425,8 @@ var Grammar = ( function (lambda) {
 					continue
 				}
 				var rule = this.rules[ith];
-				if (rule.pattern(tile)) {
-					return rule.production(tile);
+				if (rule.pattern(x)) {
+					return rule.production(x);
 				}
 			}
 			return x
@@ -639,8 +644,8 @@ var tilePlane = ( function (is, lambda) {
 		var tiles = splitGrammar.generate(pictureArea);
 
 		var scaleMatrix = Object.beget(Matrix);
-		scaleMatrix.xs = [(dimensions.width / units.x), 0];
-		scaleMatrix.ys = [0, (dimensions.height / units.y)]
+		scaleMatrix.xs = [dimensions.width / units.x, 0];
+		scaleMatrix.ys = [0, dimensions.height / units.y]
 
 		return lambda.indMap(
 			function (tile, ith) {
@@ -649,7 +654,8 @@ var tilePlane = ( function (is, lambda) {
 
 				return tile.
 					asMatrix().
-					multiply(scaleMatrix);
+					multiply(scaleMatrix).
+					asRectangle();
 			},
 			tiles.terminal
 		);
@@ -657,7 +663,7 @@ var tilePlane = ( function (is, lambda) {
 
 } )(is, lambda)
 
- console.log( tilePlane(1, 1000, 1000) );
+ console.log( tilePlane(1, {width: 1000, height: 1000}) );
 
 
 
