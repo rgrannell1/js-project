@@ -132,8 +132,6 @@ var testSuite = [
 		I.ys = [0, 1];
 
 		var res = A.multiply(I);
-
-		return allEqual(A.xs, res.xs) &&
-		allEqual(A.ys, res.ys);
+		return allEqual(A.xs, res.xs) && allEqual(A.ys, res.ys);
 	})
 ];

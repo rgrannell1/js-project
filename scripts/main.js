@@ -256,19 +256,21 @@ var Matrix = {
 			is.closure(func),
 			"error in Matrix.map: func must be a function");
 
-		return [
-			[func( this.xs[0] ), func( this.xs[1] )],
-			[func( this.ys[0] ), func( this.ys[1] )]
-		];
+		var mapped = Object.beget(Matrix);
+		mapped.xs = [func( this.xs[0] ), func( this.xs[1] )];
+		mapped.ys = [func( this.ys[0] ), func( this.ys[1] )]
+
+		return mapped;
 	},
 	transpose: function () {
 		// Matrix -> Matrix
 		// get the transpose of a matrix 
 
-		return [
-			[this.xs[0], this.ys[0]],
-			[this.xs[1], this.ys[1]]
-		];
+		var transposed = Object.beget(Matrix);
+		transposed.xs = [this.xs[0], this.ys[0]];
+		transposed.ys = [this.xs[1], this.ys[1]];
+
+		return transposed;
 	},
 	by: function (number) {
 		// (integer) -> Matrix integer
@@ -292,23 +294,22 @@ var Matrix = {
 		// implemented directly for efficiency 
 		// (canvas needs redraw on every resize).
 
-		console.assert(
-			matrix.nrows === 2 && matrix.ncols === 2,
-			"Matrix.multiply(m): the matrix m must be 2 x 2");
+		var product = Object.beget(Matrix);
+		product.xs = [
+			( (this.xs[0] * matrix.xs[0]) + (this.xs[1] * matrix.ys[0]) ),
+			( (this.xs[0] * matrix.xs[1]) + (this.xs[1] * matrix.ys[1]) )]
+		product.ys = [
+				( (this.ys[0] * matrix.xs[0]) + (this.ys[1] * matrix.ys[0]) ),
+				( (this.ys[0] * matrix.xs[1]) + (this.ys[1] * matrix.ys[1]) )]
 
-		return [
-			[
-				( (this.xs[0] * matrix.xs[0]) + (this.xs[0] * matrix.xs[1]) ),
-				( (this.xs[0] * matrix.ys[0]) + (this.xs[0] * matrix.ys[1]) )],
-			[
-				( (this.xs[1] * matrix.xs[0]) + (this.xs[1] * matrix.xs[1]) ),
-				( (this.xs[1] * matrix.ys[0]) + (this.xs[1] * matrix.ys[1]) )]
-		];
+		console.log(product)
+
+		return product;
 	},
 	asRectangle: function () {
 		// for two-way conversion from Rectange <-> Matrix
 
-		var converted = Object.beget(Rectangle)
+		var converted = Object.beget(Rectangle);
 		converted.xMinus = this.xs[0];
 		converted.xPlus = this.xs[1];
 		converted.yMinus = this.ys[0];
