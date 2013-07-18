@@ -26,12 +26,13 @@ var imageCanvas,
 
 	images = [],
 
-	theme = "none",
+	theme,
 
 	_CPjs = window.CPjs,
 
 	CPjs = function() {},
 
+	// object for storing image properties
 	Image = function(src, w, h) {
 		this.source = src;
 		this.width = w,
@@ -92,9 +93,7 @@ var imageCanvas,
 			}
 		}
 
-		if(animationSupported(t)) {
-			theme = t
-		}		
+		animationSupported(t) ? theme = t : theme = "default";		
 	}
 
 	// get images suppled by the user
@@ -110,6 +109,17 @@ var imageCanvas,
 			images.push(new Image(src, w, h));
 		}
 	};
+
+
+	/**************************
+	*
+	* Bulk of the front end work
+	* function will layout the images on the collage all nice and pretty
+	*
+	***************************/
+	function render() {
+
+	}
 
 	// takes in a div id
 	CPjs.prototype.id = function(elementId) {
@@ -139,18 +149,10 @@ var imageCanvas,
 	};
 
 	CPjs.prototype.start = function() {
-		// build object to be used by algorithm
-		function buildCollage() {
-			return {
-				canvas : imageCanvas,
-				width : width,
-				height : height,
-				theme : theme,
-				images : images
-			};
-		}
+		// call algorithm() back end
 
-		console.log(buildCollage());
+		// render the collage
+		render();
 	}
 	
 	window.CPjs = new CPjs();
