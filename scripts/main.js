@@ -1,7 +1,7 @@
+// hasOwnProperty
 if(!Array.prototype.indexOf) {
 	// implement indexOf for browser support
-	console.log('making indexOf');
-
+	
 	Array.prototype.indexOf = function(val) {
 		for(var i = 0; i < this.length; i++) {
 			if(val === this[i]) {
@@ -18,19 +18,25 @@ if(!Array.prototype.indexOf) {
 "use strict"
 
 // private variables
-var canvas,
+var imageCanvas,
 
 	width,
 
 	height,
 
-	imagePaths = [],
+	images = [],
 
 	options = {},
 
 	_CPjs = window.CPjs,
 
 	CPjs = function() {},
+
+	Image = function(src, w, h) {
+		this.source = src;
+		this.width = w,
+		this.height = h;
+	},
 
 	is = {
 		toType: function (val) {
@@ -47,46 +53,34 @@ var canvas,
 			toType(val) === 'object'
 		},
 		numeric: function (val) {
-
 			return !isNaN(parseFloat(val)) && isFinite(val);
 		}
 	};
 
-	// create new Ajax Object (provide cross browser support)
-	function _getXmlHttp() {
-		var ajaxObject;
-
-		try {
-			ajaxObject = new XMLHttpRequest();
-		} catch(e) {
-			try {
-				ajaxObject = new ActiveXObject("Microsoft.XMLHTTP");
-			} catch (E) {
-				try {
-					ajaxObject = new ActiveXObject("Msxml2.XMLHTTP");
-				} catch(ex) {
-					throw new Error("browser does not support XMLHttpRequest");
-				}
-			}
-		}
-
-		return ajaxObject;
-	}
-
 	// gets canvas element return and sets it to the canvas attribute
-	function setCanvasPropery(ele) {
-		if(document.getElementById(ele) !== null) {
-			var element = document.getElementById(ele);
-			
-			if(element.tagName !== 'DIV') {
-				throw new Error("element " + ele + " is not a div");
-			}
+	function _imageCanvas(e) {
+		var element = document.getElementById(e);
+
+		if(element !== null && element.tagName === 'DIV') {
+			imageCanvas = element;
+		}
+		else {
+			var ele = document.createElement('div');
+			ele.setAttribute('id', e.toString());
+
+			document.body.appendChild(ele);
+			imageCanvas = document.getElementById(e.toString());
 		}
 	}
 
 	// set animation for collage
 	function animationSupported(prop) {
-		var animations = ["swift", "top", "bottom", "left", "right"];
+		/*=====================================================
+		* 1) swift will do quick, flashy transitions upon opening
+		* 2) vanilla is just the dault animation style, nothing fancy
+		* 3) focusing uses css3 transitions 
+		*=======================================================*/
+		var animations = ["swift", "vanilla", "focusing"];
 
 		if(animations.indexOf(prop) !== -1) {
 			return true;
@@ -96,46 +90,32 @@ var canvas,
 		}
 	}
 
-	// sets style options supplied by the user
-	function setCanvasOptions(additionalProps) {
-
+	// callback 
+	// sets style options supplied by the user ( not sure exactly what options woudl be nice?)
+	function _canvasOptions(additionalProps) {
 		options.greyscale = additionalProps.greyscale || false;
 		options.background = additionalProps.background || 'transparent';
-
-		animationSupported(additionalProps.animation) ? options.animateType = additionalProps.animation : options.animateType = null;
-		
+		animationSupported(additionalProps.animation) ? options.animateType = additionalProps.animation.toString : options.animateType = 'vanilla';		
 	}
 
-	// parse and store the paths to collage image files
-	function storeImagePaths(data) {
-		if(data.paths) {
-			for(var d in data.paths) {
-				imagePaths.push(data.paths[d].url);
-			}
+	// get images suppled by the user
+	function _images() {
+		// get elements within element supplied by the client
+		var imgs = imageCanvas.getElementsByTagName('img');
+
+		for(var i = 0; i< imgs.length; i++) {
+			var src = imgs[i].getAttribute('src'),
+				w = imgs[i].width,
+				h = imgs[i].height;
+
+			images.push(new Image(src, w, h));
 		}
-	}
+	};
 
 	// takes in a div id
 	CPjs.prototype.id = function(elementId) {
-		setCanvasPropery(elementId);
-		return this;
-	};
-
-	// parse json property with path
-	CPjs.prototype.images =	function(json) {
-		// create new XMLHttp object to handle request
-		// Note: must be relative to html filepath [currently breaks in ie10 and Chrome during local work.... a problem]
-		var request = _getXmlHttp();
-		request.open('GET', json.toString(), false);
-		request.send();
-		
-		if(request) {
-			var response = JSON.parse(request.responseText)
-
-			if(response) {
-				storeImagePaths(response);
-			}
-		}
+		_imageCanvas(elementId);
+		_images();
 
 		return this;
 	};
@@ -155,26 +135,25 @@ var canvas,
 	}
 	// takes width and height parameters & optional additonal styling object
 	CPjs.prototype.attributes = function(props) {
-		setCanvasOptions(props);
+		_canvasOptions(props);
 		return this;
 	};
 
 	CPjs.prototype.start = function() {
 		// build object to be used by algorithm
-		function buildObject() {
+		function buildCollage() {
 			return {
+				canvas : imageCanvas,
 				width : width,
 				height : height,
 				options : options,
-				images : imagePaths
+				images : images
 			};
 		}
 
-		console.log(buildObject());
-		//call algorithm
+		console.log(buildCollage());
 	}
 	
 	window.CPjs = new CPjs();
 
 })(window);
-

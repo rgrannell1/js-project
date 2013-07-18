@@ -1,0 +1,57 @@
+<html>
+<head>
+<title>Unit tests</title>
+</head>
+<body>
+	<button onclick='test1();'>assert indexOf is undefined</button>
+		<button onclick='test2();'>assert indexOf is defined</button>
+		<div id="indexOfUndefined" style="background-color: grey; width: 200px; padding: 100px;"></div>	
+		<br />	
+		<div id="indexOfDefined" style="background-color: grey; width: 200px; padding: 100px;"></div>
+		<script type="text/javascript">
+			var arrayTest = ['1', '2', '3'];
+				
+			// assert indexOf is undefined
+			function test1() {
+				Array.prototype.indexOf = undefined;
+				var index = document.getElementById('indexOfUndefined');
+
+				if(arrayTest.indexOf == undefined) {
+					index.style.backgroundColor = 'green';
+				}
+				else {
+					index.style.backgroundColor = 'red';
+				}
+			}
+
+			// assert indexOf is defined with own implementation
+			function test2() {
+				if(!Array.prototype.indexOf) {
+					// implement indexOf for browser support
+					console.log('making indexOf');
+
+					Array.prototype.indexOf = function(val) {
+						for(var i = 0; i < this.length; i++) {
+							if(val === this[i]) {
+								return i;
+							} else {
+								continue;
+							}
+						}
+						return -1;
+					}
+				}
+
+				var index = document.getElementById('indexOfDefined');
+
+				if(arrayTest.indexOf != undefined) {
+					index.style.backgroundColor = 'green';
+				}
+				else {
+					index.style.backgroundColor = 'red';
+				}
+			}
+		</script>
+		<!-- check hasOwnProperty -->
+</body>
+</html>
