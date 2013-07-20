@@ -93,14 +93,14 @@ var imageCanvas,
 		var arr = [];
 
 		(function() {
-			var swift = new Animation('swift', { color : "#ccc" }),
+			var swift = new Animation('swift', { color: "" }),
 				vanilla = new Animation('vanilla', { color : "transparent"});
 			
 			arr.push(swift);
 			arr.push(vanilla);	
 		})();
 
-		var t = imageCanvas.getAttribute("CPjsTheme");
+		var t = imageCanvas.getAttribute("CPjs-theme");
 		
 		if(t !== null) {
 			for(var i = 0; i < arr.length; i++) {
@@ -134,7 +134,18 @@ var imageCanvas,
 	*
 	***************************/
 	function render() {
+		var isTransparent = imageCanvas.getAttribute("CPjs-canvas-transparent");
+		var userDefinedStyle = "";
 
+		if(isTransparent !== null && isTransparent === "true") {
+			console.log(isTransparent);
+
+			if(imageCanvas.getAttribute('style') !== null) {
+				userDefinedStyle = imageCanvas.getAttribute('style');
+			}
+
+			imageCanvas.setAttribute('style', "" + userDefinedStyle + "background-color : transparent;");
+		}
 	}
 
 	// takes in a div id
@@ -162,6 +173,7 @@ var imageCanvas,
 	CPjs.start = function() {
 
 		_canvasTheme();
+
 		// call algorithm() back end
 		var obj = {
 			theme : theme,
