@@ -27,7 +27,7 @@ var imageCanvas,
 
 	images = [],
 
-	theme = "default",
+	theme = null,
 
 	_CPjs = window.CPjs,
 
@@ -102,11 +102,14 @@ var imageCanvas,
 
 		var t = imageCanvas.getAttribute("CPjsTheme");
 		
-		if(t !== null && arr.indexOf(t) !== -1) {
-			// TODO:
-		} else {
-			theme = "default";
-		}	
+		if(t !== null) {
+			for(var i = 0; i < arr.length; i++) {
+				if(arr[i].name == t.toString()) {
+					theme = arr[i];
+					break;
+				}
+			}
+		}
 	}
 
 	// get images suppled by the user
