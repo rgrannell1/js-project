@@ -28,21 +28,38 @@ var test = function (description, func) {
 };
 
 var testSuite = [
-	test("test that indMap returns correct indices", function () {
+	test("test that indMap indices are correct", function () {
 
-		var indices = lambda.indMap(function (val, ind) {
-			return ind
-		}, ["a", "b", "c"]);
+		return forall(
+			"indices are correct",
+			[make.seqsAlong],
+			function (sequence) {
 
-		return allEqual(indices, [0, 1, 2]);
+				return allEqual(
+					lambda.indMap(
+						function (val, ith) { return ith },
+						sequence),
+						sequence);
+			}
+		);
+
 	}),
-	test("test that indMap returns correct values", function () {
+	test("test that indMap values are correct", function () {
 
-		var values = lambda.indMap(function (val, ind) {
-			return val * val
-		}, [0, 1, 2, 3, 4])
+		return forall(
+			"values are same as indices",
+			[make.seqsAlong],
+			function (sequence) {
 
-		return allEqual(values, [0, 1, 4, 9, 16]);
+				return allEqual(
+					lambda.indMap(
+						function (val, ith) { return val },
+						sequence),
+						sequence);
+
+			}
+		)
+
 	}),
 	test("test that negate negates predicates", function () {
 
@@ -58,13 +75,14 @@ var testSuite = [
 		return predicate.truth(1) === true &&
 			predicate.falsehood(1) === false;
 	}),
-	test("test that reduce sum is equal to normal sum", function () {
+	test("test that fold sum is equal to normal sum", function () {
 
 		var reduceSum = function (iter) {
-			return lambda.reduce(
+			return lambda.fold(
 				function (a, b) {
 					return a + b
 				},
+				0,
 				iter
 			);
 		}
@@ -123,28 +141,20 @@ var testSuite = [
 	}),
 	test("multiplying a matrix by identity yields identity", function () {
 
-		var A = Object.beget(Matrix)
-		A.xs = [1, 2];
-		A.ys = [3, 4];
-
-		var I = Object.beget(Matrix)
-		I.xs = [1, 0];
-		I.ys = [0, 1];
+		var A = Matrix([1, 2], [3, 4]);
+		var I = Matrix([1, 0], [0, 1]);
 
 		var res = A.multiply(I);
 		return allEqual(A.xs, res.xs) && allEqual(A.ys, res.ys);
 	}),
 	test("double transposing a matrix returns the matrix", function () {
 
-		var A = Object.beget(Matrix)
-		A.xs = [1, 2];
-		A.ys = [3, 4];
+		var A = Matrix([1, 2], [3, 4]);
 
 		var transpose = {
 			once: A.transpose(),
 			twice: A.transpose().transpose()
 		};
-
 
 		return allEqual(A.xs, transpose.twice.xs) && 
 			allEqual(A.ys, transpose.twice.ys) &&

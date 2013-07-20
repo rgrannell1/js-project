@@ -1,13 +1,26 @@
 
+( function () {
+	"use strict";
+} )()
+
 var make = ( function (lambda, is) {
-	
-	return {
-		positiveIntegers: function () {
-			return lambda.pickOne(
-				lambda.sequence(1, 100)
-			);
-		}
+
+	var that = {}
+	that.positiveIntegers = function () {
+		return lambda.pickOne(
+			lambda.sequence(1, 100)
+		);
 	}
+	that.sequences = function () {
+		var from = that.positiveIntegers();
+		var to = from + that.positiveIntegers()
+		return lambda.sequence(from, to)
+	}
+	that.seqsAlong = function () {
+		var to = that.positiveIntegers();
+		return lambda.sequence(0, to);
+	}
+	return that;
 
 } )(lambda, is)
 
@@ -17,7 +30,28 @@ var forall = ( function (lambda, is) {
 			quickcheck-like testing function
 		*/
 
-		var timeLeft = lambda.timer(4);
+		var call = 'forall';
+		if (!is.string(description)) {
+			throw new TypeError(call + ": description must be a string");
+		}
+		if (!is.array(cases)) {
+			throw new TypeError(call + ": cases must be an array");
+		}
+		if (!is.closure(assert)) {
+			throw new TypeError(call + ": assert must be a function");
+		}
+
+		for (ith in cases) {
+			if (!cases.hasOwnProperty(ith)) {
+				continue
+			}
+			if ( !is.closure(cases[ith]) ) {
+				throw new TypeError(call + ": each member of the array cases" +
+					"must be a function");
+			}
+		}
+
+		var timeLeft = lambda.timer(2);
 		var testResults = [];
 
 		while (timeLeft()) {
@@ -45,9 +79,9 @@ var forall = ( function (lambda, is) {
 					assert.toString() + "\n\nwith random inputs. A nullary function containing the " +
 					"failed case has been returned";
 
-				console.log(msg);	
+				throw new TypeError(msg);	
 				return function () {
-					return testCase
+					return testCase;
 				}		
 			}
 		}
@@ -57,9 +91,9 @@ var forall = ( function (lambda, is) {
 			function (accum, test) {
 
 				if (test.passed) {
-					return accum
+					return accum;
 				} else {
-					return accum.concat([test.testCase])
+					return accum.concat([test.testCase]);
 				}
 			},
 			[],
@@ -70,27 +104,17 @@ var forall = ( function (lambda, is) {
 			"of " + testResults.length + " cases " + 
 				failed.length + " failed for the function\n\n" +
 				assert.toString() +  
-				"\n\na nullary function containing the failed cases has been returned"
+				"\n\n A nullary function containing the failed cases has been returned"
 
-			console.log(msg);
+			throw new Error(msg);
 			return function () {
-				return failed
+				return failed;
 			}
 		} else {
 			console.log("'" + description + "'\n" +  
 				"all " + testResults.length + " cases passed.\n")
+			return true;
 		}
 	}
 
 } )(lambda, is);
-
-forall(
-	"integer addition commutes",
-	[
-		make.positiveIntegers,
-		make.positiveIntegers,
-	],
-	function (a, b) {
-		return a + b === b + a
-	}
-)
