@@ -35,11 +35,14 @@ var is = ( function () {
 			return this.toType(val) === 'string';
 		},
 		number: function (val) {
-			return this.toType(val) === 'number';
+			return !isNaN(parseFloat(val, 10)) && isFinite(val) &&
+				this.toType(val) === 'number';
+		},
+		boolean: function (val) {
+			return this.toType(val) === 'boolean';
 		}
 	}
 } )();
-
 
 var lambda = ( function (is) {
 	// this object contains higher order functions for the
@@ -73,13 +76,13 @@ var lambda = ( function (is) {
 			}
 			return result;
 		},
-		reduce: function (func, iter) {
+		fold: function (func, first, iter) {
 			// (b -> b -> a) -> [b] -> a
 			// inject an infix binary function func
-			// into the sequence iter[0] func iter[2] func .... iter[n],
+			// into the sequence first funct iter[0] func iter[2] func .... iter[n],
 			// returning a single value.
 			
-			var call = "reduce";
+			var call = "fold";
 			if (!is.closure(func)) {
 				throw new TypeError(call + ":" + "func must be a function");
 			}
@@ -89,22 +92,10 @@ var lambda = ( function (is) {
 			if (!is.array(iter) && !is.object (iter)) {
 				throw new TypeError(call + ":" + "iter must be an array or object");
 			}
-
-			var first = true;
-
-			for (ith in iter) {
-				if (!iter.hasOwnProperty(ith)) {
-					continue;
-				}
-				var elem = iter[ith];
-				if (first) {
-					var res = elem;
-					first = false;
-				} else {
-					res = func(res, elem);
-				}
+			for (var ith = 0; ith < iter.length; ith++) {
+				first = func(first, iter[ith]);
 			}
-			return res;
+			return first;
 		},
 		negate: function (func) {
 
