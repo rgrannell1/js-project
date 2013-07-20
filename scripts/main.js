@@ -1,7 +1,10 @@
+(function() {
+"use strict"
+})();
+
 // hasOwnProperty
 if(!Array.prototype.indexOf) {
 	// implement indexOf for browser support
-	
 	Array.prototype.indexOf = function(val) {
 		for(var i = 0; i < this.length; i++) {
 			if(val === this[i]) {
@@ -15,8 +18,6 @@ if(!Array.prototype.indexOf) {
 }
 
 (function(window) {
-"use strict"
-
 // private variables
 var imageCanvas,
 
@@ -26,37 +27,50 @@ var imageCanvas,
 
 	images = [],
 
-	theme,
+	theme = "default",
 
 	_CPjs = window.CPjs,
 
-	CPjs = function() {},
+	CPjs = {},
 
-	// object for storing image properties
+	// for better storage of api properties
 	Image = function(src, w, h) {
 		this.source = src;
 		this.width = w,
 		this.height = h;
 	},
 
-	is = {
-		toType: function (val) {
-			return ({}).toString.call(val).
-			match(/\s([a-zA-Z]+)/)[1].toLowerCase()
-		},
-		function: function (val) {
-			return toType(val) === "function";
-		},
-		array: function (val) {
-			return toType(val) === 'array';
-		},
-		object: function (val) {
-			toType(val) === 'object'
-		},
-		numeric: function (val) {
-			return !isNaN(parseFloat(val)) && isFinite(val);
-		}
-	};
+	Animation = function(name, options) {
+		this.name = name;
+		this.backgroundColor = options.backgroundColor;
+		this.border = options.imageBorder;
+		this.transition = options.imageTransition;
+		this.spawn = options.spawn;
+
+		// etc.....
+	},
+
+	// for better type checking
+	is = (function() {
+		return {
+				toType: function (val) {
+					return ({}).toString.call(val).
+					match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+				},
+				function: function (val) {
+					return toType(val) === "function";
+				},
+				array: function (val) {
+					return toType(val) === 'array';
+				},
+				object: function (val) {
+					toType(val) === 'object'
+				},
+				numeric: function (val) {
+					return !isNaN(parseFloat(val)) && isFinite(val);
+				}
+			};
+	})();
 
 	// gets canvas element return and sets it to the canvas attribute
 	function _imageCanvas(e) {
@@ -66,38 +80,37 @@ var imageCanvas,
 			imageCanvas = element;
 		}
 		else {
+			// TODO: fix
 			var ele = document.createElement('div');
 			ele.setAttribute('id', e.toString());
-
 			document.body.appendChild(ele);
 			imageCanvas = document.getElementById(e.toString());
 		}
 	}
 
-	// callback 
-	// sets style options supplied by the user ( not sure exactly what options woudl be nice?)
+	// set canvas theme
 	function _canvasTheme(t) {
-		var animations = ["swift", "vanilla", "focusing"];
-		// set animation for collage
-		function animationSupported(prop) {
-			/*=====================================================
-			* 1) swift will do quick, flashy transitions upon opening
-			* 2) vanilla is just the dault animation style, nothing fancy
-			* 3) focusing uses css3 transitions 
-			*=======================================================*/
-			if(animations.indexOf(prop) !== -1) {
-				return true;
+		var arr = [];
 
-			} else {
-				return false;
-			}
-		}
+		(function() {
+			var swift = new Animation('swift', { color : "#ccc" }),
+				vanilla = new Animation('vanilla', { color : "transparent"});
+			
+			arr.push(swift);
+			arr.push(vanilla);	
+		})();
 
-		animationSupported(t) ? theme = t : theme = "default";		
+		var t = imageCanvas.getAttribute("CPjsTheme");
+		
+		if(t !== null && arr.indexOf(t) !== -1) {
+			// TODO:
+		} else {
+			theme = "default";
+		}	
 	}
 
 	// get images suppled by the user
-	function _images() {
+	function storeImages() {
 		// get elements within element supplied by the client
 		var imgs = imageCanvas.getElementsByTagName('img');
 
@@ -122,15 +135,15 @@ var imageCanvas,
 	}
 
 	// takes in a div id
-	CPjs.prototype.id = function(elementId) {
+	CPjs.id = function(elementId) {
 		_imageCanvas(elementId);
-		_images();
+		storeImages();
 
 		return this;
 	};
 
 	// take in canvas dimensions to be used by algorithm
-	CPjs.prototype.dimensions = function(w, h)	{
+	CPjs.dimensions = function(w, h)	{
 		// check arguments supplied are Integers
 		if(is.numeric(w) && is.numeric(h)) {
 			width = Math.floor(w);
@@ -142,19 +155,24 @@ var imageCanvas,
 
 		return this;
 	}
-	// takes width and height parameters & optional additonal styling object
-	CPjs.prototype.theme = function(theme) {
-		_canvasTheme(theme);
-		return this;
-	};
+	
+	CPjs.start = function() {
 
-	CPjs.prototype.start = function() {
+		_canvasTheme();
 		// call algorithm() back end
+		var obj = {
+			theme : theme,
+			width : width,
+			height : height,
+			imageCanvas : imageCanvas,
+			images : images
+		};
+		console.log(obj);
 
-		// render the collage
+		// render the collage visually after alogrithm
 		render();
 	}
 	
-	window.CPjs = new CPjs();
+	window.CPjs = CPjs;
 
 })(window);
