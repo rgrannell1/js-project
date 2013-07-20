@@ -20,6 +20,14 @@ var make = ( function (lambda, is) {
 		var to = that.positiveIntegers();
 		return lambda.sequence(0, to);
 	}
+	that.matrices = function () {
+		var template = Matrix([0, 0], [0, 0]);
+		return template.map(
+			function (elem) {
+				return that.positiveIntegers();
+			}
+		);
+	}
 	return that;
 
 } )(lambda, is)
@@ -51,7 +59,7 @@ var forall = ( function (lambda, is) {
 			}
 		}
 
-		var timeLeft = lambda.timer(2);
+		var timeLeft = lambda.timer(0.3);
 		var testResults = [];
 
 		while (timeLeft()) {
@@ -67,12 +75,12 @@ var forall = ( function (lambda, is) {
 			}
 
 			// run the assertion with the test cases
-			var didCasePass = assert.apply(null, thisCase);
+			var assertResult = assert.apply(null, thisCase);
 
-			if (is.boolean(didCasePass)) {
-				testResults = testResults.concat(
-					{testCase: thisCase, passed: didCasePass}
-				);
+			if (is.boolean(assertResult)) {
+				testResults = testResults.concat({
+					testCase: thisCase,
+					passed: assertResult});
 			} else {
 				var msg = "'" + description + "'\n" + 
 				"a non-boolean value was produced when testing the function\n\n" +

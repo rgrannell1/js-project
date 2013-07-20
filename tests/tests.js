@@ -56,7 +56,6 @@ var testSuite = [
 						function (val, ith) { return val },
 						sequence),
 						sequence);
-
 			}
 		)
 
@@ -77,33 +76,58 @@ var testSuite = [
 	}),
 	test("test that fold sum is equal to normal sum", function () {
 
-		var reduceSum = function (iter) {
+		var foldSum = function (iter) {
 			return lambda.fold(
-				function (a, b) {
-					return a + b
-				},
-				0,
-				iter
-			);
+				function (a, b) { return a + b },
+				0, iter);
 		}
 
-		return reduceSum([0, 1, 2, 3, 4, 5]) === 15;
+		return forall(
+			"fold sum",
+			[make.sequences],
+			function (sequence) {
+
+				return foldSum(sequence) === (
+					function () {
+						var sum = 0;
+						for (var ith = 0; ith < sequence.length; ith++) {
+							sum = sum + sequence[ith];
+						}
+						return sum
+					}
+				)()
+			}
+		);
 	}),
 	test("test that concatMap acts as a map function", function () {
 
-		var mapped = lambda.concatMap(function (x) {
-			return x * x
-		}, [1, 2, 3, 4]);
+		return forall(
+			"indmap and concatMap are equivelant",
+			[make.seqsAlong],
+			function (sequence) {
 
-		return allEqual(mapped, [1, 4, 9, 16]);
+				return allEqual(
+					lambda.indMap(
+						function (x) {return x * x},
+						sequence),
+					lambda.concatMap(
+						function (x) {return x * x},
+						sequence));
+			}
+		);
 	}),
-	test("test that concatMap concatenates, not pushes", function () {
+	test("test that concatMap concatenates", function () {
 
-		return lambda.concatMap(
-			function (x) {
-				return [x, x];
-			},
-			[0, 1, 2, 3, 4]).length === 10
+		return forall(
+			"indmap and concatMap are equivelant",
+			[make.seqsAlong],
+			function (sequence) {
+
+				return lambda.concatMap(
+						function (x) {return [x, x]},
+						sequence).length === (sequence.length * 2)
+			}
+		);
 	}),
 	test("test that select selects the correct values", function () {
 
@@ -147,19 +171,7 @@ var testSuite = [
 		var res = A.multiply(I);
 		return allEqual(A.xs, res.xs) && allEqual(A.ys, res.ys);
 	}),
-	test("double transposing a matrix returns the matrix", function () {
-
-		var A = Matrix([1, 2], [3, 4]);
-
-		var transpose = {
-			once: A.transpose(),
-			twice: A.transpose().transpose()
-		};
-
-		return allEqual(A.xs, transpose.twice.xs) && 
-			allEqual(A.ys, transpose.twice.ys) &&
-			!allEqual(A.xs, transpose.once.xs) &&
-			!allEqual(A.ys, transpose.once.ys);
-
+	test("test that basic grammars", function () {
+		return false;
 	})
 ];

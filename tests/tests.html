@@ -21,6 +21,12 @@
 	.passed {
 		background: #2ecc71;
 	}
+	#test-canvas {
+		position: absolute;
+		top: 0px;
+		left: 0px;
+		margin: 100px;
+	}
 
 </style>
 <script type="text/javascript" src = "../scripts/main.js"></script>
@@ -34,6 +40,8 @@
 
 	<button id = "run-tests" onclick = "testAll()"> Run </button>
 	<div id = "test-info"></div>
+
+	<canvas id = "test-canvas">
 
 </body>
 <script type="text/javascript">
@@ -70,6 +78,33 @@
 			}
 		}
 	}
+
+    var canvas = document.getElementById('test-canvas');
+	var context = canvas.getContext("2d");
+	context.canvas.width = 1000;
+	context.canvas.height = 1000;
+	context.fillStyle = "rgb(150,29,28)";
+
+	var rectangles = tilePlane(10, {width: 1000, height: 1000});
+
+	lambda.indMap(
+		function (rectangle, ith) {
+
+			if (ith < 1000) {
+
+			console.log(rectangle.width())
+
+			context.strokeRect(
+				rectangle.xMinus, 
+				rectangle.yPlus,
+				rectangle.width(),
+				rectangle.height())
+				context.strokeStyle = "black";	
+			}
+		},
+		rectangles
+	);
+
 </script>
 </html>
 	
