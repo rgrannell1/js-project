@@ -58,6 +58,17 @@ var imageCollage,
 			};
 	})(),
 
+	dialog = function() {
+		var popup = document.createElement("div");
+		popup.setAttribute("style", "position: absolute; width: 90%; height: 200px; border : 1px solid #222; top: 0"); 
+
+		console.log(popup);
+		
+		var body = document.getElementsByTagName('body');
+		console.log(body);
+		body[0].appendChild(popup);
+	},
+
 	// theme objects
 	themes = (function() {
 		return {
@@ -69,14 +80,12 @@ var imageCollage,
 						boxShadow : 'box-shadow : 2px 2px 8px rgba(20, 80, 200, 0.5);'
 					},
 					imageStyle : {
-						margin : 'margin: 2px 2px;'
+						padding : 'padding: 2px 2px;'
 					},
 
 					imageEvents : {
 						onclick : function(evt) {
-							// testing right now
 							// open a dialog
-							
 						},
 
 						onhover : function(evt) {
@@ -98,22 +107,21 @@ var imageCollage,
 						boxShadow : 'box-shadow : 2px 2px 6px rgba(200, 20, 20, 0.5);'
 					},
 					imageStyle : {
-						margin: "margin: 2px 2px;"
+						padding: "padding: 2px 2px;"
 					},
 					
 					imageEvents : {
 						onclick : function(evt) {
-							// testing right now
-							evt.currentTarget.style.backgroundColor = "black";
+							// open a dialog
 							
 						},
 
 						onhover : function(evt) {
-							evt.currentTarget.style.backgroundColor = "yellow";
+							//evt.currentTarget.style.backgroundColor = "yellow";
 						},
 
 						onleave : function(evt) {
-							evt.currentTarget.style.backgroundColor = "white";
+							//evt.currentTarget.style.backgroundColor = "white";
 						}
 					}
 				},
@@ -126,13 +134,12 @@ var imageCollage,
 					},
 
 					imageStyle : {
-						margin : 'margin: 2px 2px;'
+						padding : 'padding: 2px 2px;'
 					},
 
 					imageEvents : {
 						onclick : function(evt) {
-							// testing right now
-							evt.currentTarget.style.backgroundColor = "black";
+							// open a dialog
 							
 						},
 
@@ -154,12 +161,12 @@ var imageCollage,
 					},
 
 					imageStyle : {
-						margin: 'margin: 2px 2px;'
+						padding: 'padding: 2px 2px;'
 					},
 
 					imageEvents : {
 						onclick : function(evt) {
-							// testing right now
+							dialog();
 						},
 
 						onhover : function(evt) {
@@ -316,7 +323,7 @@ var imageCollage,
 		};
 
 		// call backend and then render through callback
-		theBackend(backendConfig, function() {
+		theBackend(backendConfig, function(val) {
 			render._theme();
 			render._dimensions(collageWidth, collageHeight);
 		});
@@ -326,9 +333,7 @@ var imageCollage,
 	
 	function theBackend(config, callback) {
 		// all alogrithm functions go here
-		console.log(config);
-
-		callback();
+		callback({});
 	}
 	// return object to window
 	window.plaid = plaid;
