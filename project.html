@@ -2,19 +2,28 @@
 	<head>
 		<script src="scripts/main.js" type="text/javascript"></script>
 	</head>
+	<style type="text/css">
+		#myDiv {
+			height: 500px;
+			width: 1200px;
+			clear: both;
+			margin: 10px auto;
+		}
+	</style>
 	<body>
-	<div id="stuff" style="background-color : #ccc; height: 30%; border: 2px solid #222;">
-		<div id="myDiv" CPjs-theme="skylight" style="background-color: #222; border-bottom: 1px solid #222;" CPjs-canvas-transparent="true">
+	<div id="stuff" style="background-color : #fff">hi</div>
+	<div>
+		<div id="myDiv" CPjs-theme="vanilla" CPjs-inherit-backgroundColor="stuff">
 			<img src="resources/"/>
-			<img src="resources/image2" />
+			<img src="resources/image2"/>
 			<img src="resources/image3" />
 			<img src="resources/image4" />
 		</div>
 	</div>
 		<script type="text/javascript">
 			//basic idea of what we expect from the user
-			CPjs.dimensions('200.00', 200)
-				.id("myDiv")
+			CPjs.id("myDiv")
+				.dimensions('200.00', 200)
 				.start();
 		</script>
 		this file is for testing out css stylesheets and js-scripts

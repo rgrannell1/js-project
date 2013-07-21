@@ -27,8 +27,6 @@ var imageCollage,
 
 	images = [],
 
-	theme = null,
-
 	_CPjs = window.CPjs,
 
 	CPjs = {},
@@ -62,27 +60,51 @@ var imageCollage,
 			};
 	})(),
 
-	// themes
+	// theme objects
 	themes = (function() {
 		return {
 				aqua : {
 					name : "aqua",
-					border : '1px solid rgba(50,50,150)'
+					canvasStyle : {
+						border : 'border : 2px solid rgba(50,100,240,1);'
+					},
+					imageStyle : {
+						boxShadow : 'box-shadow : 2px 2px 2px rgba(50,100,240,1);',
+						margin : 'margin: 10px 10px;'
+					}
 				},
 
 				ember : {
 					name : "ember",
-					border : '1px solid rgba(150,50,50)'
+					canvasStyle : {
+						border : 'border : 2px solid rgba(150,50,50, 1);'
+					},
+					imageStyle : {
+						boxShadow : 'box-shadow : 2px 2px 2px rgba(150,50,50, 1);',
+						margin : 'margin: 10px 10px;'
+					}
 				},
 
 				vanilla : {
 					name : "vanilla",
-					border : '1px solid rgba(150,150,150)'
+					canvasStyle : {
+						border : 'border : 2px solid rgba(200,200,200, 1);',
+					},
+					imageStyle : {
+						boxShadow : 'box-shadow : 2px 2px 2px rgba(200,200,200, 1);',
+						margin : 'margin: 10px 10px;'
+					}
 				},
 
 				skylight : {
 					name : "skylight",
-					border : '1px solid rgba(34,34,34)'
+					canvasStyle : {
+						border : 'border : 2px solid rgba(34,34,34, 1);'
+					},
+					imageStyle : {
+						boxShadow : 'box-shadow : 2px 2px 2px rgba(34,34,34, 1);',
+						margin : 'margin: 10px 10px;'
+					}
 				}
 			};
 	})();
@@ -127,31 +149,48 @@ var imageCollage,
 	***************************/
 	var render = (function() {
 		// set background color of collage div to the same as its parent
-		// if CPjs-canvas-transparent is set to true	
-		var _backgroundColor = function() {
-			var isTransparent = imageCollage.getAttribute("CPjs-canvas-transparent");
-			if(isTransparent !== null && isTransparent === "true") {
-				imageCollage.style['backgroundColor'] = imageCollage.parentNode.style['backgroundColor'];
-			}
-		}
+		// if CPjs-canvas-transparent is set to true
+		return {
+			_theme : function() {
+				var theme = null,
+					t = imageCollage.getAttribute("CPjs-theme"),
+					inheritId = imageCollage.getAttribute("CPjs-inherit-backgroundColor"),
+					inheritedBgColor = document.getElementById(inheritId).style.backgroundColor;
+					images = imageCollage.getElementsByTagName("img");
 
-		var _theme = function() {
-			var t = imageCollage.getAttribute("CPjs-theme");
+				function setStyles(style) {
+					var output = "";
+					
+					if(inheritedBgColor !== null) {
+						output += "background-color : " + inheritedBgColor + ";";
+					}
 
-			if(t !== null) {
-				for(data in themes) {
-					if(themes[data].name == t) {
-						theme = themes[data];
-						break;
+					for(var prop in theme[style]) {
+						output += theme[style][prop];
+					}
+
+					return output;
+				}
+
+				if(t !== null) {
+					for(var data in themes) {
+						if(themes[data].name == t) {
+							theme = themes[data];
+							break;
+						}
+					}
+
+					// apply styles to the collage and images
+					imageCollage.style = setStyles('canvasStyle').toString();
+
+					for(var image in images) {
+						// has own propety check to come
+						images[image].style = setStyles('imageStyle').toString();
 					}
 				}
 			}
-		}
-
-		return {
-			isTransparent : _backgroundColor,
-			theme : _theme
 		};
+
 	})();
 
 	// div id to be used as the collage element
@@ -170,7 +209,7 @@ var imageCollage,
 			height = Math.floor(h);
 
 		} else {
-			throw new Error("width and height must both be numbers");
+			throw new TypeError("width and height must both be numbers");
 		}
 
 		return this;
@@ -183,11 +222,9 @@ var imageCollage,
 		* TEST Object
 		*
 		********************/
-		render.isTransparent();
-		render.theme()
+		render._theme();
 
 		var obj = {
-			theme : theme,
 			width : width,
 			height : height,
 			imageCollage : imageCollage,
