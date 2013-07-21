@@ -211,7 +211,24 @@ var lambda = ( function (is) {
 				result = result.concat(ith);
 			}
 			return result;
+		},
+		timer: function (seconds) {
+			// returns a function that returns true for
+			// seconds, em, seconds after its creation.
+			
+			return ( function () {
+				var unixTime = function () {
+					return Math.round(new Date().getTime() / 1000.0);
+				}
+				var genesis = unixTime();
+				return function () {
+					// has seconds seconds elapsed since creation?
+					var timeSinceCreation = unixTime() - genesis;
+					return timeSinceCreation < seconds;
+				}
+			} )();
 		}
+
 	}
 
 } )(is);
@@ -236,16 +253,19 @@ if (!is.closure(Object.beget)) {
 // functions will be applied to xy points.
 
 var Matrix = ( function (is) {
-	return {
-		xs: [0, 0],
-		ys: [0, 0],
-		nrows: function () {
-			this.xs.length;
-		},
-		ncols: function () {
-			this.ys.length;
-		},
-		map: function (func) {
+	return function (xs, ys) {
+
+		var that = {};
+		that.xs = xs;
+		that.ys = ys;
+		
+		that.rows = function () {
+			that.xs.length;
+		}
+		that.cols = function () {
+			that.ys.length;
+		}
+		that.map = function (func) {
 			// (a - > b) -> Matrix a -> Matrix b
 			// element-wise mapping over matrix,
 			// so that matrix is a Functor
@@ -254,100 +274,91 @@ var Matrix = ( function (is) {
 			if (!is.closure(func)) {
 				throw new TypeError(call + ":" + "func must be a function");
 			}
-
-			var mapped = Object.beget(Matrix);
-
-			mapped.xs = [func( this.xs[0] ), func( this.xs[1] )];
-			mapped.ys = [func( this.ys[0] ), func( this.ys[1] )]
+			var mapped = Matrix(
+				[func( that.xs[0] ), func( that.xs[1] )],
+				[func( that.ys[0] ), func( that.ys[1] )] );
 
 			return mapped;
-		},
-		transpose: function () {
-			// Matrix -> Matrix
-			// get the transpose of a matrix 
-
-			var transposed = Object.beget(Matrix);
-			transposed.xs = [this.xs[0], this.ys[0]];
-			transposed.ys = [this.xs[1], this.ys[1]];
-
-			return transposed;
-		},
-		by: function (number) {
+		}
+		that.by = function (number) {
 			// (integer) -> Matrix integer
 			// scalar multiplication; linearly scale a point
 
-			return this.map( function (x) {
+			return that.map( function (x) {
 				return x * number;
 			} );
-		},
-		add: function (number) {
+		}
+		that.add = function (number) {
 			// (integer) -> Matrix integer
 			// scalar addition; translate a point
 
-			return this.map( function (x) {
+			return that.map( function (x) {
 				return x + number;
 			} );	
-		},
-		multiply: function (matrix) {
-			// Matrix a -> Matrix -> a
-			// non-scalar multiplication.
-			// implemented directly for efficiency 
-			// (canvas needs redraw on every resize).
+		}
+		that.multiply = function (matrix) {
+			/* Matrix a -> Matrix -> a
+			 non-scalar multiplication.
+			 implemented directly for efficiency 
+			 (canvas needs redraw on every resize). */
 
-			var product = Object.beget(Matrix);
-			product.xs = [
-				( (this.xs[0] * matrix.xs[0]) + (this.xs[1] * matrix.ys[0]) ),
-				( (this.xs[0] * matrix.xs[1]) + (this.xs[1] * matrix.ys[1]) )]
-			product.ys = [
-					( (this.ys[0] * matrix.xs[0]) + (this.ys[1] * matrix.ys[0]) ),
-					( (this.ys[0] * matrix.xs[1]) + (this.ys[1] * matrix.ys[1]) )]
+			var product = Matrix(
+				[
+					( (that.xs[0] * matrix.xs[0]) + (that.xs[1] * matrix.ys[0]) ),
+					( (that.xs[0] * matrix.xs[1]) + (that.xs[1] * matrix.ys[1]) )],
+				[
+						( (that.ys[0] * matrix.xs[0]) + (that.ys[1] * matrix.ys[0]) ),
+						( (that.ys[0] * matrix.xs[1]) + (that.ys[1] * matrix.ys[1]) )]);
 
 			return product;
-		},
-		asRectangle: function () {
-			// for two-way conversion from Rectange <-> Matrix
-
-			var converted = Object.beget(Rectangle);
-			converted.xMinus = this.xs[0];
-			converted.xPlus = this.xs[1];
-			converted.yMinus = this.ys[0];
-			converted.yPlus = this.ys[1];
-
-			return converted
 		}
+		that.asRectangle = function () {
+			/* for two-way conversion from Rectange <-> Matrix */
+
+			var converted = Rectangle(
+				xMinus = that.xs[0], xPlus = that.xs[1],
+				yMinus = that.ys[0], yPlus = that.ys[1]);
+
+			return converted;
+		}
+		return that;
 	}
-} )(is);
+} )(is)
 
 //# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 //# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 
 var Rectangle = ( function () {
-	return {
-		// left, right. bottom, top.
-		// easier to work with mathematical notation
+	return function (xMinus, xPlus, yMinus, yPlus) {
 
-		xMinus: 0, xPlus: 0,
-		yMinus: 0, yPlus: 0,
+		var that = {};
+		that.xMinus = xMinus;
+		that.xPlus = xPlus;
+		that.yMinus = yMinus;
+		that.yPlus = yPlus;
 
-		width: function () {
-			return Math.abs(this.xPlus - this.xMinus)
+		that.width = function () {
+			return Math.abs(that.xPlus - that.xMinus)
 		},
-		height: function () {
-			return Math.abs(this.xPlus - this.xMinus)
+		that.height = function () {
+			return Math.abs(that.xPlus - that.xMinus)
 		},
-		asMatrix: function () {
+		that.asMatrix = function () {
 			// converts rectangle to a matrix,
 			// with each row giving a component x, y
 			// and each column giving a coordinate
 
-			var converted = Object.beget(Matrix);
-			converted.xs = [this.xMinus, this.xPlus];
-			converted.ys = [this.yMinus, this.yPlus];
+			var converted = Matrix(
+				[that.xMinus, that.xPlus],
+				[that.yMinus, that.yPlus]);
 
 			return converted;
 		}
-	}
+		return that;
+	};
 } )()
+
+
 
 //# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 //# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
@@ -356,20 +367,15 @@ var Rectangle = ( function () {
 // but seperated for modularity and testabilities sake.
 
 var Grammar = ( function (lambda) {
-
-	return {
+	return function (rules) {
 		/*  an object for holding grammar rules, returning 
 			terminals and non-terminals, and generating a string
 			in the language from an initial symbol and a ruleset */
-
-		rules: [
-			{
-				pattern: [],
-				production: []
-			}
-		],
-		nonTerminals: function (xs) {
-			/* [a] -> [{pattern: function production: function}] -> [a]
+		
+		var that = {};
+		that.rules = rules;
+		that.nonTerminals = function (xs) {
+			/* [a] -> [a]
 				takes a collection xs and an array rules of 
 				pattern : production object pairs.
 				returns the xs matching some pattern in rules.
@@ -377,31 +383,33 @@ var Grammar = ( function (lambda) {
 
 			return lambda.select(
 				function (x) {
+					// does x match at least one pattern in rules? 
 
-					for (ith in this.rules) {
-						if (!this.rules.hasOwnProperty(ith)) {
+					for (ith in that.rules) {
+						if (!that.rules.hasOwnProperty(ith)) {
 							continue
 						}
-						var rule = this.rules[ith];
+						var rule = that.rules[ith];
 						if (rule.pattern(x)) {
 							return true;
 						}
 					}
 					return false;
 				},
-				xs);
-		},
-		terminals: function (xs) {
-			/* [a] -> [{pattern: function production: function}] -> [a] */
+				xs
+			);
+		}
+		that.terminals = function (xs) {
+			/* [a] -> [a] */
 
 			return lambda.select(
 				function (x) {
 
-					for (ith in this.rules) {
-						if (!this.rules.hasOwnProperty(ith)) {
+					for (ith in that.rules) {
+						if (!that.rules.hasOwnProperty(ith)) {
 							continue
 						}
-						var rule = this.rules[ith];
+						var rule = that.rules[ith];
 						if (rule.pattern(x)) {
 							return false;
 						}
@@ -409,47 +417,54 @@ var Grammar = ( function (lambda) {
 					return true;
 				},
 				xs);
-		},
-		generateOne: function (x) {
-			for (ith in this.rules) {
-				if (!this.rules.hasOwnProperty(ith)) {
+		}
+		that.generateOne = function (x) {
+			/*  x -> [x] 
+				takes a single terminal or non-terminal symbol,
+				and apply a production rule to it, if it exists.
+				otherwise, return the value */ 
+
+			for (ith in that.rules) {
+				if (!that.rules.hasOwnProperty(ith)) {
 					continue
 				}
-				var rule = this.rules[ith];
+				var rule = that.rules[ith];
 				if (rule.pattern(x)) {
 					return rule.production(x);
 				}
 			}
-			return x
-		},
-		generate: function (start) {
+			//return x
+		}
+		that.generate = function (start) {
 			/*  x -> [{pattern: function, production: function}] -> [x]
 				take a starting symbol and apply a production rule repeatedly
 				until only terminal symbols are left. */
 
-			var parThis = this;
-
 			/* iteratively apply production rules,
 			   return when only terminals */
+			
+			// guard against infinite loops during testing
+			var noTimeLeft = lambda.negate(lambda.timer);
+
 			return lambda.until(
 				pred = function (stacks) {
 					/* a -> boolean */
-					return stacks.nonTerminal.length === 0
+					return stacks.nonTerminal.length === 0 || noTimeLeft();
 				},
 				func = function (stacks) {
 					/* [{ nonTerminal: [a], terminal: [a] }] ->
 					   [{ nonTerminal: [a], terminal: [a] }] */
 
 					var producable = stacks.nonTerminal.pop();
-					var products = parThis.generateOne(producable);
+					var products = that.generateOne(producable);
 
 					return {
 						nonTerminal: 
 							stacks.nonTerminal.concat(
-								parThis.nonTerminals(products)),
+								that.nonTerminals(products)),
 						terminal:
 							stacks.terminal.concat(
-								parThis.terminals(products))
+								that.terminals(products))
 					};
 				}, 
 				initial = {
@@ -458,8 +473,8 @@ var Grammar = ( function (lambda) {
 				}
 			);
 		}
-	};
-
+		return that;
+	}
 } )(lambda);
 
 // = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
@@ -496,6 +511,7 @@ var splitGrammar = ( function (lambda) {
 
 		*/
 
+	// utility functions to close over
 	var xor = function (a, b) {
 		return (a || b) && !(a && b)
 	}
@@ -506,11 +522,10 @@ var splitGrammar = ( function (lambda) {
 			(tile.width() + tile.height()) > 3
 	}
 
-	var GrammarObject = Object.beget(Grammar);
-	GrammarObject.rules = [
+	return Grammar([
 		{
 			pattern: function (tile) {
-				// matches 1 x n tiles
+				// match 1 x n tiles only
 
 				return isDivisible(tile) && 
 					xor(tile.width() === 1, tile.height() === 1);
@@ -519,11 +534,9 @@ var splitGrammar = ( function (lambda) {
 				// split an 1 x n tile into [ (1 x n-m), (1 x m) ],
 				// where m is a random number in 2...(n-1)
 
-				var product = 
-					[Object.beget(tile), Object.beget(tile)];
-
 				if (tile.width() === 1) {
-					// dividing a vertical rectangle into two
+					// divide a vertical rectangle into two
+					// rectangles
 
 					var boundary = {
 						yMiddle: lambda.pickOne(
@@ -532,11 +545,18 @@ var splitGrammar = ( function (lambda) {
 								to = tile.yPlus - 1
 						))
 					}
-					product[0].yMinus = boundary.yMiddle;
-					product[1].yPlus = boundary.yMiddle;
+
+					var product = [
+						Rectangle(
+							tile.xMinus, tile.xPlus,
+							boundary.yMiddle, tile.yPlus),
+						Rectangle(
+							tile.xMinus, tile.xPlus,
+							tile.yMinus, boundary.yMiddle)];
 
 				} else {
-					// dividing a horizontal rectangle into two
+					// divide a horizontal rectangle into two
+					// rectangles
 
 					var boundary = {
 						xMiddle: lambda.pickOne(
@@ -545,8 +565,13 @@ var splitGrammar = ( function (lambda) {
 								to = tile.xPlus - 1
 						))
 					}
-					product[0].xMinus = boundary.xMiddle;
-					product[1].xPlus = boundary.xMiddle;
+					var product = [
+						Rectangle(
+							boundary.xMiddle, tile.xPlus,
+							boundary.yMiddle, tile.yPlus),
+						Rectangle(
+							tile.xMinus, boundary.xMiddle,
+							tile.yMinus, boundary.yMiddle)];
 				}
 
 				return product;
@@ -564,7 +589,6 @@ var splitGrammar = ( function (lambda) {
 				// where a, b > 2
 
 				var boundary = {
-					// height
 					xMiddle: lambda.pickOne(
 						lambda.sequence(
 							from = tile.yMinus + 1,
@@ -577,31 +601,28 @@ var splitGrammar = ( function (lambda) {
 					))
 				};
 
-				var product = [Object.beget(tile), Object.beget(tile),
-					Object.beget(tile), Object.beget(tile)];
-
-				// top-left
-				product[0].xPlus = boundary.xMiddle;
-				product[0].yMinus = boundary.yMiddle;
-
-				// top-right
-				product[1].xMinus = boundary.xMiddle;
-				product[1].yMinus = boundary.yMiddle;
-
-				// bottom-left
-				product[2].xPlus = boundary.xMiddle;
-				product[2].yPlus = boundary.yMiddle;
-
-				// bottom-right
-				product[3].xMinus = boundary.xMiddle;
-				product[3].yPlus = boundary.yMiddle;
-
+				var product = [
+					// top-left tile
+					Rectangle(
+						tile.xMinus, boundary.xMiddle,
+						boundary.yMiddle, tile.yPlus),
+					// top-right tile
+					Rectangle(
+						boundary.xMiddle, tile.xPlus,
+						boundary.yMiddle, tile.yPlus),
+					// bottom-left tile
+					Rectangle(
+						tile.xMinus, boundary.xMiddle,
+						tile.yMinus, boundary.yMiddle),
+					// bottom-right tile
+					Rectangle(
+						boundary.xMiddle, tile.xPlus,
+						tile.yMinus, boundary.yMiddle)
+				];
 				return product;
 			}
 		}
-	];
-
-	return GrammarObject;
+	]);
 
 } )(lambda);
 
@@ -619,24 +640,19 @@ var tilePlane = ( function (is, lambda) {
 			   later, units will be dynamically adjusted.
 			   important, determines how many columns/rows of tiles to have */
 
-			return {
-				x: 6,
-				y: 6
-			}; 
+			return {x: 6, y: 6}; 
 
 		} )(n, dimensions.width, dimensions.height);
 
 		// the initial rectangle to subdivide
-		var pictureArea = Object.beget(Rectangle);
-		pictureArea.xPlus = units.x;
-		pictureArea.yPlus = units.y;
+
+		var pictureArea = Rectangle(0, units.x, 0, units.y);
 
 		// tile -> [tile]
 		var tiles = splitGrammar.generate(pictureArea);
-
-		var scaleMatrix = Object.beget(Matrix);
-		scaleMatrix.xs = [dimensions.width / units.x, 0];
-		scaleMatrix.ys = [0, dimensions.height / units.y]
+		var scaleMatrix = Matrix(
+			[dimensions.width / units.x, 0],
+			[0, dimensions.height/ units.y]);
 
 		return lambda.indMap(
 			function (tile, ith) {
@@ -653,8 +669,4 @@ var tilePlane = ( function (is, lambda) {
 	}
 
 } )(is, lambda)
-
- console.log( tilePlane(1, {width: 1000, height: 1000}) );
-
-
 
