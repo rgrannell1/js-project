@@ -19,7 +19,7 @@ if(!Array.prototype.indexOf) {
 
 (function(window) {
 // private variables
-var imageCanvas,
+var imageCollage,
 
 	width,
 
@@ -73,23 +73,23 @@ var imageCanvas,
 	})();
 
 	// gets canvas element return and sets it to the canvas attribute
-	function _imageCanvas(e) {
+	function _imageCollage(e) {
 		var element = document.getElementById(e);
 
 		if(element !== null && element.tagName === 'DIV') {
-			imageCanvas = element;
+			imageCollage = element;
 		}
 		else {
 			// TODO: fix
 			var ele = document.createElement('div');
 			ele.setAttribute('id', e.toString());
 			document.body.appendChild(ele);
-			imageCanvas = document.getElementById(e.toString());
+			imageCollage = document.getElementById(e.toString());
 		}
 	}
 
 	// set canvas theme
-	function _canvasTheme(t) {
+	function _collageTheme(t) {
 		var arr = [];
 
 		(function() {
@@ -100,7 +100,7 @@ var imageCanvas,
 			arr.push(vanilla);	
 		})();
 
-		var t = imageCanvas.getAttribute("CPjs-theme");
+		var t = imageCollage.getAttribute("CPjs-theme");
 		
 		if(t !== null) {
 			for(var i = 0; i < arr.length; i++) {
@@ -115,7 +115,7 @@ var imageCanvas,
 	// get images suppled by the user
 	function storeImages() {
 		// get elements within element supplied by the client
-		var imgs = imageCanvas.getElementsByTagName('img');
+		var imgs = imageCollage.getElementsByTagName('img');
 
 		for(var i = 0; i< imgs.length; i++) {
 			var src = imgs[i].getAttribute('src'),
@@ -133,31 +133,31 @@ var imageCanvas,
 	* function will layout the images on the collage all nice and pretty
 	*
 	***************************/
-	function render() {
-		var isTransparent = imageCanvas.getAttribute("CPjs-canvas-transparent");
-		var userDefinedStyle = "";
-
-		if(isTransparent !== null && isTransparent === "true") {
-			console.log(isTransparent);
-
-			if(imageCanvas.getAttribute('style') !== null) {
-				userDefinedStyle = imageCanvas.getAttribute('style');
+	var render = (function() {
+		// set background color of collage div to the same as its parent
+		// if CPjs-canvas-transparent is set to true	
+		var _backgroundColor = function() {
+			var isTransparent = imageCollage.getAttribute("CPjs-canvas-transparent");
+			if(isTransparent !== null && isTransparent === "true") {
+				imageCollage.style['backgroundColor'] = imageCollage.parentNode.style['backgroundColor'];
 			}
+		};
 
-			imageCanvas.setAttribute('style', "" + userDefinedStyle + "background-color : transparent;");
-		}
-	}
+		return {
+			isTransparent : _backgroundColor
+		};
+	})();
 
-	// takes in a div id
+	// div id to be used as the collage element
 	CPjs.id = function(elementId) {
-		_imageCanvas(elementId);
+		_imageCollage(elementId);
 		storeImages();
 
 		return this;
 	};
 
-	// take in canvas dimensions to be used by algorithm
-	CPjs.dimensions = function(w, h)	{
+	// collage dimensions to be used by algorithm
+	CPjs.dimensions = function(w, h) {
 		// check arguments supplied are Integers
 		if(is.numeric(w) && is.numeric(h)) {
 			width = Math.floor(w);
@@ -172,20 +172,25 @@ var imageCanvas,
 	
 	CPjs.start = function() {
 
-		_canvasTheme();
+		// set the theme on the collage
+		_collageTheme();
 
-		// call algorithm() back end
+		/*******************
+		*
+		* TEST Object
+		*
+		********************/
 		var obj = {
 			theme : theme,
 			width : width,
 			height : height,
-			imageCanvas : imageCanvas,
+			imageCollage : imageCollage,
 			images : images
 		};
 		console.log(obj);
 
 		// render the collage visually after alogrithm
-		render();
+		render.isTransparent();
 	}
 	
 	window.CPjs = CPjs;
