@@ -58,16 +58,20 @@ var imageCollage,
 			};
 	})(),
 
-	dialog = function() {
-		var popup = document.createElement("div");
-		popup.setAttribute("style", "position: absolute; width: 90%; height: 200px; border : 1px solid #222; top: 0"); 
+	dialog = (function() {
+		return {
+			create : function() {
+				var popup = document.createElement("div");
+				popup.setAttribute("style", "position: absolute; width: 90%; height: 200px; border : 1px solid #222; top: 0");
+			},
 
-		console.log(popup);
-		
-		var body = document.getElementsByTagName('body');
-		console.log(body);
-		body[0].appendChild(popup);
-	},
+			render : function() {
+				var body = document.getElementsByTagName('body');
+				console.log(body);
+				body[0].appendChild(popup);
+			}
+		}
+	})(),
 
 	// theme objects
 	themes = (function() {
@@ -166,7 +170,7 @@ var imageCollage,
 
 					imageEvents : {
 						onclick : function(evt) {
-							dialog();
+							dialog.create();
 						},
 
 						onhover : function(evt) {
