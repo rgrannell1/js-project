@@ -40,16 +40,6 @@ var imageCollage,
 		this.height = h;
 	},
 
-	Animation = function(name, options) {
-		this.name = name;
-		this.backgroundColor = options.backgroundColor;
-		this.border = options.imageBorder;
-		this.transition = options.imageTransition;
-		this.spawn = options.spawn;
-
-		// etc.....
-	},
-
 	// for better type checking
 	is = (function() {
 		return {
@@ -70,7 +60,33 @@ var imageCollage,
 					return !isNaN(parseFloat(val)) && isFinite(val);
 				}
 			};
+	})(),
+
+	// themes
+	themes = (function() {
+		return {
+				aqua : {
+					name : "aqua",
+					border : '1px solid rgba(50,50,150)'
+				},
+
+				ember : {
+					name : "ember",
+					border : '1px solid rgba(150,50,50)'
+				},
+
+				vanilla : {
+					name : "vanilla",
+					border : '1px solid rgba(150,150,150)'
+				},
+
+				skylight : {
+					name : "skylight",
+					border : '1px solid rgba(34,34,34)'
+				}
+			};
 	})();
+	
 
 	// gets canvas element return and sets it to the canvas attribute
 	function _imageCollage(e) {
@@ -85,30 +101,6 @@ var imageCollage,
 			ele.setAttribute('id', e.toString());
 			document.body.appendChild(ele);
 			imageCollage = document.getElementById(e.toString());
-		}
-	}
-
-	// set canvas theme
-	function _collageTheme(t) {
-		var arr = [];
-
-		(function() {
-			var swift = new Animation('swift', { color: "" }),
-				vanilla = new Animation('vanilla', { color : "transparent"});
-			
-			arr.push(swift);
-			arr.push(vanilla);	
-		})();
-
-		var t = imageCollage.getAttribute("CPjs-theme");
-		
-		if(t !== null) {
-			for(var i = 0; i < arr.length; i++) {
-				if(arr[i].name == t.toString()) {
-					theme = arr[i];
-					break;
-				}
-			}
 		}
 	}
 
@@ -141,10 +133,24 @@ var imageCollage,
 			if(isTransparent !== null && isTransparent === "true") {
 				imageCollage.style['backgroundColor'] = imageCollage.parentNode.style['backgroundColor'];
 			}
-		};
+		}
+
+		var _theme = function() {
+			var t = imageCollage.getAttribute("CPjs-theme");
+
+			if(t !== null) {
+				for(data in themes) {
+					if(themes[data].name == t) {
+						theme = themes[data];
+						break;
+					}
+				}
+			}
+		}
 
 		return {
-			isTransparent : _backgroundColor
+			isTransparent : _backgroundColor,
+			theme : _theme
 		};
 	})();
 
@@ -172,14 +178,14 @@ var imageCollage,
 	
 	CPjs.start = function() {
 
-		// set the theme on the collage
-		_collageTheme();
-
 		/*******************
 		*
 		* TEST Object
 		*
 		********************/
+		render.isTransparent();
+		render.theme()
+
 		var obj = {
 			theme : theme,
 			width : width,
@@ -188,9 +194,6 @@ var imageCollage,
 			images : images
 		};
 		console.log(obj);
-
-		// render the collage visually after alogrithm
-		render.isTransparent();
 	}
 	
 	window.CPjs = CPjs;
