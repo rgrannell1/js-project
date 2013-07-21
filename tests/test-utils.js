@@ -76,7 +76,7 @@ var forall = ( function (lambda, is) {
 			// run the assertion with the test cases
 			var assertResult = assert.apply(null, thisCase);
 
-			if (is.boolean(assertResult)) {
+			if (is.logical(assertResult)) {
 				testResults = testResults.concat({
 					testCase: thisCase,
 					passed: assertResult});

@@ -163,8 +163,6 @@ var testSuite = ( function (is, lambda) {
 		}),
 		test("test that until works and terminates", function () {
 
-			console.log("asdasdasd")
-
 			return forall(
 				"until terminates and whatnot",
 				[make.positiveIntegers],
