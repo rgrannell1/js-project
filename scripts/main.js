@@ -25,9 +25,9 @@ var imageCollage,
 
 	images = [],
 
-	_CPjs = window.CPjs,
+	_plaid = window.Plaid,
 
-	CPjs = {},
+	plaid = {},
 
 	// for better storage of api properties
 	Image = function(src, w, h) {
@@ -64,6 +64,7 @@ var imageCollage,
 				aqua : {
 					name : "aqua",
 					canvasStyle : {
+						padding : "padding : 4px;",
 						border : 'border : 2px solid rgba(150,150,240,1);',
 						boxShadow : 'box-shadow : 2px 2px 8px rgba(20, 80, 200, 0.5);'
 					},
@@ -74,12 +75,13 @@ var imageCollage,
 					imageEvents : {
 						onclick : function(evt) {
 							// testing right now
-							evt.currentTarget.style.backgroundColor = "black";
+							// open a dialog
 							
 						},
 
 						onhover : function(evt) {
-							evt.currentTarget.style.backgroundColor = "yellow";
+
+							evt.currentTarget.style.transition = "yellow";
 						},
 
 						onleave : function(evt) {
@@ -91,6 +93,7 @@ var imageCollage,
 				ember : {
 					name : "ember",
 					canvasStyle : {
+						padding : "padding : 4px;",
 						border : 'border : 2px solid rgba(240,150,150, 1);',
 						boxShadow : 'box-shadow : 2px 2px 6px rgba(200, 20, 20, 0.5);'
 					},
@@ -118,6 +121,7 @@ var imageCollage,
 				vanilla : {
 					name : "vanilla",
 					canvasStyle : {
+						padding : "padding : 4px;",
 						border : 'border : 1px solid rgba(180,180,180, 1);'
 					},
 
@@ -145,6 +149,7 @@ var imageCollage,
 				skylight : {
 					name : "skylight",
 					canvasStyle : {
+						padding : "padding : 4px;",
 						border : 'border : 3px solid rgba(80, 80, 95, 1);'
 					},
 
@@ -155,16 +160,19 @@ var imageCollage,
 					imageEvents : {
 						onclick : function(evt) {
 							// testing right now
-							evt.currentTarget.style.backgroundColor = "black";
-							
 						},
 
 						onhover : function(evt) {
-							evt.currentTarget.style.backgroundColor = "yellow";
+							evt.currentTarget.style.transition = "1s ease";
+							evt.currentTarget.style.webkitTransition = "1s ease";
+
+							evt.currentTarget.style.transform = "scale(1.02)";
+							evt.currentTarget.style.webkitTransform = "scale(1.02)";
 						},
 
 						onleave : function(evt) {
-							evt.currentTarget.style.backgroundColor = "white";
+							evt.currentTarget.style.transform = "scale(1)";
+							evt.currentTarget.style.webkitTransform = "scale(1)";
 						}
 					}
 				}
@@ -216,8 +224,8 @@ var imageCollage,
 
 			_theme : function() {
 				var theme,
-					t = imageCollage.getAttribute("CPjs-theme"),
-					inheritId = imageCollage.getAttribute("CPjs-inherit-backgroundColor"),
+					t = imageCollage.getAttribute("plaid-theme"),
+					inheritId = imageCollage.getAttribute("plaid-inherit-backgroundColor"),
 					inheritedBgColor,
 					images = imageCollage.getElementsByTagName("img");
 
@@ -259,7 +267,7 @@ var imageCollage,
 						for(var i = 0; i < images.length ; i++) {
 							images[i].setAttribute("style", setStyles('imageStyle'));
 							
-							// should be dynamic ? bad practice ?
+							// should be dynamic. bad practice ?
 							images[i].onclick =  theme.imageEvents.onclick;
 							images[i].onmouseover = theme.imageEvents.onhover;
 							images[i].onmouseout = theme.imageEvents.onleave;
@@ -272,7 +280,7 @@ var imageCollage,
 	})();
 
 	// div id to be used as the collage element
-	CPjs.id = function(elementId) {
+	plaid.id = function(elementId) {
 		_imageCollage(elementId);
 		storeImages();
 
@@ -280,7 +288,7 @@ var imageCollage,
 	};
 
 	// collage dimensions to be used by algorithm
-	CPjs.dimensions = function(w, h) {
+	plaid.dimensions = function(w, h) {
 		// check arguments supplied are Integers
 		if(is.numeric(w) && is.numeric(h)) {
 			collageWidth = Math.floor(w);
@@ -293,31 +301,36 @@ var imageCollage,
 		return this;
 	}
 	
-	CPjs.start = function() {
+	plaid.start = function() {
 
 		/*******************
 		*
 		* TEST Object
 		*
 		********************/
-		function testObject() {
-			var obj = {
+		var backendConfig = {
 			width : collageWidth,
 			height : collageHeight,
 			imageCollage : imageCollage,
 			images : images
-			};
+		};
 
-			console.log(obj);
-		}
+		// call backend and then render through callback
+		theBackend(backendConfig, function() {
+			render._theme();
+			render._dimensions(collageWidth, collageHeight);
+		});
 
-		render._theme();
-		render._dimensions(collageWidth, collageHeight);
-
-		testObject();
+		return this;
 	}
 	
+	function theBackend(config, callback) {
+		// all alogrithm functions go here
+		console.log(config);
+
+		callback();
+	}
 	// return object to window
-	window.CPjs = CPjs;
+	window.plaid = plaid;
 
 })(window);

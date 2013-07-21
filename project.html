@@ -14,16 +14,18 @@
 		}
 
 		img {
-			width: 260px;
+			width: 240px;
 			height: 200px;
 		}
 	</style>
 	<body>
 	<div id="test" style="background-color : #fff">inherited background color</div>
 	<div>
-		<div id="myDiv" CPjs-theme="vanilla" CPjs-inherit-backgroundColor="test">
+		<div id="myDiv" plaid-theme="skylight" plaid-inherit-backgroundColor="test">
 			<img src="resources/"/>
 			<img src="resources/image2"/>
+			<img src="resources/image3" />
+			<img src="resources/image4" />
 			<img src="resources/image3" />
 			<img src="resources/image4" />
 			<img src="resources/image3" />
@@ -32,7 +34,7 @@
 	</div>
 		<script type="text/javascript">
 			//basic idea of what we expect from the user
-			CPjs.id("myDiv")
+			plaid.id("myDiv")
 				.dimensions(1000, 500)
 				.start();
 		</script>
