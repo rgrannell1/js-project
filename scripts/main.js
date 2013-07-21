@@ -109,6 +109,9 @@ var lambda = ( function (is) {
 			}
 		},
 		negate: function (func) {
+			/* (a -> boolean) -> (a -> boolean)
+			   returns a function that inverts the boolean value of func;
+			   if func(x) returns true then negate(func(x)) returns false */
 
 			var call = "negate";
 			if (!is.closure(func)) {
@@ -123,7 +126,10 @@ var lambda = ( function (is) {
 			}
 		},
 		concatMap: function (func, iter) {
-			// (a -> b) -> a -> [b]
+			/* (a -> b) -> a -> [b]
+			   map a function over iter, and concatenate the 
+			   results so that length iter is not necessarily the same length
+			   at the return value */ 
 
 			var call = "concatMap";
 			if (is.closure(func)) {
@@ -161,8 +167,12 @@ var lambda = ( function (is) {
 
 		},
 		select: function (func, iter) {
-			// (a -> boolean) -> a -> [a]
-
+			/* (a -> boolean) -> a -> [a]
+			   takes a function and an array, and returns 
+			   an array containing only elements for which the function returns true
+			   upon application
+			*/
+	
 			var call = "select";
 			if (!is.closure(func)) {
 				throw new TypeError(call + ":" + "func must be a function");
@@ -188,7 +198,10 @@ var lambda = ( function (is) {
 			return result;		
 		},
 		until: function (pred, func, initial) {
-			// (a -> boolean) -> (a -> a) -> a -> a
+			/* (a -> boolean) -> (a -> a) -> a -> a
+			   takes a predicate, a function and an initial value.
+			   Iteratively applies func to initial, until predicate returns true
+			*/
 
 			var call = "until";
 			if (!is.closure(pred)) {
@@ -229,6 +242,8 @@ var lambda = ( function (is) {
 			return iter[Math.floor(Math.random() * iter.length)];
 		},
 		sequence: function (from, to) {
+			/* integer -> integer -> [integer]
+			   return the sequence from...to */
 
 			var result = [];
 			for (var ith = from; ith <= to; ith++) {
@@ -466,7 +481,9 @@ var Grammar = ( function (is, lambda) {
 			);
 		}
 		that.terminals = function (xs) {
-			/* [a] -> [a] */
+			/* [a] -> [a] 
+			   get the terminal symbols in xs
+			*/
 
 			var call = "nonTerminals"
 			if (!is.array(xs)) {
