@@ -35,8 +35,7 @@ var make = ( function (lambda, is) {
 var forall = ( function (lambda, is) {
 	return function (description, cases, assert) {
 		/* {a} -> functions -> boolean
-			quickcheck-like testing function
-		*/
+			quickcheck-like testing function */
 
 		var call = 'forall';
 		if (!is.string(description)) {
@@ -54,7 +53,7 @@ var forall = ( function (lambda, is) {
 				continue
 			}
 			if ( !is.closure(cases[ith]) ) {
-				throw new TypeError(call + ": each member of the array cases" +
+				throw new TypeError(call + ": each member of the array 'cases' " +
 					"must be a function");
 			}
 		}
