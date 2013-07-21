@@ -37,8 +37,11 @@ var is = ( function () {
 		number: function (val) {
 			return this.toType(val) === 'number';
 		},
-		boolean: function (val) {
+		logical: function (val) {
 			return this.toType(val) === 'boolean';
+		},
+		nan: function (val) {
+			return val !== val;
 		}
 	}
 } )();
@@ -56,18 +59,18 @@ var lambda = ( function (is) {
 
 			var call = "indMap";
 			if (!is.closure(func)) {
-				throw new TypeError(call + ":" + "func must be a function");
+				throw new TypeError(call + ": func must be a function");
 			}
 			if (!func.length === 2) {
-				throw new TypeError(call + ":" + "func must be a binary function");
+				throw new TypeError(call + ": func must be a binary function");
 			}
 			if (!is.array(iter)) {
-				throw new TypeError(call + ":" + "iter must be an array");
+				throw new TypeError(call + ": iter must be an array");
 			}
 
 			var result = [];
 
-			for (var ith = 0; ith < iter.length; iter++) {
+			for (var ith = 0; ith < iter.length; ith++) {
 				result[ith] = func(iter[ith], parseInt(ith, 10));
 			}
 			return result;
@@ -91,13 +94,13 @@ var lambda = ( function (is) {
 			} else {
 				var call = "fold";
 				if (!is.closure(func)) {
-					throw new TypeError(call + ":" + "func must be a function");
+					throw new TypeError(call + ": func must be a function");
 				}
 				if (!func.length === 2) {
-					throw new TypeError(call + ":" + "func must be a binary function");
+					throw new TypeError(call + ": func must be a binary function");
 				}
 				if (!is.array(iter) && !is.object (iter)) {
-					throw new TypeError(call + ":" + "iter must be an array or object");
+					throw new TypeError(call + ": iter must be an array or object");
 				}
 				for (var ith = 0; ith < iter.length; ith++) {
 					first = func(first, iter[ith]);
@@ -151,7 +154,7 @@ var lambda = ( function (is) {
 				}
 
 				var result = [];
-				for (var ith = 0 ; ith < iter.length; iter++) {
+				for (var ith = 0 ; ith < iter.length; ith++) {
 					if (!iter.hasOwnProperty(ith)) {
 						continue;
 					}
@@ -298,12 +301,11 @@ var Matrix = ( function (is) {
 		}
 		that.map = function (func) {
 			// (a - > b) -> Matrix a -> Matrix b
-			// element-wise mapping over matrix,
-			// so that matrix is a Functor
+			// element-wise mapping over matrix.
 
 			var call = "matrix.map";
 			if (!is.closure(func)) {
-				throw new TypeError(call + ":" + "func must be a function");
+				throw new TypeError(call + ": func must be a function");
 			}
 			var mapped = Matrix(
 				[func( that.xs[0] ), func( that.xs[1] )],
@@ -313,7 +315,7 @@ var Matrix = ( function (is) {
 		}
 		that.by = function (number) {
 			// (integer) -> Matrix integer
-			// scalar multiplication; linearly scale a point
+			// scalar multiplication; linearly scale a 2 x 2 matrix
 
 			return that.map( function (x) {
 				return x * number;
@@ -321,7 +323,7 @@ var Matrix = ( function (is) {
 		}
 		that.add = function (number) {
 			// (integer) -> Matrix integer
-			// scalar addition; translate a point
+			// scalar addition; translate a 2 x 2 matrix
 
 			return that.map( function (x) {
 				return x + number;
@@ -362,6 +364,7 @@ var Matrix = ( function (is) {
 var Rectangle = ( function () {
 	return function (xMinus, xPlus, yMinus, yPlus) {
 
+		var call = "Rectangle";
 		var args = Array.prototype.slice.call(arguments);
 
 		lambda.indMap(
@@ -370,7 +373,8 @@ var Rectangle = ( function () {
 					throw new TypeError(call + ": all values supplied to " + 
 						" the rectangle constructor must be numbers");
 				}
-				if (isNaN(val) || isFinite(value)) {
+
+				if (is.nan(val) || !isFinite(val)) {
 					throw new Error(call + ": all values supplied to " + 
 						" the rectangle constructor must be non-NaN");
 				}
