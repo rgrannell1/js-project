@@ -1,57 +1,80 @@
-var assignLinks = function (images, rectangles) {
- // [ {url: string, dimensions: [x y]} ] -> [Rectangles] -> [{url: string, rectangle: Rectangle}]
- 	// returns an array of objects which are bijective maps from 
- // a url onto a rectangle.
-
- // greedy find the mapping f(urls, rectangles) that minimises
- // sum (percentage cropping needed per image)
-
- // var result = []
- // for each image get the dimension; find the first hor/vert/square tile to fit it in
- 	// push {image: url} into result, remove both the current image and rectangle from the stacks
-};
-
-
-
-//create an array of results --> url-rectangle mapping to the result
-//pop each rectangle and image from their stacks 
-//is there an exact number of rectangles for each type? 
-	//If so, why not assign the image to rectangle when the rectangles are generated.
-	
-	//there will not be an equal number of rectangles for each size image, I have to find best fit.
 var assignLinks = function (images, rectangles){
-	
-	var imageType = 0,
-		notFound = true,
+
+	var notFound = true,
+		squareNotFound = true,
+		k = 0,
+		j = 0,
+		rectangle,
+		temp = {url: "", dimension: [0, 0]},
+		result = result = {url: "1", rectangle: "2"},
+		results = [],
+		indexOfImage = 0,
+		currentType = 0;
+		
+	while( rectangles.length !== 0 ){
+		
+		rectangle = rectangles.pop(); 
 		j = 0;
-	
-	for(i=0;i<images.length; i++){
-		if(images[i].width>images[i].height){
-			if(images[i].width >= images[i].height*1.5){
-				//return n*2n
-				imageType = 1;
-			}else{
-				//return n*n
-				imageType = 2;
-			}
-		}else{
-			if(images[i].height >= images[i].width*1.5){
-				//return 2n*n
-				imageType = 3;
-			}else{
-				//return n*n
-				imageType = 2;
-			}
-		}
-		j=0;
+		notFound = true; 
+		indexOfImage = 0;
+		
 		while(notFound){
-			if(rectangles[j].type === imageType){
-				rectangles[j].image = images[i]//assign image to rectangle
+		
+			if(images[j].aspectRatio() < 0.75 ){
+				currentType = 0.5; //4*2
+			}else if(images[j].aspectRatio() > 1.25 ){
+				currentType = 2; //2*4
+			}else{
+				currentType = 1; //square
+			}
+			
+			if( rectangle.aspectRatio() === currentType ){
+				
+				indexOfImage = j; //correct match found
+				notFound = false;
+			}
+			
+			if( notFound && ( j === (images.length - 1 )) ){
+			
+				indexOfImage = 0;
+				squareNotFound = true;
+				k = 0; 
+				
+				//Find square
+				while(squareNotFound){
+				
+					if(images[k].aspectRatio() < 0.75 ){
+						currentType = 0.5; //4*2
+					}else if(images[k].aspectRatio() > 1.25 ){
+						currentType = 2; //2*4
+					}else{
+						currentType = 1; //square
+					}
+					
+					if( currentType === 1 ){
+						indexOfImage = k; //take first square
+						squareNotFound = false;
+					}
+					
+					//square not found
+					if( squareNotFound && ( k === (images.length - 1 )) ){
+						indexOfImage = 0; //take first image in the array
+						squareNotFound = false;
+					}
+					k++;
+				}
 				notFound = false;
 			}
 			j++;
-		} 1l 
-		notFound = true;
+		}
+		
+		temp = images.slice(0, indexOfImage+1);
+		var image = temp.pop();
+		if(images.length !== 1){
+			images = temp.concat(images.slice(indexOfImage+1, images.length));
+		}
+		result = {url: image.url(), rectangle: "4"}; 
+		results.push(result)
 	}
-	return rectangles;
+	return results; 
 };
