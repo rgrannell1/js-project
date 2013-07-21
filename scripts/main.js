@@ -62,7 +62,7 @@ var lambda = ( function (is) {
 				throw new TypeError(call + ":" + "func must be a binary function");
 			}
 			if (!is.array(iter)) {
-				throw new TypeError(call + ":" + "iter must be an array ");
+				throw new TypeError(call + ":" + "iter must be an array");
 			}
 
 			var result = [];
@@ -527,16 +527,13 @@ var Grammar = ( function (is, lambda) {
 			/*  x -> [{pattern: function, production: function}] -> [x]
 				take a starting symbol and apply a production rule repeatedly
 				until only terminal symbols are left. */
-
-			/* iteratively apply production rules,
-			   return when only terminals */
 			
 			// guard against infinite loops during testing
 			var noTimeLeft = lambda.negate(lambda.timer);
 
 			return lambda.until(
 				pred = function (stacks) {
-					/* a -> boolean */
+					/* a -> boolean  */
 					return stacks.nonTerminal.length === 0 || noTimeLeft();
 				},
 				func = function (stacks) {
