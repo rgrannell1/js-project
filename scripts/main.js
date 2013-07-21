@@ -69,6 +69,16 @@ var imageCollage,
 					},
 					imageStyle : {
 						margin : 'margin: 2px 2px;'
+					},
+
+					imageEvents : {
+						onclick : function() {
+							alert("click");
+						},
+
+						onhover : function() {
+							alert("hover");
+						}
 					}
 				},
 
@@ -189,8 +199,13 @@ var imageCollage,
 						// apply styles to the collage and images
 						imageCollage.setAttribute("style", setStyles('canvasStyle'));
 
+
 						for(var i = 0; i < images.length ; i++) {
 							images[i].setAttribute("style", setStyles('imageStyle'));
+							
+							// should be dynamic
+							images[i].onmouseover = theme.imageEvents.onhover;
+							images[i].onclick = theme.imageEvents.onclick;
 						}
 					}
 				}
