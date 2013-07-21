@@ -190,7 +190,6 @@ var imageCollage,
 						imageCollage.setAttribute("style", setStyles('canvasStyle'));
 
 						for(var i = 0; i < images.length ; i++) {
-							console.log(images[i]);
 							images[i].setAttribute("style", setStyles('imageStyle'));
 						}
 					}
