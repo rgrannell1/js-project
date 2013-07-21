@@ -35,8 +35,7 @@ var is = ( function () {
 			return this.toType(val) === 'string';
 		},
 		number: function (val) {
-			return !isNaN(parseFloat(val, 10)) && isFinite(val) &&
-				this.toType(val) === 'number';
+			return this.toType(val) === 'number';
 		},
 		boolean: function (val) {
 			return this.toType(val) === 'boolean';
@@ -83,19 +82,31 @@ var lambda = ( function (is) {
 			// returning a single value.
 			
 			var call = "fold";
-			if (!is.closure(func)) {
-				throw new TypeError(call + ":" + "func must be a function");
+			if (is.closure(func)) {
+				throw new TypeError(call + ": func must be a function");
 			}
-			if (!func.length === 2) {
-				throw new TypeError(call + ":" + "func must be a binary function");
+			if (is.array(iter)) {
+				throw new TypeError(call + ": iter must be an array");
 			}
-			if (!is.array(iter) && !is.object (iter)) {
-				throw new TypeError(call + ":" + "iter must be an array or object");
+
+			if (iter.length === 0) {
+				return first
+			} else {
+				var call = "fold";
+				if (!is.closure(func)) {
+					throw new TypeError(call + ":" + "func must be a function");
+				}
+				if (!func.length === 2) {
+					throw new TypeError(call + ":" + "func must be a binary function");
+				}
+				if (!is.array(iter) && !is.object (iter)) {
+					throw new TypeError(call + ":" + "iter must be an array or object");
+				}
+				for (var ith = 0; ith < iter.length; ith++) {
+					first = func(first, iter[ith]);
+				}
+				return first;				
 			}
-			for (var ith = 0; ith < iter.length; ith++) {
-				first = func(first, iter[ith]);
-			}
-			return first;
 		},
 		negate: function (func) {
 
@@ -115,26 +126,39 @@ var lambda = ( function (is) {
 			// (a -> b) -> a -> [b]
 
 			var call = "concatMap";
-			if (!is.closure(func)) {
-				throw new TypeError(call + ":" + "func must be a function");
+			if (is.closure(func)) {
+				throw new TypeError(call + ": func must be a function");
 			}
-			if (!func.length === 1) {
-				throw new TypeError(call + ":" + "func must be a unary function");
-			}
-			if (!is.array(iter) && !is.object (iter)) {
-				throw new TypeError(call + ":" + "iter must be an array or object");
+			if (is.array(iter)) {
+				throw new TypeError(call + ": iter must be an array");
 			}
 
-			var result = [];
-
-			for (ith in iter) {
-				if (!iter.hasOwnProperty(ith)) {
-					continue;
+			if (iter.length === 0) {
+				return []
+			} else {
+				var call = "concatMap";
+				if (!is.closure(func)) {
+					throw new TypeError(call + ":" + "func must be a function");
 				}
-				var val = iter[ith];
-				result = result.concat(func(val, ith));
+				if (!func.length === 1) {
+					throw new TypeError(call + ":" + "func must be a unary function");
+				}
+				if (!is.array(iter) && !is.object (iter)) {
+					throw new TypeError(call + ":" + "iter must be an array or object");
+				}
+
+				var result = [];
+
+				for (ith in iter) {
+					if (!iter.hasOwnProperty(ith)) {
+						continue;
+					}
+					var val = iter[ith];
+					result = result.concat(func(val, ith));
+				}
+				return result;				
 			}
-			return result;
+
 		},
 		select: function (func, iter) {
 			// (a -> boolean) -> a -> [a]
@@ -228,9 +252,7 @@ var lambda = ( function (is) {
 				}
 			} )();
 		}
-
 	}
-
 } )(is);
 
 // = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
@@ -331,6 +353,22 @@ var Matrix = ( function (is) {
 var Rectangle = ( function () {
 	return function (xMinus, xPlus, yMinus, yPlus) {
 
+		var args = Array.prototype.slice.call(arguments);
+
+		lambda.indMap(
+			function (val, ith) {
+				if (!is.number(val)) {
+					throw new TypeError(call + ": all values supplied to " + 
+						" the rectangle constructor must be numbers");
+				}
+				if (isNaN(val) || isFinite(value)) {
+					throw new Error(call + ": all values supplied to " + 
+						" the rectangle constructor must be non-NaN");
+				}
+			},
+			args
+		);
+
 		var that = {};
 		that.xMinus = xMinus;
 		that.xPlus = xPlus;
@@ -366,20 +404,48 @@ var Rectangle = ( function () {
 // Grammar Prototype. Only used once, 
 // but seperated for modularity and testabilities sake.
 
-var Grammar = ( function (lambda) {
+var Grammar = ( function (is, lambda) {
 	return function (rules) {
 		/*  an object for holding grammar rules, returning 
 			terminals and non-terminals, and generating a string
 			in the language from an initial symbol and a ruleset */
 		
+		var call = "Grammar";
 		var that = {};
 		that.rules = rules;
+
+		if (!is.array(rules)) {
+			throw new TypeError(call + ": rules must be an array")
+		}
+
+		lambda.indMap(
+			function (rulePair, ith) {
+	
+				if ( !is.closure(rulePair.pattern) ) {
+					throw new TypeError(call + ": every rule must be an object " +
+						" containing a function bound to .pattern and a function bound " +
+						" to .production ");
+				}
+				if ( !is.closure(rulePair.production) ) {
+					throw new TypeError(call + ": every rule must be an object " + 
+						"containing a function bound to .pattern and a function bound" +
+						"to .production");
+				}
+			},
+			that.rules
+		)
+
 		that.nonTerminals = function (xs) {
 			/* [a] -> [a]
 				takes a collection xs and an array rules of 
 				pattern : production object pairs.
 				returns the xs matching some pattern in rules.
 				return the non-terminal values in the grammar rules. */
+
+			var call = "nonTerminals";
+			if (!is.array(xs)) {
+				throw new TypeError(call + ": xs must be an array");
+			}
 
 			return lambda.select(
 				function (x) {
@@ -401,6 +467,11 @@ var Grammar = ( function (lambda) {
 		}
 		that.terminals = function (xs) {
 			/* [a] -> [a] */
+
+			var call = "nonTerminals"
+			if (!is.array(xs)) {
+				throw new TypeError(call + ": xs must be an array");
+			}
 
 			return lambda.select(
 				function (x) {
@@ -475,7 +546,7 @@ var Grammar = ( function (lambda) {
 		}
 		return that;
 	}
-} )(lambda);
+} )(is, lambda);
 
 // = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
 // = # = # = # = Core Algorithm = # = # = # = # = # = # = # = # = # = # 
@@ -634,6 +705,14 @@ var tilePlane = ( function (is, lambda) {
 		   whose .width and .height fields are positive integers.
 		   returns an array of Rectangles of length n. This array of rectangles
 		   will tile a plane of size dimensions.width x dimensions.height. */
+
+		var call = "tilePlane";
+		if (!is.number(n)) {
+			throw new TypeError(call + ": n must be an number");
+		}
+		if (Math.round(n) !== n || n < 0) {
+			throw new Error(call + " n must be a positive integer");
+		}
 
 		var units = ( function (n, width, height) {
 			/* magic numbers, for the moment.

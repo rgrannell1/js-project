@@ -200,45 +200,25 @@ var testSuite = ( function (is, lambda) {
 			var simpleGrammar = Grammar([
 				{
 					pattern: function (symbol) {
-						return 
+						return symbol === "a";
 					},
 					production: function (symbol) {
-						return 
+						return ["b", "c"];
 					}
 				},
 				{
 					pattern: function (symbol) {
-						return 
+						return symbol === "b";
 					},
 					production: function (symbol) {
-						return 
-					}
-				},
-				{
-					pattern: function (symbol) {
-						return 
-					},
-					production: function (symbol) {
-						return 
+						return ["c"];
 					}
 				}
 			]); 
 
-			return forall(
-				"",
-				[],
-				function () {
-
-
-
-
-
-
-				}
-			)
-
+			var sentence = simpleGrammar.generate(["a"]);
+			return allEqual(sentence, ["c", "c"]);
 		})
 	];
-
 
 } )(is, lambda)
