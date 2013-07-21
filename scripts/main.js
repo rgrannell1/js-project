@@ -72,12 +72,18 @@ var imageCollage,
 					},
 
 					imageEvents : {
-						onclick : function() {
-							alert("click");
+						onclick : function(evt) {
+							// testing right now
+							evt.currentTarget.style.backgroundColor = "black";
+							
 						},
 
-						onhover : function() {
-							alert("hover");
+						onhover : function(evt) {
+							evt.currentTarget.style.backgroundColor = "yellow";
+						},
+
+						onleave : function(evt) {
+							evt.currentTarget.style.backgroundColor = "white";
 						}
 					}
 				},
@@ -90,6 +96,22 @@ var imageCollage,
 					},
 					imageStyle : {
 						margin: "margin: 2px 2px;"
+					},
+					
+					imageEvents : {
+						onclick : function(evt) {
+							// testing right now
+							evt.currentTarget.style.backgroundColor = "black";
+							
+						},
+
+						onhover : function(evt) {
+							evt.currentTarget.style.backgroundColor = "yellow";
+						},
+
+						onleave : function(evt) {
+							evt.currentTarget.style.backgroundColor = "white";
+						}
 					}
 				},
 
@@ -98,8 +120,25 @@ var imageCollage,
 					canvasStyle : {
 						border : 'border : 1px solid rgba(180,180,180, 1);'
 					},
+
 					imageStyle : {
 						margin : 'margin: 2px 2px;'
+					},
+
+					imageEvents : {
+						onclick : function(evt) {
+							// testing right now
+							evt.currentTarget.style.backgroundColor = "black";
+							
+						},
+
+						onhover : function(evt) {
+							evt.currentTarget.style.backgroundColor = "yellow";
+						},
+
+						onleave : function(evt) {
+							evt.currentTarget.style.backgroundColor = "white";
+						}
 					}
 				},
 
@@ -108,8 +147,25 @@ var imageCollage,
 					canvasStyle : {
 						border : 'border : 3px solid rgba(80, 80, 95, 1);'
 					},
+
 					imageStyle : {
 						margin: 'margin: 2px 2px;'
+					},
+
+					imageEvents : {
+						onclick : function(evt) {
+							// testing right now
+							evt.currentTarget.style.backgroundColor = "black";
+							
+						},
+
+						onhover : function(evt) {
+							evt.currentTarget.style.backgroundColor = "yellow";
+						},
+
+						onleave : function(evt) {
+							evt.currentTarget.style.backgroundColor = "white";
+						}
 					}
 				}
 			};
@@ -189,7 +245,7 @@ var imageCollage,
 
 				if(t !== null) {
 					for(var data in themes) {
-						if(themes[data].name == t) {
+						if(themes[data].name === t) {
 							theme = themes[data];
 							break;
 						}
@@ -203,9 +259,10 @@ var imageCollage,
 						for(var i = 0; i < images.length ; i++) {
 							images[i].setAttribute("style", setStyles('imageStyle'));
 							
-							// should be dynamic
+							// should be dynamic ? bad practice ?
+							images[i].onclick =  theme.imageEvents.onclick;
 							images[i].onmouseover = theme.imageEvents.onhover;
-							images[i].onclick = theme.imageEvents.onclick;
+							images[i].onmouseout = theme.imageEvents.onleave;
 						}
 					}
 				}
