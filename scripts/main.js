@@ -59,10 +59,14 @@ var imageCollage,
 	})(),
 
 	dialog = (function() {
+		var popup;
+
 		return {
 			create : function() {
-				var popup = document.createElement("div");
-				popup.setAttribute("style", "position: absolute; width: 90%; height: 200px; border : 1px solid #222; top: 0");
+				popup = document.createElement("div");
+				popup.setAttribute("style", "position: absolute;" + 
+													 "width: 99%; height: 200px;" +
+													 "top: 0; left: 0; z-index: 3000;");
 			},
 
 			render : function() {
@@ -171,6 +175,7 @@ var imageCollage,
 					imageEvents : {
 						onclick : function(evt) {
 							dialog.create();
+							dialog.render();
 						},
 
 						onhover : function(evt) {
