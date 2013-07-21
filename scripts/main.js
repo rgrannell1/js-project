@@ -1,7 +1,3 @@
-(function() {
-"use strict"
-})();
-
 // hasOwnProperty
 if(!Array.prototype.indexOf) {
 	// implement indexOf for browser support
@@ -18,6 +14,8 @@ if(!Array.prototype.indexOf) {
 }
 
 (function(window) {
+"use strict"
+
 // private variables
 var imageCollage,
 
