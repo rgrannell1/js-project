@@ -1,11 +1,11 @@
 
 ( function () {
 	"use strict";
-} )()
+} )();
 
 var make = ( function (lambda, is) {
 
-	var that = {}
+	var that = {};
 	that.positiveIntegers = function () {
 		return lambda.pickOne(
 			lambda.sequence(1, 100)
@@ -87,10 +87,14 @@ var forall = ( function (lambda, is) {
 					assert.toString() + "\n\nwith random inputs. A nullary function containing the " +
 					"failed case has been returned";
 
-				throw new TypeError(msg);	
-				return function () {
-					return testCase;
-				}		
+				try {
+					throw new TypeError(msg);						
+				}
+				finally {
+					return function () {
+						return testCase;
+					}
+				}
 			}
 		}
 
@@ -113,10 +117,13 @@ var forall = ( function (lambda, is) {
 				failed.length + " failed for the function\n\n" +
 				assert.toString() +  
 				"\n\n A nullary function containing the failed cases has been returned"
-
-			throw new Error(msg);
-			return function () {
-				return failed;
+			try {
+				throw new Error(msg);				
+			}
+			finally {
+				return function () {
+					return failed;
+				}				
 			}
 		} else {
 			console.log("'" + description + "'\n" +  
@@ -126,3 +133,5 @@ var forall = ( function (lambda, is) {
 	}
 
 } )(lambda, is);
+
+
