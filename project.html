@@ -3,17 +3,25 @@
 		<script src="scripts/main.js" type="text/javascript"></script>
 	</head>
 	<style type="text/css">
+		#test {
+			color: #fff;
+			padding: 20px;
+		}
+
 		#myDiv {
-			height: 500px;
-			width: 1200px;
 			clear: both;
-			margin: 10px auto;
+			margin: 20px auto;
+		}
+
+		img {
+			width: 260px;
+			height: 200px;
 		}
 	</style>
 	<body>
-	<div id="stuff" style="background-color : #fff">hi</div>
+	<div id="test" style="background-color : #fff">inherited background color</div>
 	<div>
-		<div id="myDiv" CPjs-theme="vanilla" CPjs-inherit-backgroundColor="stuff">
+		<div id="myDiv" CPjs-theme="skylight" CPjs-inherit-backgroundColor="test">
 			<img src="resources/"/>
 			<img src="resources/image2"/>
 			<img src="resources/image3" />
@@ -23,7 +31,7 @@
 		<script type="text/javascript">
 			//basic idea of what we expect from the user
 			CPjs.id("myDiv")
-				.dimensions('200.00', 200)
+				.dimensions(1000, 500)
 				.start();
 		</script>
 		this file is for testing out css stylesheets and js-scripts
