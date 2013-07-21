@@ -163,6 +163,8 @@ var testSuite = ( function (is, lambda) {
 		}),
 		test("test that until works and terminates", function () {
 
+			console.log("asdasdasd")
+
 			return forall(
 				"until terminates and whatnot",
 				[make.positiveIntegers],
@@ -170,7 +172,7 @@ var testSuite = ( function (is, lambda) {
 
 					lambda.until(
 						function (xs) {
-							return xs[xs.length - 1] === upper;
+							return xs[xs.length - 1] > upper;
 						},
 						function (xs) {
 							return xs.concat(xs[xs.length - 1] + 1);

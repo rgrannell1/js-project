@@ -67,10 +67,7 @@ var lambda = ( function (is) {
 
 			var result = [];
 
-			for (ith in iter) {
-				if (!iter.hasOwnProperty(ith)) {
-					continue;
-				}
+			for (var ith = 0; ith < iter.length; iter++) {
 				result[ith] = func(iter[ith], parseInt(ith, 10));
 			}
 			return result;
@@ -82,10 +79,10 @@ var lambda = ( function (is) {
 			// returning a single value.
 			
 			var call = "fold";
-			if (is.closure(func)) {
+			if (!is.closure(func)) {
 				throw new TypeError(call + ": func must be a function");
 			}
-			if (is.array(iter)) {
+			if (!is.array(iter)) {
 				throw new TypeError(call + ": iter must be an array");
 			}
 
@@ -105,7 +102,7 @@ var lambda = ( function (is) {
 				for (var ith = 0; ith < iter.length; ith++) {
 					first = func(first, iter[ith]);
 				}
-				return first;				
+				return first;
 			}
 		},
 		negate: function (func) {
@@ -132,10 +129,10 @@ var lambda = ( function (is) {
 			   at the return value */ 
 
 			var call = "concatMap";
-			if (is.closure(func)) {
+			if (!is.closure(func)) {
 				throw new TypeError(call + ": func must be a function");
 			}
-			if (is.array(iter)) {
+			if (!is.array(iter)) {
 				throw new TypeError(call + ": iter must be an array");
 			}
 
@@ -154,8 +151,7 @@ var lambda = ( function (is) {
 				}
 
 				var result = [];
-
-				for (ith in iter) {
+				for (var ith = 0 ; ith < iter.length; iter++) {
 					if (!iter.hasOwnProperty(ith)) {
 						continue;
 					}
@@ -170,9 +166,8 @@ var lambda = ( function (is) {
 			/* (a -> boolean) -> a -> [a]
 			   takes a function and an array, and returns 
 			   an array containing only elements for which the function returns true
-			   upon application
-			*/
-	
+			   upon application */
+
 			var call = "select";
 			if (!is.closure(func)) {
 				throw new TypeError(call + ":" + "func must be a function");
@@ -185,7 +180,6 @@ var lambda = ( function (is) {
 			}
 
 			var result = [];
-
 			for (ith in iter) {
 				if (!iter.hasOwnProperty(ith)) {
 					continue;
@@ -214,7 +208,7 @@ var lambda = ( function (is) {
 				throw new TypeError(call + ":" + "func must be a unary function");
 			}
 			if (!pred.length === 1) {
-				throw new TypeError(call + ":" + "pred must be a unary function");			
+				throw new TypeError(call + ":" + "pred must be a unary function");
 			}
 
 			// cut short after 10,000 iterations, 
@@ -224,7 +218,7 @@ var lambda = ( function (is) {
 				if (pred(initial)) {
 					break;
 				} else {
-					initial = func(initial);				
+					initial = func(initial);
 				}
 			}
 			return initial;
@@ -252,20 +246,20 @@ var lambda = ( function (is) {
 			return result;
 		},
 		timer: function (seconds) {
+			// integer -> ( -> boolean)
 			// returns a function that returns true for
 			// seconds, em, seconds after its creation.
 			
-			return ( function () {
-				var unixTime = function () {
-					return Math.round(new Date().getTime() / 1000.0);
-				}
-				var genesis = unixTime();
-				return function () {
-					// has seconds seconds elapsed since creation?
-					var timeSinceCreation = unixTime() - genesis;
-					return timeSinceCreation < seconds;
-				}
-			} )();
+			var unixTime = function () {
+				return Math.round(new Date().getTime() / 1000.0);
+			}
+			var genesis = unixTime();
+			
+			return function () {
+				// has seconds seconds elapsed since creation?
+				var timeSinceCreation = unixTime() - genesis;
+				return timeSinceCreation < seconds;
+			}
 		}
 	}
 } )(is);
