@@ -62,7 +62,8 @@ var imageCollage,
 		// todo
 	})(),
 
-	// theme objects
+	// theme objects that can be refrenced by the user
+	// the idea is that these themes are easily editable to users so simple themes can be easily created
 	themes = (function() {
 		return {
 				aqua : {
@@ -189,7 +190,7 @@ var imageCollage,
 			imageCollage = element;
 		}
 		else {
-			throw new Error("Collage container must be a DIV");
+			console.error("Collage container must be a DIV");
 		}
 	}
 
@@ -295,7 +296,7 @@ var imageCollage,
 			collageHeight = Math.floor(h);
 
 		} else {
-			throw new TypeError("width and height must both be numbers");
+			console.error("width and height must both be numbers");
 		}
 
 		return this;
