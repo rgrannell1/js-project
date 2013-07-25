@@ -29,13 +29,6 @@ var imageCollage,
 
 	plaid = {},
 
-	// for better storage of api properties
-	Image = function(src, w, h) {
-		this.source = src;
-		this.width = w,
-		this.height = h;
-	},
-
 	// for better type checking
 	is = (function() {
 		return {
@@ -56,10 +49,6 @@ var imageCollage,
 					return !isNaN(parseFloat(val)) && isFinite(val);
 				}
 			};
-	})(),
-
-	dialog = (function() {
-		// todo
 	})(),
 
 	// theme objects that can be refrenced by the user
@@ -105,7 +94,7 @@ var imageCollage,
 					},
 					
 					imageEvents : {
-						"onclick" : function(evt) {
+						onclick : function(evt) {
 							// open a dialog
 							
 						},
@@ -181,16 +170,26 @@ var imageCollage,
 			};
 	})();
 	
+	// error handling 
+	function UsefulError(description) {
+		this.description = description;
+	}
+
+	// for better storage of image properties
+	function Image(src, w, h) {
+		this.source = src;
+		this.width = w,
+		this.height = h;
+	}
 
 	// gets canvas element return and sets it to the canvas attribute
 	function _imageCollage(e) {
 		var element = document.getElementById(e);
 
 		if(element !== null && element.tagName === 'DIV') {
-			imageCollage = element;
-		}
-		else {
-			console.error("Collage container must be a DIV");
+				imageCollage = element;
+		} else {
+			throw new UsefulError("Collage container must be a DIV");
 		}
 	}
 
@@ -218,7 +217,9 @@ var imageCollage,
 	var render = (function() {
 		// set background color of collage div to the same as its parent
 		// if CPjs-canvas-transparent is set to true
-		return {
+
+		return {						
+
 			_dimensions : function(w, h) {
 				imageCollage.style.width = w;
 				imageCollage.style.height = h;
@@ -226,7 +227,28 @@ var imageCollage,
 
 			_theme : function() {
 				var theme,
-					t = imageCollage.getAttribute("plaid-theme"),
+					t,
+					inheritId,
+					inheritedBgColor,
+					images;
+
+					function setStyles(style) {
+						var output = "";
+						
+						if(style === 'canvasStyle' && inheritedBgColor !== null) {
+							output += "background-color : " + inheritedBgColor + ";";
+						}
+
+						for(var prop in theme[style]) {
+							if(theme[style].hasOwnProperty(prop)) {
+								output += theme[style][prop];
+							}
+						}
+
+						return output;
+					}
+
+					t = imageCollage.getAttribute("plaid-theme")
 					inheritId = imageCollage.getAttribute("plaid-inherit-backgroundColor"),
 					inheritedBgColor,
 					images = imageCollage.getElementsByTagName("img");
@@ -235,23 +257,6 @@ var imageCollage,
 						var inheritedBgColorElement = document.getElementById(inheritId);
 						inheritedBgColorElement !== null? inheritedBgColor = inheritedBgColorElement.style.backgroundColor : inheritedBgColor = null;
 					}
-					
-
-				function setStyles(style) {
-					var output = "";
-					
-					if(style === 'canvasStyle' && inheritedBgColor !== null) {
-						output += "background-color : " + inheritedBgColor + ";";
-					}
-
-					for(var prop in theme[style]) {
-						if(theme[style].hasOwnProperty(prop)) {
-							output += theme[style][prop];
-						}
-					}
-
-					return output;
-				}
 
 				if(t !== null) {
 					for(var data in themes) {
@@ -282,8 +287,13 @@ var imageCollage,
 
 	// div id to be used as the collage element
 	plaid.id = function(elementId) {
-		_imageCollage(elementId);
-		storeImages();
+		try {
+			_imageCollage(elementId);
+			storeImages();
+
+		} catch(e) {
+			console.error(e.description);
+		}
 
 		return this;
 	};
@@ -291,38 +301,45 @@ var imageCollage,
 	// collage dimensions to be used by algorithm
 	plaid.dimensions = function(w, h) {
 		// check arguments supplied are Integers
-		if(is.numeric(w) && is.numeric(h)) {
-			collageWidth = Math.floor(w);
-			collageHeight = Math.floor(h);
+		try {
+			if(is.numeric(w) && is.numeric(h)) {
+				collageWidth = Math.floor(w);
+				collageHeight = Math.floor(h);
 
-		} else {
-			console.error("width and height must both be numbers");
+			} else {
+				throw new UsefulError("width and height must both be numbers");
+			}
+		} catch (e) {
+			console.error(e.description);
 		}
 
 		return this;
 	}
 	
 	plaid.start = function() {
+			function isCollageUndefined() {
+				if(!imageCollage) {
+					throw new UsefulError("imageCollage is undefined");
+				}
+			};
 
-		/*******************
-		*
-		* TEST Object
-		*
-		********************/
-		var backendConfig = {
-			width : collageWidth,
-			height : collageHeight,
-			imageCollage : imageCollage,
-			images : images
-		};
+			var backendConfig = {
+				width : collageWidth,
+				height : collageHeight,
+				imageCollage : imageCollage,
+				images : images
+			};
 
-		// call backend and then render through callback
-		theBackend(backendConfig, function(val) {
-			render._theme();
-			render._dimensions(collageWidth, collageHeight);
-		});
+			try {// call backend and then render through callback
 
-		return this;
+				isCollageUndefined();
+				theBackend(backendConfig, function(val) {
+					render._theme();
+					render._dimensions(collageWidth, collageHeight);
+				});
+			} catch(e) {
+				console.error(e.description);
+			}
 	}
 	
 	function theBackend(config, callback) {
