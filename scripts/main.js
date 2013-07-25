@@ -263,10 +263,8 @@ var imageCollage,
 					if(theme !== undefined) {
 						// apply styles to the collage and images
 						imageCollage.setAttribute("style", setStyles('canvasStyle'));
-
-
+						
 						for(var i = 0; i < images.length ; i++) {
-							
 							images[i].setAttribute("style", setStyles('imageStyle'));
 							
 							for(var evt in theme.imageEvents) {
