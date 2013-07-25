@@ -59,22 +59,7 @@ var imageCollage,
 	})(),
 
 	dialog = (function() {
-		var popup;
-
-		return {
-			create : function() {
-				popup = document.createElement("div");
-				popup.setAttribute("style", "position: absolute;" + 
-													 "width: 99%; height: 200px;" +
-													 "top: 0; left: 0; z-index: 3000;");
-			},
-
-			render : function() {
-				var body = document.getElementsByTagName('body');
-				console.log(body);
-				body[0].appendChild(popup);
-			}
-		}
+		// todo
 	})(),
 
 	// theme objects
@@ -96,12 +81,12 @@ var imageCollage,
 							// open a dialog
 						},
 
-						onhover : function(evt) {
+						onmouseover : function(evt) {
 
 							evt.currentTarget.style.transition = "yellow";
 						},
 
-						onleave : function(evt) {
+						onmouseout : function(evt) {
 							evt.currentTarget.style.backgroundColor = "white";
 						}
 					}
@@ -119,16 +104,16 @@ var imageCollage,
 					},
 					
 					imageEvents : {
-						onclick : function(evt) {
+						"onclick" : function(evt) {
 							// open a dialog
 							
 						},
 
-						onhover : function(evt) {
+						onmouseover : function(evt) {
 							//evt.currentTarget.style.backgroundColor = "yellow";
 						},
 
-						onleave : function(evt) {
+						onmouseout : function(evt) {
 							//evt.currentTarget.style.backgroundColor = "white";
 						}
 					}
@@ -151,11 +136,11 @@ var imageCollage,
 							
 						},
 
-						onhover : function(evt) {
+						onmouseover : function(evt) {
 							evt.currentTarget.style.backgroundColor = "yellow";
 						},
 
-						onleave : function(evt) {
+						onmouseout : function(evt) {
 							evt.currentTarget.style.backgroundColor = "white";
 						}
 					}
@@ -178,7 +163,7 @@ var imageCollage,
 							dialog.render();
 						},
 
-						onhover : function(evt) {
+						onmouseover : function(evt) {
 							evt.currentTarget.style.transition = "1s ease";
 							evt.currentTarget.style.webkitTransition = "1s ease";
 
@@ -186,7 +171,7 @@ var imageCollage,
 							evt.currentTarget.style.webkitTransform = "scale(1.02)";
 						},
 
-						onleave : function(evt) {
+						onmouseout : function(evt) {
 							evt.currentTarget.style.transform = "scale(1)";
 							evt.currentTarget.style.webkitTransform = "scale(1)";
 						}
@@ -281,12 +266,13 @@ var imageCollage,
 
 
 						for(var i = 0; i < images.length ; i++) {
+							
 							images[i].setAttribute("style", setStyles('imageStyle'));
 							
-							// should be dynamic. bad practice ?
-							images[i].onclick =  theme.imageEvents.onclick;
-							images[i].onmouseover = theme.imageEvents.onhover;
-							images[i].onmouseout = theme.imageEvents.onleave;
+							for(var evt in theme.imageEvents) {
+								images[i][evt.toString()] = theme.imageEvents[evt.toString()];
+							}
+							
 						}
 					}
 				}
