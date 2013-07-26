@@ -108,23 +108,6 @@ var lambda = ( function (is) {
 				return first;
 			}
 		},
-		negate: function (func) {
-			/* (a -> boolean) -> (a -> boolean)
-			   returns a function that inverts the boolean value of func;
-			   if func(x) returns true then negate(func(x)) returns false */
-
-			var call = "negate";
-			if (!is.closure(func)) {
-				throw new TypeError(call + ":" + "func must be a function");
-			}
-			if (!func.length === 1) {
-				throw new TypeError(call + ":" + "func must be a unary function");
-			}
-
-			return function (x) {
-				return !func(x)
-			}
-		},
 		concatMap: function (func, iter) {
 			/* (a -> b) -> a -> [b]
 			   map a function over iter, and concatenate the 
@@ -173,13 +156,13 @@ var lambda = ( function (is) {
 
 			var call = "select";
 			if (!is.closure(func)) {
-				throw new TypeError(call + ":" + "func must be a function");
+				throw new TypeError(call + ": func must be a function");
 			}
 			if (!func.length === 1) {
-				throw new TypeError(call + ":" + "func must be a unary function");
+				throw new TypeError(call + ": func must be a unary function");
 			}
 			if (!is.array(iter) && !is.object (iter)) {
-				throw new TypeError(call + ":" + "iter must be an array or object");
+				throw new TypeError(call + ": iter must be an array or object");
 			}
 
 			var result = [];
@@ -194,46 +177,13 @@ var lambda = ( function (is) {
 			}
 			return result;		
 		},
-		until: function (pred, func, initial) {
-			/* (a -> boolean) -> (a -> a) -> a -> a
-			   takes a predicate, a function and an initial value.
-			   Iteratively applies func to initial, until predicate returns true
-			*/
-
-			var call = "until";
-			if (!is.closure(pred)) {
-				throw new TypeError(call + ":" + "pred must be a function");
-			}
-			if (!is.closure(func)) {
-				throw new TypeError(call + ":" + "func must be a function");
-			}
-			if (!pred.length === 1) {
-				throw new TypeError(call + ":" + "func must be a unary function");
-			}
-			if (!pred.length === 1) {
-				throw new TypeError(call + ":" + "pred must be a unary function");
-			}
-
-			// cut short after 10,000 iterations, 
-			// in case pred was set up badly
-			for (var failSafe = 0; failSafe < 10000; failSafe++) {
-
-				if (pred(initial)) {
-					break;
-				} else {
-					initial = func(initial);
-				}
-			}
-			return initial;
-
-		},
 		pickOne: function (iter) {
 			// [a] -> a
 			// return a single value from iter
 
 			var call = "pickOne";
 			if (!is.array(iter) && !is.object (iter)) {
-				throw new TypeError(call + ":" + "iter must be an array or object");
+				throw new TypeError(call + ": iter must be an array or object");
 			}
 
 			return iter[Math.floor(Math.random() * iter.length)];
@@ -367,6 +317,8 @@ var Rectangle = ( function () {
 		var call = "Rectangle";
 		var args = Array.prototype.slice.call(arguments);
 
+		console.log( args )
+
 		lambda.indMap(
 			function (val, ith) {
 				if (!is.number(val)) {
@@ -387,7 +339,11 @@ var Rectangle = ( function () {
 		that.xPlus = xPlus;
 		that.yMinus = yMinus;
 		that.yPlus = yPlus;
-
+		that.value = undefined;
+		
+		that._value = function (value) {
+			that.value = value;
+		};
 		that.width = function () {
 			return Math.abs(that.xPlus - that.xMinus)
 		},
@@ -527,34 +483,34 @@ var Grammar = ( function (is, lambda) {
 				until only terminal symbols are left. */
 			
 			// guard against infinite loops during testing
-			var noTimeLeft = lambda.negate(lambda.timer);
+			var timeLeft = lambda.timer;
 
-			return lambda.until(
-				pred = function (stacks) {
-					/* a -> boolean  */
-					return stacks.nonTerminal.length === 0 || noTimeLeft();
-				},
-				func = function (stacks) {
-					/* [{ nonTerminal: [a], terminal: [a] }] ->
-					   [{ nonTerminal: [a], terminal: [a] }] */
+			var stacks = {
+				nonTerminal: [start],
+				terminal: []
+			};
 
-					var producable = stacks.nonTerminal.pop();
+			while (stacks.nonTerminal.length > 0 || timeLeft()) {
+				/* [{ nonTerminal: [a], terminal: [a] }] ->
+				   [{ nonTerminal: [a], terminal: [a] }] */
+					
+					var producable = stacks.nonTerminal[0];
+
+					// shorten the non-terminal stack by one element
+					stacks.nonTerminal = stacks.nonTerminal.splice(
+						1, stacks.nonTerminal.length
+					);
+
+					// generate some more tiles from the 'producable'
 					var products = that.generateOne(producable);
 
-					return {
-						nonTerminal: 
-							stacks.nonTerminal.concat(
-								that.nonTerminals(products)),
-						terminal:
-							stacks.terminal.concat(
-								that.terminals(products))
-					};
-				}, 
-				initial = {
-					nonTerminal: [start],
-					terminal: []
-				}
-			);
+					stacks.nonTerminal = stacks.nonTerminal.concat(
+						that.nonTerminals(products));
+
+					stacks.terminal = stacks.terminal.concat(
+						that.terminals(products));
+			}
+			return stacks
 		}
 		return that;
 	}
@@ -702,6 +658,7 @@ var splitGrammar = ( function (lambda) {
 						boundary.xMiddle, tile.xPlus,
 						tile.yMinus, boundary.yMiddle)
 				];
+
 				return product;
 			}
 		}
@@ -723,7 +680,7 @@ var tilePlane = ( function (is, lambda) {
 			throw new TypeError(call + ": n must be an number");
 		}
 		if (Math.round(n) !== n || n < 0) {
-			throw new Error(call + " n must be a positive integer");
+			throw new Error(call + ": n must be a positive integer");
 		}
 
 		var units = ( function (n, width, height) {
@@ -736,7 +693,6 @@ var tilePlane = ( function (is, lambda) {
 		} )(n, dimensions.width, dimensions.height);
 
 		// the initial rectangle to subdivide
-
 		var pictureArea = Rectangle(0, units.x, 0, units.y);
 
 		// tile -> [tile]
@@ -761,3 +717,4 @@ var tilePlane = ( function (is, lambda) {
 
 } )(is, lambda)
 
+tilePlane(10, {width: 1000, height: 1000})

@@ -1,9 +1,7 @@
 
 var testRectangles = ( function () {
 
-	var scaleMatrix = Matrix(
-		[1000 / 4, 0],
-		[0, 1000/ 4]);
+	var scaleMatrix = Matrix([1000 / 4, 0], [0, 1000/ 4]);
 
 	var tiles = [
 		Rectangle(0, 1, 3, 4),
