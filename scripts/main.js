@@ -317,7 +317,7 @@ var Rectangle = ( function () {
 		var call = "Rectangle";
 		var args = Array.prototype.slice.call(arguments);
 
-		console.log( args )
+		console.log( args );
 
 		lambda.indMap(
 			function (val, ith) {
@@ -348,7 +348,7 @@ var Rectangle = ( function () {
 			return Math.abs(that.xPlus - that.xMinus)
 		},
 		that.height = function () {
-			return Math.abs(that.xPlus - that.xMinus)
+			return Math.abs(that.yPlus - that.yMinus)
 		},
 		that.asMatrix = function () {
 			// converts rectangle to a matrix,
@@ -630,15 +630,22 @@ var splitGrammar = ( function (lambda) {
 				var boundary = {
 					xMiddle: lambda.pickOne(
 						lambda.sequence(
-							from = tile.yMinus + 1,
-							to = tile.yPlus - 1
+							from = tile.xMinus + 1,
+							to = tile.xPlus - 1
 					)),
 					yMiddle: lambda.pickOne(
 						lambda.sequence(
-							from = tile.xMinus + 1,
-							to = tile.xPlus - 1
+							from = tile.yMinus + 1,
+							to = tile.yPlus - 1
 					))
 				};
+
+				if (!is.number(boundary.yMiddle)) {
+					console.log(tile)
+					console.log(tile.width())
+					console.log(tile.height())
+
+				}
 
 				var product = [
 					// top-left tile
