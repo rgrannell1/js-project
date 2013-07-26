@@ -481,16 +481,13 @@ var Grammar = ( function (is, lambda) {
 			/*  x -> [{pattern: function, production: function}] -> [x]
 				take a starting symbol and apply a production rule repeatedly
 				until only terminal symbols are left. */
-			
-			// guard against infinite loops during testing
-			var timeLeft = lambda.timer;
 
 			var stacks = {
 				nonTerminal: [start],
 				terminal: []
 			};
 
-			while (stacks.nonTerminal.length > 0 || timeLeft()) {
+			while (stacks.nonTerminal.length > 0) {
 				/* [{ nonTerminal: [a], terminal: [a] }] ->
 				   [{ nonTerminal: [a], terminal: [a] }] */
 					
@@ -498,8 +495,7 @@ var Grammar = ( function (is, lambda) {
 
 					// shorten the non-terminal stack by one element
 					stacks.nonTerminal = stacks.nonTerminal.splice(
-						1, stacks.nonTerminal.length
-					);
+						1, stacks.nonTerminal.length);
 
 					// generate some more tiles from the 'producable'
 					var products = that.generateOne(producable);
@@ -639,13 +635,6 @@ var splitGrammar = ( function (lambda) {
 							to = tile.yPlus - 1
 					))
 				};
-
-				if (!is.number(boundary.yMiddle)) {
-					console.log(tile)
-					console.log(tile.width())
-					console.log(tile.height())
-
-				}
 
 				var product = [
 					// top-left tile
