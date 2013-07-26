@@ -208,31 +208,27 @@ var imageCollage,
 	};
 
 
-	/**************************
-	*
-	* Bulk of the front end work
-	* function will layout the images on the collage all nice and pretty
-	*
-	***************************/
 	var render = (function() {
 		// set background color of collage div to the same as its parent
 		// if CPjs-canvas-transparent is set to true
+		var collageHeight,
+			collageWidth;
 
-		return {						
+		return {
+			
+				_dimensions : function(w, h) {
+					collageWidth = w;
+					collageHeight = h;
+				},
 
-			_dimensions : function(w, h) {
-				imageCollage.style.width = w;
-				imageCollage.style.height = h;
-			},
+				_theme : function() {
+					var theme,
+						t,
+						inheritId,
+						inheritedBgColor,
+						images;
 
-			_theme : function() {
-				var theme,
-					t,
-					inheritId,
-					inheritedBgColor,
-					images;
-
-					function setStyles(style) {
+					var setStyles = function(style) {
 						var output = "";
 						
 						if(style === 'canvasStyle' && inheritedBgColor !== null) {
@@ -244,6 +240,9 @@ var imageCollage,
 								output += theme[style][prop];
 							}
 						}
+
+						// add oveflow on images (probably not needed in the future)
+						output += "overflow: hidden;";
 
 						return output;
 					}
@@ -258,95 +257,85 @@ var imageCollage,
 						inheritedBgColorElement !== null? inheritedBgColor = inheritedBgColorElement.style.backgroundColor : inheritedBgColor = null;
 					}
 
-				if(t !== null) {
-					for(var data in themes) {
-						if(themes[data].name === t) {
-							theme = themes[data];
-							break;
-						}
-					}
-
-					if(theme !== undefined) {
-						// apply styles to the collage and images
-						imageCollage.setAttribute("style", setStyles('canvasStyle'));
+					if(t !== null) {
 						
-						for(var i = 0; i < images.length ; i++) {
-							images[i].setAttribute("style", setStyles('imageStyle'));
-							
-							for(var evt in theme.imageEvents) {
-								images[i][evt.toString()] = theme.imageEvents[evt.toString()];
+						for(var data in themes) {
+							if(themes[data].name === t) {
+								theme = themes[data];
+								break;
 							}
+						}
+
+						if(theme !== undefined) {
+							// apply styles to the collage and images
+							imageCollage.setAttribute("style", setStyles('canvasStyle'));
 							
+							for(var i = 0; i < images.length ; i++) {
+								images[i].setAttribute("style", setStyles('imageStyle'));
+								
+								for(var evt in theme.imageEvents) {
+									images[i][evt.toString()] = theme.imageEvents[evt.toString()];
+								}
+								
+							}
 						}
 					}
+					
 				}
+			};	
+	})();
+
+	function API(colId) {
+		this.id = colId;
+		this.width;
+		this.height;
+
+		// tale in collage width and height
+		this.dimensions = function(w, h) {
+			if(is.numeric(w) && is.numeric(h)) {
+				var width = Math.floor(w);
+				var height = Math.floor(h);
+
+				render._dimensions(width, height)
+
+			} else {
+					throw new UsefulError("width and height must both be numbers");
+			}
+
+			return this;
+		};
+
+		// call algorithm and render
+		this.start = function() {
+			var theBackend = function(config, callback) {
+				console.log(config);
+				callback({});
+			};
+
+			try {
+				_imageCollage(this.id);
+				storeImages();
+
+				var config = {
+					images : images
+				};
+
+				theBackend(config, function(val) {
+					render._theme(val);
+				});
+
+			} catch (e) {
+				console.error(e.description);
 			}
 		};
 
-	})();
+	}
 
-	// div id to be used as the collage element
-	plaid.id = function(elementId) {
-		try {
-			_imageCollage(elementId);
-			storeImages();
-
-		} catch(e) {
-			console.error(e.description);
-		}
-
-		return this;
+	// return object to window
+	var plaid = function(colId) {
+		return new API(colId);
 	};
 
-	// collage dimensions to be used by algorithm
-	plaid.dimensions = function(w, h) {
-		// check arguments supplied are Integers
-		try {
-			if(is.numeric(w) && is.numeric(h)) {
-				collageWidth = Math.floor(w);
-				collageHeight = Math.floor(h);
-
-			} else {
-				throw new UsefulError("width and height must both be numbers");
-			}
-		} catch (e) {
-			console.error(e.description);
-		}
-
-		return this;
-	}
-	
-	plaid.start = function() {
-			function isCollageUndefined() {
-				if(!imageCollage) {
-					throw new UsefulError("imageCollage is undefined");
-				}
-			};
-
-			var backendConfig = {
-				width : collageWidth,
-				height : collageHeight,
-				imageCollage : imageCollage,
-				images : images
-			};
-
-			try {// call backend and then render through callback
-
-				isCollageUndefined();
-				theBackend(backendConfig, function(val) {
-					render._theme();
-					render._dimensions(collageWidth, collageHeight);
-				});
-			} catch(e) {
-				console.error(e.description);
-			}
-	}
-	
-	function theBackend(config, callback) {
-		// all alogrithm functions go here
-		callback({});
-	}
-	// return object to window
 	window.plaid = plaid;
 
 })(window);
