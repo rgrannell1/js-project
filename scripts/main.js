@@ -58,7 +58,6 @@ if(!Array.prototype.indexOf) {
 				},
 
 				onmouseover : function(evt) {
-
 					evt.currentTarget.style.transition = "yellow";
 				},
 
@@ -109,7 +108,6 @@ if(!Array.prototype.indexOf) {
 			imageEvents : {
 				onclick : function(evt) {
 					// open a dialog
-					
 				},
 
 				onmouseover : function(evt) {
@@ -135,8 +133,8 @@ if(!Array.prototype.indexOf) {
 
 			imageEvents : {
 				onclick : function(evt) {
-					dialog.create();
-					dialog.render();
+					var lightBox = new LightBox(evt.currentTarget);
+					lightBox.create();
 				},
 
 				onmouseover : function(evt) {
@@ -154,17 +152,47 @@ if(!Array.prototype.indexOf) {
 			}
 		}
 	};
-	
+
+	// create sepeate image for lightbox with new styles
+	function LightBox(target) {
+		this.image = target;
+		this.caption = target.getAttribute("plaid-caption") || null;
+
+		this.create = function() {
+			var body;
+
+			var imgHeight = this.image.height,
+				imgWidth = this.image.width;
+
+			var windowHeight = window.innerHeight,
+				windowWidth = window.innerWidth;
+
+			var lb = document.createElement("div");
+
+			var fixToLightbox = function() {
+				// fit image onto lightbox by computing aspect ratio
+			};
+
+			lb.setAttribute("style", "" +
+				"border: 1px solid #222;" +
+				"background-color: #111;" +
+				"position: absolute;" +
+				"width:" + imgWidth + ";" +
+				"height:" + imgHeight + ";" +
+				"top:" + (windowHeight/2) + "; left:" + (windowWidth/2)  + ";");
+			
+
+			body = document.getElementsByTagName('body')[0];
+			lb.appendChild(this.image);
+			body.appendChild(lb);
+		}
+	}
+
 	// for better storage of image properties
 	function Image(src, w, h) {
 		this.source = src;
 		this.width = w,
 		this.height = h;
-	}
-
-	// gets canvas element return and sets it to the canvas attribute
-	function _imageCollage(e) {
-		return document.getElementById(e);
 	}
 
 	// get images suppled by the user
@@ -184,16 +212,22 @@ if(!Array.prototype.indexOf) {
 		return images;
 	};
 
-	function Render() {
-
-		this.theme = function() {
-			var id = this.id;
-
+	function Render(colId) {
+		this.element = colId;
+		
+		this.start = function() {
 			var theme,
 				t,
 				inheritId,
 				inheritedBgColor,
 				images;
+			var collageEle,
+				imagesObj;
+
+			// get collage element by id 
+			collageEle = _imageCollage(this.element)
+			// get array of Image objects
+			imagesObj = storeImages(collageEle);
 
 			var setStyles = function(style) {
 				var output = "";
@@ -214,10 +248,17 @@ if(!Array.prototype.indexOf) {
 				return output;
 			}
 
-			t = id.getAttribute("plaid-theme")
-			inheritId = id.getAttribute("plaid-inherit-backgroundColor"),
+			// get ref to image object from img element for lightbox effects
+			var _imageRef = function(ref) {
+				// TODO:
+				console.log(imagesObj);
+			};
+
+
+			t = collageEle.getAttribute("plaid-theme")
+			inheritId = collageEle.getAttribute("plaid-inherit-backgroundColor"),
 			inheritedBgColor,
-			images = id.getElementsByTagName("img");
+			images = collageEle.getElementsByTagName("img");
 
 			if(inheritId !== null) {
 				var inheritedBgColorElement = document.getElementById(inheritId);
@@ -235,9 +276,11 @@ if(!Array.prototype.indexOf) {
 
 				if(theme !== undefined) {
 					// apply styles to the collage and images
-					id.setAttribute("style", setStyles('canvasStyle'));
+					var self = this;
+					collageEle.setAttribute("style", setStyles('canvasStyle'));
 					
 					for(var i = 0; i < images.length ; i++) {
+						_imageRef(images[0]);
 						images[i].setAttribute("style", setStyles('imageStyle'));
 						
 						for(var evt in theme.imageEvents) {
@@ -251,63 +294,60 @@ if(!Array.prototype.indexOf) {
 	};
 
 	var theBackend = function(config, callback) {
-				console.log(config);
-				callback([{},{},{}]);
+		console.log(config);
+		callback([{},{},{}]);
 	};
 
-		
-	function Plaid() {
-		this.id;
-		this.width;
-		this.height;
-		this.images;
-	}
+	// gets canvas element return and sets it to the canvas attribute
+	var _imageCollage = function(e) {
+		var ele = document.getElementById(e);
 
-	Plaid.prototype.id = function(idEle) {
-		this.id = _imageCollage(idEle);
+		ele.style.display = 'none';
 
-		return this;
+		return ele;
 	};
 
-	Plaid.prototype.dimensions = function(w, h) {
-		this.width = w;
-		this.height = h;
+	function Plaid(ele) {
+		this.id = ele;
 
-		return this;
-	};
+		this.dimensions = function(w, h) {
+			this.width = w;
+			this.height = h;
+			return this;
+		};
 
-	Plaid.prototype.start = function() {
-		var self = this;
-		var render = new Render();
+		this.start = function() {
+			var self = this;
+			try {
+				if(this.id !== null || this.id.tagName === 'DIV') {
+					var config = {
+						width: this.width,
+						height : this.height,
+						images : this.images
+					};
 
-		try {
-			if(this.id !== null || this.id.tagName === 'DIV') {
-				this.images = storeImages(this.id);
+					theBackend(config, function(val) {
+						//test
+						var render = new Render(self.id);
+						render.start();
+					});
 
-				var config = {
-					width: this.width,
-					height : this.height,
-					images : this.images
-				};
-
-				theBackend(config, function(val) {
-					//test
-					console.log(config);
-
-					render.theme.call(self);
-				});
-
-			} else {
-				throw new TypeError("element used for collage must be a div");
+				} else {
+					throw new TypeError("element used for collage must be a DIV");
+				}
+			} catch (e) {
+				console.error(e);
 			}
-		} catch (e) {
-			console.error(e);
-		}
-	};
+		};
+	}
 
 	var _plaid = window.plaid;
 
+	var pl = function(id) {
+		return new Plaid(id)
+	}
+
 	// return object to window
-	window.plaid =  new Plaid();
+	window.plaid = pl;
 
 })(window);
