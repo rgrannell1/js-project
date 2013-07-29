@@ -11,18 +11,20 @@
 		#myDiv {
 			clear: both;
 			margin: 20px auto;
+			border: 2px solid #222;
 		}
 
 		img {
 			width : 200px;
 			height: 200px;
+			background-color: #56ca89;
 		}
 	</style>
 	<body>
 	<div id="test" style="background-color:#fff">inherited background color</div>
 	<div>
 		<div id="myDiv" plaid-theme="skylight" plaid-inherit-backgroundColor="test">
-			<img src="resources/global-technology.jpg" plaid-caption="lovely image"/>
+			<img plaid-caption="lovely image"/>
 			<img src="resources/image2"/>
 			<img src="resources/image3" />
 			<img src="resources/image4" />
@@ -37,7 +39,7 @@
 	</div>
 		<script type="text/javascript">
 			//basic idea of what we expect from the user
-			plaid("myDiv").dimensions(500, 100).start();
+			plaid("myDiv", {width: 1000, height: 1000}).start();
 		</script>
 		this file is for testing out css stylesheets and js-scripts
 		<br />

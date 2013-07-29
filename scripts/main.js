@@ -1,4 +1,7 @@
-// hasOwnProperty
+
+(function(window) {
+"use strict";
+	
 if(!Array.prototype.indexOf) {
 	// implement indexOf for browser support
 	Array.prototype.indexOf = function(val) {
@@ -13,38 +16,55 @@ if(!Array.prototype.indexOf) {
 	}
 }
 
-(function(window) {
-"use strict"
+// DOM shothand methods
+Object.prototype.getAttr = function(ref) {
+	return this.getAttribute(ref.toString());
+};
 
-	// for better type checking
-	var is = (function() {
-		return {
-				toType: function (val) {
-					return ({}).toString.call(val).
-					match(/\s([a-zA-Z]+)/)[1].toLowerCase()
-				},
-				function: function (val) {
-					return toType(val) === "function";
-				},
-				array: function (val) {
-					return toType(val) === 'array';
-				},
-				object: function (val) {
-					toType(val) === 'object'
-				},
-				numeric: function (val) {
-					return !isNaN(parseFloat(val)) && isFinite(val);
-				}
-			};
-	})(),
+Object.prototype.getDecendents = function(ref) {
+	var eles = this.getElementsByTagName(ref.toString());
 
-	// theme objects that can be refrenced by the user
-	// the idea is that these themes are easily editable to users so simple themes can be easily created
-	themes = {
+	if(eles.length === 1) {
+		return eles[0];
+	} else {
+		return eles;
+	}
+};
+
+// sets styles on object
+Object.prototype.setStyle = function(style) {
+	var output = "";
+	var theme = themes[style.toString()];
+	var styleType;
+
+	if(this.tagName === 'DIV') {
+		styleType = 'canvasStyle';
+	} else {
+		styleType = 'imageStyle';
+	} 
+
+	for(var prop in theme[styleType]) {
+		if(theme[styleType].hasOwnProperty(prop)) {
+			this.style[prop] += theme[styleType][prop];
+		}
+	}
+};
+
+Object.prototype.setHeight = function(h) {
+	this.style.height = h;
+}
+
+Object.prototype.setWidth = function(w) {
+	this.style.width = w;
+}
+
+// theme objects that can be refrenced by the user
+// the idea is that these themes are easily editable to users so simple themes can be easily created
+	var themes = {
 		aqua : {
 			name : "aqua",
 			canvasStyle : {
-				padding : "padding : 4px;",
+				padding : "4px",
 				border : 'border : 2px solid rgba(150,150,240,1);',
 				boxShadow : 'box-shadow : 2px 2px 8px rgba(20, 80, 200, 0.5);'
 			},
@@ -123,12 +143,12 @@ if(!Array.prototype.indexOf) {
 		skylight : {
 			name : "skylight",
 			canvasStyle : {
-				padding : "padding : 4px;",
-				border : 'border : 3px solid rgba(80, 80, 95, 1);'
+				padding : "4px",
+				border : '3px solid rgba(80, 80, 95, 1)'
 			},
 
 			imageStyle : {
-				padding: 'padding: 2px 2px;'
+				padding: '2px 2px'
 			},
 
 			imageEvents : {
@@ -141,8 +161,8 @@ if(!Array.prototype.indexOf) {
 					evt.currentTarget.style.transition = "1s ease";
 					evt.currentTarget.style.webkitTransition = "1s ease";
 
-					evt.currentTarget.style.transform = "scale(1.02)";
-					evt.currentTarget.style.webkitTransform = "scale(1.02)";
+					evt.currentTarget.style.transform = "scale(1.01)";
+					evt.currentTarget.style.webkitTransform = "scale(1.01)";
 				},
 
 				onmouseout : function(evt) {
@@ -152,6 +172,27 @@ if(!Array.prototype.indexOf) {
 			}
 		}
 	};
+	// for better type checking
+	var is = (function() {
+		return {
+				toType: function (val) {
+					return ({}).toString.call(val).
+					match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+				},
+				function: function (val) {
+					return toType(val) === "function";
+				},
+				array: function (val) {
+					return toType(val) === 'array';
+				},
+				object: function (val) {
+					toType(val) === 'object'
+				},
+				numeric: function (val) {
+					return !isNaN(parseFloat(val)) && isFinite(val);
+				}
+			};
+	})();
 
 	// create sepeate image for lightbox with new styles
 	function LightBox(target) {
@@ -167,26 +208,32 @@ if(!Array.prototype.indexOf) {
 			var windowHeight = window.innerHeight,
 				windowWidth = window.innerWidth;
 
-			var lb = document.createElement("div");
+			this.domNode = document.createElement("div");
+			console.log("testing...");
 
-			var fixToLightbox = function() {
-				// fit image onto lightbox by computing aspect ratio
-			};
-
-			lb.setAttribute("style", "" +
-				"border: 1px solid #222;" +
-				"background-color: #111;" +
-				"position: absolute;" +
-				"width:" + imgWidth + ";" +
-				"height:" + imgHeight + ";" +
-				"top:" + (windowHeight/2) + "; left:" + (windowWidth/2)  + ";");
+			this.style("border", "2px solid #ccc")
+				.style("background-color", "#111")
+				.style("position", "absolute")
+				.style("width", imgWidth)
+				.style("height", imgHeight)
+				.style("top", (windowHeight/2))
+				.style("left", (windowWidth/2));
 			
 
-			body = document.getElementsByTagName('body')[0];
-			lb.appendChild(this.image);
-			body.appendChild(lb);
+			body = document.getDecendents('body');
+
+			console.log(this.domNode);
+
+			this.domNode.appendChild(this.image);
+			body.appendChild(this.domNode);
 		}
 	}
+
+	LightBox.prototype.style = function(prop, val) {
+		this.domNode.style[prop.toString()] = val.toString();
+
+		return this;
+	};
 
 	// for better storage of image properties
 	function Image(src, w, h) {
@@ -196,13 +243,13 @@ if(!Array.prototype.indexOf) {
 	}
 
 	// get images suppled by the user
-	function storeImages(id) {
+	var storeImages = function(id) {
 		// get elements within element supplied by the client
 		var imgs = id.getElementsByTagName('img'),
 			images = [];
 
 		for(var i = 0; i< imgs.length; i++) {
-			var src = imgs[i].getAttribute('src'),
+			var src = imgs[i].getAttr('src'),
 				w = imgs[i].width,
 				h = imgs[i].height;
 
@@ -212,112 +259,90 @@ if(!Array.prototype.indexOf) {
 		return images;
 	};
 
-	function Render(colId) {
-		this.element = colId;
-		
-		this.start = function() {
-			var theme,
-				t,
-				inheritId,
-				inheritedBgColor,
-				images;
-			var collageEle,
-				imagesObj;
-
-			// get collage element by id 
-			collageEle = _imageCollage(this.element)
-			// get array of Image objects
-			imagesObj = storeImages(collageEle);
-
-			var setStyles = function(style) {
-				var output = "";
-				
-				if(style === 'canvasStyle' && inheritedBgColor !== null) {
-					output += "background-color : " + inheritedBgColor + ";";
-				}
-
-				for(var prop in theme[style]) {
-					if(theme[style].hasOwnProperty(prop)) {
-						output += theme[style][prop];
-					}
-				}
-
-				// add oveflow on images (probably not needed in the future)
-				output += "overflow: hidden;";
-
-				return output;
-			}
-
-			// get ref to image object from img element for lightbox effects
-			var _imageRef = function(ref) {
-				// TODO:
-				console.log(imagesObj);
-			};
-
-
-			t = collageEle.getAttribute("plaid-theme")
-			inheritId = collageEle.getAttribute("plaid-inherit-backgroundColor"),
+	var render = function(self) {
+		var theme,
+			selectedTheme,
+			inheritId,
 			inheritedBgColor,
-			images = collageEle.getElementsByTagName("img");
+			images;
 
-			if(inheritId !== null) {
-				var inheritedBgColorElement = document.getElementById(inheritId);
-				inheritedBgColorElement !== null? inheritedBgColor = inheritedBgColorElement.style.backgroundColor : inheritedBgColor = null;
+		// dom variables
+		var collageEle,
+			imagesObj;
+
+		// get collage element by id 
+		collageEle = _imageCollage(self.id)
+
+		// get array of Image objects
+		imagesObj = storeImages(collageEle);
+
+		// get ref to image object from img element for lightbox effects
+		var _imageRef = function(ref) {
+			// TODO:
+			console.log(imagesObj);
+		};
+
+		collageEle.setWidth(self.width);
+		collageEle.setHeight(self.height);
+
+		selectedTheme = collageEle.getAttr("plaid-theme")
+		inheritId = collageEle.getAttr("plaid-inherit-backgroundColor"),
+		images = collageEle.getDecendents("img");
+
+		if(inheritId !== null) {
+			var inheritedBgColorElement = document.getElementById(inheritId);
+			inheritedBgColorElement !== null? inheritedBgColor = inheritedBgColorElement.style.backgroundColor : inheritedBgColor = null;
+		}
+
+		if(selectedTheme !== null) {
+			
+			for(var data in themes) {
+				if(themes[data].name === selectedTheme) {
+					theme = themes[data];
+					break;
+				}
 			}
 
-			if(t !== null) {
+			if(theme !== undefined) {
+				// apply styles to the collage and images
+				var self = this;
+				collageEle.setStyle('skylight');
 				
-				for(var data in themes) {
-					if(themes[data].name === t) {
-						theme = themes[data];
-						break;
-					}
-				}
+				for(var i = 0; i < images.length ; i++) {
+					//_imageRef(images[0]);
+					var img = images[i];
 
-				if(theme !== undefined) {
-					// apply styles to the collage and images
-					var self = this;
-					collageEle.setAttribute("style", setStyles('canvasStyle'));
+					img.setStyle('skylight');
 					
-					for(var i = 0; i < images.length ; i++) {
-						_imageRef(images[0]);
-						images[i].setAttribute("style", setStyles('imageStyle'));
-						
-						for(var evt in theme.imageEvents) {
-							images[i][evt.toString()] = theme.imageEvents[evt.toString()];
-						}
-						
+					for(var evt in theme.imageEvents) {
+						images[i][evt.toString()] = theme.imageEvents[evt.toString()];
 					}
+					
 				}
 			}
 		}
+
+		console.log(collageEle);
 	};
 
 	var theBackend = function(config, callback) {
-		console.log(config);
 		callback([{},{},{}]);
 	};
 
 	// gets canvas element return and sets it to the canvas attribute
 	var _imageCollage = function(e) {
 		var ele = document.getElementById(e);
-
-		ele.style.display = 'none';
-
 		return ele;
 	};
 
-	function Plaid(ele) {
+	function Plaid(ele, dim) {
 		this.id = ele;
-
-		this.dimensions = function(w, h) {
-			this.width = w;
-			this.height = h;
-			return this;
-		};
+		this.width = dim.width || 1000;
+		this.height = dim.height || 1000;
 
 		this.start = function() {
 			var self = this;
+
 			try {
 				if(this.id !== null || this.id.tagName === 'DIV') {
 					var config = {
@@ -327,9 +352,7 @@ if(!Array.prototype.indexOf) {
 					};
 
 					theBackend(config, function(val) {
-						//test
-						var render = new Render(self.id);
-						render.start();
+						render(self);
 					});
 
 				} else {
@@ -343,8 +366,8 @@ if(!Array.prototype.indexOf) {
 
 	var _plaid = window.plaid;
 
-	var pl = function(id) {
-		return new Plaid(id)
+	var pl = function(id, dimensions) {
+		return new Plaid(id, dimensions)
 	}
 
 	// return object to window
