@@ -1,66 +1,102 @@
 
 (function(window) {
 "use strict";
-	
-if(!Array.prototype.indexOf) {
-	// implement indexOf for browser support
-	Array.prototype.indexOf = function(val) {
-		for(var i = 0; i < this.length; i++) {
-			if(val === this[i]) {
-				return i;
-			} else {
-				continue;
+	if(!Array.prototype.indexOf) {
+		// implement indexOf for browser support
+		Array.prototype.indexOf = function(val) {
+			for(var i = 0; i < this.length; i++) {
+				if(val === this[i]) {
+					return i;
+				} else {
+					continue;
+				}
+			}
+			return -1;
+		}
+	}
+
+	function Plaid() {
+
+		this.on = function(ele) {
+			this.id = ele;
+			return this;
+		};
+
+		this.dim = function(w, h) {
+			this.width = w;
+			this.height = h;
+			return this;
+		};
+
+		this.start = function() {
+			var self = this;
+
+			try {
+				if(this.id !== null || this.id.tagName === 'DIV') {
+					var config = {
+						width: this.width,
+						height : this.height,
+						images : this.images
+					};
+
+					theBackend(config, function(val) {
+						render(self);
+					});
+
+				} else {
+					throw new TypeError("element used for collage must be a DIV");
+				}
+			} catch (e) {
+				console.error(e);
+			}
+		};
+	}
+
+	// DOM shothand methods
+	Plaid.prototype.getAttr = function(node, ref) {
+		return node.getAttribute(ref.toString());
+	};
+
+	Plaid.prototype.getDecendents = function(node, ref) {
+		var eles = node.getElementsByTagName(ref.toString());
+
+		if(eles.length === 1) {
+			return eles[0];
+		} else {
+			return eles;
+		}
+	};
+
+
+	Plaid.prototype.styling = function(node, prop, val) {
+		node.style[prop.toString()] = val.toString();
+		return this;
+	};
+
+	// sets styles on object
+	Plaid.prototype.setStyle = function(node, style) {
+		var styleType;
+
+		if(node.tagName === 'DIV') {
+			styleType = 'canvasStyle';
+		} else {
+			styleType = 'imageStyle';
+		} 
+
+		for(var prop in style[styleType]) {
+			if(style[styleType].hasOwnProperty(prop)) {
+				node.style[prop] += style[styleType][prop];
 			}
 		}
-		return -1;
+	};
+
+	Plaid.prototype.setHeight = function(node, h) {
+		node.style.height = h;
 	}
-}
 
-// DOM shothand methods
-Object.prototype.getAttr = function(ref) {
-	return this.getAttribute(ref.toString());
-};
-
-Object.prototype.getDecendents = function(ref) {
-	var eles = this.getElementsByTagName(ref.toString());
-
-	if(eles.length === 1) {
-		return eles[0];
-	} else {
-		return eles;
+	Plaid.prototype.setWidth = function(node, w) {
+		node.style.width = w;
 	}
-};
-
-
-Object.prototype.styling = function(prop, val) {
-	this.style[prop.toString()] = val.toString();
-	return this;
-};
-
-// sets styles on object
-Object.prototype.setStyle = function(style) {
-	var styleType;
-
-	if(this.tagName === 'DIV') {
-		styleType = 'canvasStyle';
-	} else {
-		styleType = 'imageStyle';
-	} 
-
-	for(var prop in style[styleType]) {
-		if(style[styleType].hasOwnProperty(prop)) {
-			this.style[prop] += style[styleType][prop];
-		}
-	}
-};
-
-Object.prototype.setHeight = function(h) {
-	this.style.height = h;
-}
-
-Object.prototype.setWidth = function(w) {
-	this.style.width = w;
-}
 
 // theme objects that can be refrenced by the user
 // the idea is that these themes are easily editable to users so simple themes can be easily created
@@ -241,16 +277,16 @@ Object.prototype.setWidth = function(w) {
 				
 			this.domNode = document.createElement("div");
 
-			this.domNode
-				.styling("border", "5px solid #ccc")
-				.styling("background-color", "#222")
-				.styling("position", "absolute")
-				.styling("width", windowWidth - (windowWidth*.10))
-				.styling("height", windowHeight - (windowHeight*.10))
-				.styling("top", 0)
-				.styling("left", 0)
 			
-			body = document.getDecendents('body');
+			Plaid.styling(this.domNode, "border", "5px solid #ccc")
+				.styling(this.domNode, "background-color", "#222")
+				.styling(this.domNode, "position", "absolute")
+				.styling(this.domNode, "width", windowWidth - (windowWidth*.10))
+				.styling(this.domNode, "height", windowHeight - (windowHeight*.10))
+				.styling(this.domNode, "top", 0)
+				.styling(this.domNode, "left", 0)
+			
+			body = plaid.getDecendents(document, 'body');
 
 			this.domNode.appendChild(this.image);
 			body.appendChild(this.domNode);
@@ -293,15 +329,16 @@ Object.prototype.setWidth = function(w) {
 			imagesObj;
 
 		// get collage element by id 
-		collageEle = _imageCollage(self.id)
-		collageEle.setWidth(self.width);
-		collageEle.setHeight(self.height);
+		collageEle = _imageCollage(self.id);
+
+		plaid.setWidth(collageEle, self.width);
+		plaid.setHeight(collageEle, self.height);
 
 		// get array of Image objects
 		imagesObj = storeImages(collageEle);
 
-		selectedTheme = collageEle.getAttr("plaid-theme")
-		inheritId = collageEle.getAttr("plaid-inherit-backgroundColor");
+		selectedTheme = plaid.getAttr(collageEle, "plaid-theme")
+		inheritId = plaid.getAttr(collageEle, "plaid-inherit-backgroundColor");
 
 		if(inheritId !== null) {
 			var inheritedBgColorElement = document.getElementById(inheritId);
@@ -320,13 +357,13 @@ Object.prototype.setWidth = function(w) {
 			if(theme !== undefined) {
 				// apply styles to the collage and images
 				var self = this;
-				collageEle.setStyle(theme);
+				plaid.setStyle(collageEle, theme);
 				
 				for(var i = 0; i < imagesObj.length ; i++) {
 					//_imageRef(images[0]);
 					var img = imagesObj[i].source;
 
-					img.setStyle(theme);
+					plaid.setStyle(img, theme);
 					
 					for(var evt in theme.imageEvents) {
 						imagesObj[i].source[evt.toString()] = theme.imageEvents[evt.toString()];
@@ -349,42 +386,15 @@ Object.prototype.setWidth = function(w) {
 		return ele;
 	};
 
-	function Plaid(ele, dim) {
-		this.id = ele;
-		this.width = dim.width || 1000;
-		this.height = dim.height || 1000;
-
-		this.start = function() {
-			var self = this;
-
-			try {
-				if(this.id !== null || this.id.tagName === 'DIV') {
-					var config = {
-						width: this.width,
-						height : this.height,
-						images : this.images
-					};
-
-					theBackend(config, function(val) {
-						render(self);
-					});
-
-				} else {
-					throw new TypeError("element used for collage must be a DIV");
-				}
-			} catch (e) {
-				console.error(e);
-			}
-		};
-	}
-
+	// return object to window
 	var _plaid = window.plaid;
 
-	var pl = function(id, dimensions) {
+	/*var plaid = function(id, dimensions) {
 		return new Plaid(id, dimensions)
-	}
+	};*/
 
-	// return object to window
-	window.plaid = pl;
+	var plaid = new Plaid();
+	console.log(plaid);
+	window.plaid = plaid;
 
 })(window);
