@@ -3,19 +3,18 @@
 <HTML>
 	<HEAD>
 		<script type="text/JavaScript">
-		
 
 			function tester(){
 				
 				var Rectangles = [];
 				var Images = [];
 				
-				var Rectangle1 = new Rectangle(8, 4);
-				var Rectangle2 = new Rectangle(8, 4);
+				var Rectangle1 = new Rectangle(2, 4);
+				var Rectangle2 = new Rectangle(4, 4);
 				var Rectangle3 = new Rectangle(8, 4);
-				var Rectangle4 = new Rectangle(8, 4);
-				var Rectangle5 = new Rectangle(8, 4);
-				var Rectangle6 = new Rectangle(8, 4);
+				var Rectangle4 = new Rectangle(16, 8);
+				var Rectangle5 = new Rectangle(4, 2);
+				var Rectangle6 = new Rectangle(4, 8);
 				
 				Rectangles.push(Rectangle1);
 				Rectangles.push(Rectangle2);
@@ -24,11 +23,11 @@
 				Rectangles.push(Rectangle5);
 				Rectangles.push(Rectangle6);
 				
-				var Image1 = new Image(200, 200, "a");
-				var Image2 = new Image(100, 200, "b");
-				var Image3 = new Image(100, 200, "c");
+				var Image1 = new Image(200, 400, "a");
+				var Image2 = new Image(400, 200, "b");
+				var Image3 = new Image(200, 200, "c");
 				var Image4 = new Image(400, 200, "d");
-				var Image5 = new Image(100, 100, "e");
+				var Image5 = new Image(200, 100, "e");
 				var Image6 = new Image(100, 200, "f");
 				Images.push(Image1);
 				Images.push(Image2);
@@ -39,13 +38,14 @@
 				
 				var results = assignLinks(Images, Rectangles);
 				
+				//alert(results.length);
 				var contents = document.getElementById('text').innerHTML;
-				contents = contents + 	"<br/><br/>Result Set: <br/> - Results[0].url(): "+results[0].url+
-										"<br/> - Results[1].url(): "+results[1].url+
-										"<br/> - Results[2].url(): "+results[2].url+
-										"<br/> - Results[3].url(): "+results[3].url+
-										"<br/> - Results[4].url(): "+results[4].url+
-										"<br/> - Results[5].url(): "+results[5].url;
+				contents = contents + 	"<br/><br/>Result Set: <br/> - Results[0].width(): "+results[0].width()+"; Results[0].height(): "+results[0].height()+"; Results[0].url(): "+results[0].url()+
+										"<br/> - Results[1].width(): "+results[1].width()+"; Results[1].height(): "+results[1].height()+"; Results[1].url(): "+results[1].url()+
+										"<br/> - Results[2].width(): "+results[2].width()+"; Results[2].height(): "+results[2].height()+"; Results[2].url(): "+results[2].url()+
+										"<br/> - Results[3].width(): "+results[3].width()+"; Results[3].height(): "+results[3].height()+"; Results[3].url(): "+results[3].url()+
+										"<br/> - Results[4].width(): "+results[4].width()+"; Results[4].height(): "+results[4].height()+"; Results[4].url(): "+results[4].url()+
+										"<br/> - Results[5].width(): "+results[5].width()+"; Results[5].height(): "+results[5].height()+"; Results[5].url(): "+results[5].url();
 				document.getElementById('text').innerHTML = contents; 
 			};
 				
@@ -65,28 +65,59 @@
 			var Rectangle = function (w, h) {
 				var widthVal = w,
 					heightVal = h,
+					urlVal = "",
 					aspRatVal = widthVal/heightVal;
 				return {
+					url: function () {return urlVal;},
+					setUrl: function (val) {urlVal=val;},
 					width: function () {return widthVal;},
 					height: function () {return heightVal;},
 					aspectRatio: function () {return aspRatVal;}
 				};
 			};
 
-
-
 			var assignLinks = function (images, rectangles){
-
+				
+				function removeByIndex(arr, index) {
+					arr.splice(index, 1);
+				};
+				
+				function arrangeArray(){
+				
+					var tempURL = "",
+						fCon = 0,
+						sCon = 0,
+						notFoundArr = true,
+						arrangedResults = [];
+						
+					while ( fCon < tempImages.length ){
+						alert(fCon);
+						tempURL = tempImages[fCon].url();
+						
+						notFoundArr = true;
+						sCon = 0;
+						while(notFoundArr){
+							if(resultsRecs[sCon].url() === tempURL){
+								arrangedResults.push(resultsRecs[sCon]);
+								notFoundArr = false;
+							}
+							sCon++;
+						}
+						fCon++;
+					}
+					return arrangedResults;
+				};
+			
 				var notFound = true,
 					squareNotFound = true,
 					k = 0,
 					j = 0,
 					rectangle,
 					temp = {url: "", dimension: [0, 0]},
-					result = result = {url: "1", rectangle: "2"},
-					results = [],
+					resultsRecs = [],
 					indexOfImage = 0,
-					currentType = 0;
+					currentType = 0
+					tempImages = [].concat(images);
 					
 				while( rectangles.length !== 0 ){
 					
@@ -144,16 +175,11 @@
 						}
 						j++;
 					}
-					
-					temp = images.slice(0, indexOfImage+1);
-					var image = temp.pop();
-					if(images.length !== 1){
-						images = temp.concat(images.slice(indexOfImage+1, images.length));
-					}
-					result = {url: image.url(), rectangle: "4"}; 
-					results.push(result)
+					rectangle.setUrl(images[indexOfImage].url());
+					resultsRecs.push(rectangle);
+					removeByIndex(images, indexOfImage);
 				}
-				return results; 
+				return arrangeArray(); 
 			};
 		</script>
 	</HEAD>

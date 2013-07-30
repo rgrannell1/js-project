@@ -1,4 +1,32 @@
 var assignLinks = function (images, rectangles){
+	
+	function removeByIndex(arr, index) {
+		arr.splice(index, 1);
+	};
+	
+	function arrangeArray(){
+		var tempURL = "",
+			fCon = 0,
+			sCon = 0,
+			notFoundArr = true,
+			arrangedResults = [];
+		while ( fCon < tempImages.length ){
+			alert(fCon);
+			tempURL = tempImages[fCon].url();
+			
+			notFoundArr = true;
+			sCon = 0;
+			while(notFoundArr){
+				if(resultsRecs[sCon].url() === tempURL){
+					arrangedResults.push(resultsRecs[sCon]);
+					notFoundArr = false;
+				}
+				sCon++;
+			}
+			fCon++;
+		}
+		return arrangedResults;
+	};
 
 	var notFound = true,
 		squareNotFound = true,
@@ -6,10 +34,10 @@ var assignLinks = function (images, rectangles){
 		j = 0,
 		rectangle,
 		temp = {url: "", dimension: [0, 0]},
-		result = result = {url: "1", rectangle: "2"},
-		results = [],
+		resultsRecs = [],
 		indexOfImage = 0,
-		currentType = 0;
+		currentType = 0
+		tempImages = [].concat(images);
 		
 	while( rectangles.length !== 0 ){
 		
@@ -67,14 +95,9 @@ var assignLinks = function (images, rectangles){
 			}
 			j++;
 		}
-		
-		temp = images.slice(0, indexOfImage+1);
-		var image = temp.pop();
-		if(images.length !== 1){
-			images = temp.concat(images.slice(indexOfImage+1, images.length));
-		}
-		result = {url: image.url(), rectangle: "4"}; 
-		results.push(result)
+		rectangle.setUrl(images[indexOfImage].url());
+		resultsRecs.push(rectangle);
+		removeByIndex(images, indexOfImage);
 	}
-	return results; 
+	return arrangeArray(); 
 };

@@ -1,0 +1,40 @@
+
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<HTML>
+	<HEAD>
+		<script type="text/JavaScript">
+		
+			function tester(){
+			
+				var imageCollage = document.getElementById("myDiv");
+				var imgs = imageCollage.getElementsByTagName('img');
+				var images;
+
+				for(var i = 0; i< imgs.length; i++) {
+					var src = imgs[i].getAttribute('src'),
+						w = imgs[i].width,
+						h = imgs[i].height;
+
+					images.push(new Image(src, w, h));
+				}
+				
+				
+				
+			};
+
+		</script>
+	</HEAD>
+	<BODY onload="tester()">
+		<div id="myDiv" plaid-theme="skylight" plaid-inherit-backgroundColor="test">
+			<img src="resources/"/>
+			<img src="resources/image2"/>
+			<img src="resources/image3" />
+			<img src="resources/image4" />
+			<img src="resources/image3" />
+			<img src="resources/image4" />
+			<img src="resources/image3" />
+			<img src="resources/image4" />
+		</div>
+	</BODY>
+</HTML>
