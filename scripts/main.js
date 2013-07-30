@@ -153,8 +153,14 @@ Object.prototype.setWidth = function(w) {
 
 			imageEvents : {
 				onclick : function(evt) {
-					var lightBox = new LightBox(evt.currentTarget);
-					lightBox.create();
+					var img = evt.currentTarget;
+
+					getOriginalImageSize(evt.currentTarget.src, function(w, h) {
+						
+						var lightBox = new LightBox(img, {widthO : w, heightO : h});
+						lightBox.create();
+					});
+					
 				},
 
 				onmouseover : function(evt) {
@@ -194,16 +200,33 @@ Object.prototype.setWidth = function(w) {
 			};
 	})();
 
+	//util function to get original width and height of an image
+	var getOriginalImageSize = function(src, callback) {
+		var image = new Image();
+		
+		image.onload = function() {
+			callback( image.width, image.height );
+			image.onload = image.onerror = null;
+		};
+
+		image.onerror = function(){
+			console.log("failed");
+		};
+
+		image.src = src;
+		console.log(image);
+	};
+
 	// create sepeate image for lightbox with new styles
-	function LightBox(target) {
+	function LightBox(target, dims) {
 		this.image = target;
 		this.caption = target.getAttribute("plaid-caption") || null;
 
+		this.width = dims.widthO;
+		this.height = dims.heightO;
+
 		this.create = function() {
 			var body;
-
-			var imgHeight = this.image.height,
-				imgWidth = this.image.width;
 
 			var windowHeight = window.innerHeight,
 				windowWidth = window.innerWidth;
@@ -214,8 +237,8 @@ Object.prototype.setWidth = function(w) {
 			this.style("border", "2px solid #ccc")
 				.style("background-color", "#111")
 				.style("position", "absolute")
-				.style("width", imgWidth)
-				.style("height", imgHeight)
+				.style("width", this.width)
+				.style("height", this.height)
 				.style("top", (windowHeight/2))
 				.style("left", (windowWidth/2));
 			
@@ -236,7 +259,7 @@ Object.prototype.setWidth = function(w) {
 	};
 
 	// for better storage of image properties
-	function Image(src, w, h) {
+	function PlaidImage(src, w, h) {
 		this.source = src;
 		this.width = w,
 		this.height = h;
@@ -249,11 +272,11 @@ Object.prototype.setWidth = function(w) {
 			images = [];
 
 		for(var i = 0; i< imgs.length; i++) {
-			var src = imgs[i].getAttr('src'),
+			var src = imgs[i],
 				w = imgs[i].width,
 				h = imgs[i].height;
 
-			images.push(new Image(src, w, h));
+			images.push(new PlaidImage(src, w, h));
 		}
 
 		return images;
@@ -276,18 +299,18 @@ Object.prototype.setWidth = function(w) {
 		// get array of Image objects
 		imagesObj = storeImages(collageEle);
 
+		console.log(imagesObj);
+
 		// get ref to image object from img element for lightbox effects
 		var _imageRef = function(ref) {
 			// TODO:
-			console.log(imagesObj);
 		};
 
 		collageEle.setWidth(self.width);
 		collageEle.setHeight(self.height);
 
 		selectedTheme = collageEle.getAttr("plaid-theme")
-		inheritId = collageEle.getAttr("plaid-inherit-backgroundColor"),
-		images = collageEle.getDecendents("img");
+		inheritId = collageEle.getAttr("plaid-inherit-backgroundColor");
 
 		if(inheritId !== null) {
 			var inheritedBgColorElement = document.getElementById(inheritId);
@@ -308,14 +331,16 @@ Object.prototype.setWidth = function(w) {
 				var self = this;
 				collageEle.setStyle('skylight');
 				
-				for(var i = 0; i < images.length ; i++) {
+				for(var i = 0; i < imagesObj.length ; i++) {
 					//_imageRef(images[0]);
-					var img = images[i];
+					console.log(imagesObj[i].source);
+
+					var img = imagesObj[i].source;
 
 					img.setStyle('skylight');
 					
 					for(var evt in theme.imageEvents) {
-						images[i][evt.toString()] = theme.imageEvents[evt.toString()];
+						imagesObj[i].source[evt.toString()] = theme.imageEvents[evt.toString()];
 					}
 					
 				}
