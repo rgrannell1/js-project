@@ -39,8 +39,6 @@ Object.prototype.styling = function(prop, val) {
 
 // sets styles on object
 Object.prototype.setStyle = function(style) {
-	var output = "";
-	var theme = themes[style.toString()];
 	var styleType;
 
 	if(this.tagName === 'DIV') {
@@ -49,9 +47,9 @@ Object.prototype.setStyle = function(style) {
 		styleType = 'imageStyle';
 	} 
 
-	for(var prop in theme[styleType]) {
-		if(theme[styleType].hasOwnProperty(prop)) {
-			this.style[prop] += theme[styleType][prop];
+	for(var prop in style[styleType]) {
+		if(style[styleType].hasOwnProperty(prop)) {
+			this.style[prop] += style[styleType][prop];
 		}
 	}
 };
@@ -296,19 +294,11 @@ Object.prototype.setWidth = function(w) {
 
 		// get collage element by id 
 		collageEle = _imageCollage(self.id)
+		collageEle.setWidth(self.width);
+		collageEle.setHeight(self.height);
 
 		// get array of Image objects
 		imagesObj = storeImages(collageEle);
-
-		console.log(imagesObj);
-
-		// get ref to image object from img element for lightbox effects
-		var _imageRef = function(ref) {
-			// TODO:
-		};
-
-		collageEle.setWidth(self.width);
-		collageEle.setHeight(self.height);
 
 		selectedTheme = collageEle.getAttr("plaid-theme")
 		inheritId = collageEle.getAttr("plaid-inherit-backgroundColor");
@@ -320,9 +310,9 @@ Object.prototype.setWidth = function(w) {
 
 		if(selectedTheme !== null) {
 			
-			for(var data in themes) {
-				if(themes[data].name === selectedTheme) {
-					theme = themes[data];
+			for(var t in themes) {
+				if(themes[t].name === selectedTheme) {
+					theme = themes[t];
 					break;
 				}
 			}
@@ -330,15 +320,13 @@ Object.prototype.setWidth = function(w) {
 			if(theme !== undefined) {
 				// apply styles to the collage and images
 				var self = this;
-				collageEle.setStyle('skylight');
+				collageEle.setStyle(theme);
 				
 				for(var i = 0; i < imagesObj.length ; i++) {
 					//_imageRef(images[0]);
-					console.log(imagesObj[i].source);
-
 					var img = imagesObj[i].source;
 
-					img.setStyle('skylight');
+					img.setStyle(theme);
 					
 					for(var evt in theme.imageEvents) {
 						imagesObj[i].source[evt.toString()] = theme.imageEvents[evt.toString()];
