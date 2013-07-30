@@ -31,6 +31,12 @@ Object.prototype.getDecendents = function(ref) {
 	}
 };
 
+
+Object.prototype.styling = function(prop, val) {
+	this.style[prop.toString()] = val.toString();
+	return this;
+};
+
 // sets styles on object
 Object.prototype.setStyle = function(style) {
 	var output = "";
@@ -156,7 +162,7 @@ Object.prototype.setWidth = function(w) {
 					var img = evt.currentTarget;
 
 					getOriginalImageSize(evt.currentTarget.src, function(w, h) {
-						
+
 						var lightBox = new LightBox(img, {widthO : w, heightO : h});
 						lightBox.create();
 					});
@@ -219,6 +225,7 @@ Object.prototype.setWidth = function(w) {
 
 	// create sepeate image for lightbox with new styles
 	function LightBox(target, dims) {
+		// work in progress!!!
 		this.image = target;
 		this.caption = target.getAttribute("plaid-caption") || null;
 
@@ -231,32 +238,26 @@ Object.prototype.setWidth = function(w) {
 			var windowHeight = window.innerHeight,
 				windowWidth = window.innerWidth;
 
+			var imgHeight,
+				imgWidth;
+				
 			this.domNode = document.createElement("div");
-			console.log("testing...");
 
-			this.style("border", "2px solid #ccc")
-				.style("background-color", "#111")
-				.style("position", "absolute")
-				.style("width", this.width)
-				.style("height", this.height)
-				.style("top", (windowHeight/2))
-				.style("left", (windowWidth/2));
+			this.domNode
+				.styling("border", "5px solid #ccc")
+				.styling("background-color", "#222")
+				.styling("position", "absolute")
+				.styling("width", windowWidth - (windowWidth*.10))
+				.styling("height", windowHeight - (windowHeight*.10))
+				.styling("top", 0)
+				.styling("left", 0)
 			
-
 			body = document.getDecendents('body');
-
-			console.log(this.domNode);
 
 			this.domNode.appendChild(this.image);
 			body.appendChild(this.domNode);
 		}
 	}
-
-	LightBox.prototype.style = function(prop, val) {
-		this.domNode.style[prop.toString()] = val.toString();
-
-		return this;
-	};
 
 	// for better storage of image properties
 	function PlaidImage(src, w, h) {
