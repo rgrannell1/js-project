@@ -1,4 +1,5 @@
 
+// TODO: fix issue in firefox where lightbox background-color is never set
 (function(window) {
 "use strict";
 	if(!Array.prototype.indexOf) {
@@ -114,7 +115,12 @@
 
 			imageEvents : {
 				onclick : function(evt) {
-					// open a dialog
+					var img = evt.currentTarget;
+
+					getOriginalImage(img, function(imageO) {
+						var lightBox = new LightBox(imageO);
+						lightBox.create();
+					});
 				},
 
 				onmouseover : function(evt) {
@@ -140,7 +146,12 @@
 			
 			imageEvents : {
 				onclick : function(evt) {
-					// open a dialog
+					var img = evt.currentTarget;
+
+					getOriginalImage(img, function(imageO) {
+						var lightBox = new LightBox(imageO);
+						lightBox.create();
+					});
 					
 				},
 
@@ -167,7 +178,12 @@
 
 			imageEvents : {
 				onclick : function(evt) {
-					// open a dialog
+					var img = evt.currentTarget;
+
+					getOriginalImage(img, function(imageO) {
+						var lightBox = new LightBox(imageO);
+						lightBox.create();
+					});
 				},
 
 				onmouseover : function(evt) {
@@ -263,41 +279,38 @@
 		this.target = target;
 		this.caption = target.getAttribute("caption") || null;
 
-		console.log(this.caption);
+		this.create = function() {
+			var body;
+			var windowHeight = window.screen.availHeight,
+				windowWidth = window.screen.availWidth;
+
+			var tarWidth = this.target.width,
+				tarHeight = this.target.height;
+
+			this.domNode = document.createElement("div");
+
+			plaid.styling(this.domNode, "border", "5px solid #ccc")
+				.styling(this.domNode, "background-color", "#222")
+				.styling(this.domNode, "position", "absolute")
+				.styling(this.domNode, "width", (function() {
+					return Math.floor(tarWidth + (tarWidth*.05));
+				})())
+				.styling(this.domNode, "height", (function() {
+					return Math.floor(tarWidth + (tarWidth*.05));
+				})())
+				.styling(this.domNode, "top", (function() {
+					return (windowHeight/2) - tarHeight;
+				})())
+				.styling(this.domNode, "left", (function() {
+					return (windowWidth/2) - tarWidth/2;
+				})())
+			
+			body = plaid.getDecendents(document, 'body');
+
+			this.domNode.appendChild(this.target);
+			body.appendChild(this.domNode);
+		}
 	}
-
-	LightBox.prototype.create = function() {
-		var body;
-		var windowHeight = window.screen.availHeight,
-			windowWidth = window.screen.availWidth;
-		var tarWidth = this.target.width,
-			tarHeight = this.target.height;
-
-		console.log(windowHeight, windowWidth);
-
-		this.domNode = document.createElement("div");
-
-		plaid.styling(this.domNode, "border", "5px solid #ccc")
-			.styling(this.domNode, "background-color", "#222")
-			.styling(this.domNode, "position", "absolute")
-			.styling(this.domNode, "width", (function() {
-				return Math.floor(tarWidth + (tarWidth*.05));
-			})())
-			.styling(this.domNode, "height", (function() {
-				return Math.floor(tarWidth + (tarWidth*.05));
-			})())
-			.styling(this.domNode, "top", (function() {
-				return (windowHeight/2) - tarHeight;
-			})())
-			.styling(this.domNode, "left", (function() {
-				return (windowWidth/2) - tarWidth/2;
-			})())
-		
-		body = plaid.getDecendents(document, 'body');
-
-		this.domNode.appendChild(this.target);
-		body.appendChild(this.domNode);
-	};
 
 	// for better storage of image properties
 	function PlaidImage(src, w, h) {
