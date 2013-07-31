@@ -1,0 +1,82 @@
+
+<html>
+<head>
+	<title></title>
+</head>
+<style>
+	html {
+		margin: 16%;
+		margin-top: 100px;
+		background: #ecf0f1;
+	}
+	.test {
+		width: 500px;
+		padding: 20px;
+		margin: 10px;
+		color: white;
+	}
+	.failed {
+		background: #e74c3c;
+	}
+	.passed {
+		background: #2ecc71;
+	}
+	#test-canvas {
+		position: absolute;
+		top: 0px;
+		left: 0px;
+		margin: 100px;
+	}
+
+</style>
+<script type="text/javascript" src = "../scripts/main.js"></script>
+<script type="text/javascript" src = "./test-utils.js"></script>
+<script type="text/javascript" src = "./tests.js"></script>
+
+<body>
+	<hgroup>
+		<h1> Unit Tests </h1>
+	</hgroup>
+
+	<button id = "run-tests" onclick = "testAll()"> Run </button>
+	<div id = "test-info"></div>
+
+</body>
+<script type="text/javascript">
+
+	var testAll = function () {
+
+		var div = document.getElementById('test-info');
+		div.innerHTML = "";
+
+		var report = function (test, status) {
+
+			if (status === "passed") {
+				var message = "<div class = 'test passed'>" +
+					test.description + 
+				"</div>";
+			} else {
+				var message = "<div class = 'test failed'>" +
+					test.description + 
+				"</div>";		
+			}
+
+			var div = document.getElementById('test-info');
+			div.innerHTML = div.innerHTML + message;
+		}
+		for (var ith = 0; ith < testSuite.length; ith++) {
+
+			var unitTest = testSuite[ith];
+			var allPassed = unitTest.func();
+
+			if (allPassed) {
+				report(unitTest, status = "passed");
+			} else {
+				report(unitTest, status = "failed");
+			}
+		}
+	}
+
+</script>
+</html>
+	

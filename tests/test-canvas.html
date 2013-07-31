@@ -1,0 +1,64 @@
+
+
+<html>
+<head>
+	<title></title>
+</head>
+<style>
+	html {
+		background: #ecf0f1;
+	}
+	.test {
+		width: 500px;
+		padding: 20px;
+		margin: 10px;
+		color: white;
+	}
+	#test-canvas {
+		position: absolute;
+		top: 0px;
+		left: 0px;
+	}
+
+</style>
+<script type="text/javascript" src = "../scripts/main.js"></script>
+<script type="text/javascript" src = "./test-utils.js"></script>
+<script type="text/javascript" src = "./tests.js"></script>
+
+<body>
+	<h1> 1000 x 1000 canvas </h1>
+	<canvas id = "test-canvas">
+</body>
+<script type="text/javascript">
+	
+    var canvas = document.getElementById('test-canvas');
+	var context = canvas.getContext("2d");
+	context.canvas.width = 1000;
+	context.canvas.height = 1000;
+	context.fillStyle = "#1abc9c";
+
+	var rectangles = tilePlane(100, {width: 1000, height: 1000});
+
+	lambda.indMap(
+		function (rectangle, ith) {
+
+			context.fillRect(
+				rectangle.xMinus, 
+				rectangle.yPlus,
+				rectangle.width(),
+				rectangle.height());
+			
+			context.strokeRect(
+				rectangle.xMinus, 
+				rectangle.yPlus,
+				rectangle.width(),
+				rectangle.height());
+
+			context.strokeStyle = "white";	
+		},
+		rectangles
+	);
+
+</script>
+</html>
+	
