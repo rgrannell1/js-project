@@ -195,9 +195,8 @@
 				onclick : function(evt) {
 					var img = evt.currentTarget;
 
-					getOriginalImageSize(evt.currentTarget.src, function(w, h) {
-
-						var lightBox = new LightBox(img, {widthO : w, heightO : h});
+					getOriginalImage(img, function(imageO) {
+						var lightBox = new LightBox(imageO);
 						lightBox.create();
 					});
 					
@@ -241,11 +240,11 @@
 	})();
 
 	//util function to get original width and height of an image
-	var getOriginalImageSize = function(src, callback) {
+	var getOriginalImage = function(img, callback) {
 		var image = new Image();
 		
 		image.onload = function() {
-			callback( image.width, image.height );
+			callback(image);
 			image.onload = image.onerror = null;
 		};
 
@@ -253,45 +252,48 @@
 			console.log("failed");
 		};
 
-		image.src = src;
-		console.log(image);
+		image.src = img.src;
+		image.setAttribute("caption", img.getAttribute("plaidcaption"));	
 	};
 
 	// create sepeate image for lightbox with new styles
-	function LightBox(target, dims) {
+	function LightBox(target) {
 		// work in progress!!!
 		this.image = target;
-		this.caption = target.getAttribute("plaid-caption") || null;
+		this.caption = target.getAttribute("caption") || null;
 
-		this.width = dims.widthO;
-		this.height = dims.heightO;
-
-		this.create = function() {
-			var body;
-
-			var windowHeight = window.innerHeight,
-				windowWidth = window.innerWidth;
-
-			var imgHeight,
-				imgWidth;
-				
-			this.domNode = document.createElement("div");
-
-			
-			Plaid.styling(this.domNode, "border", "5px solid #ccc")
-				.styling(this.domNode, "background-color", "#222")
-				.styling(this.domNode, "position", "absolute")
-				.styling(this.domNode, "width", windowWidth - (windowWidth*.10))
-				.styling(this.domNode, "height", windowHeight - (windowHeight*.10))
-				.styling(this.domNode, "top", 0)
-				.styling(this.domNode, "left", 0)
-			
-			body = plaid.getDecendents(document, 'body');
-
-			this.domNode.appendChild(this.image);
-			body.appendChild(this.domNode);
-		}
+		console.log(this.caption);
 	}
+
+	LightBox.prototype.create = function() {
+		var body;
+
+		var windowHeight = window.innerHeight,
+			windowWidth = window.innerWidth;
+			
+		this.domNode = document.createElement("div");
+
+		plaid.styling(this.domNode, "border", "5px solid #ccc")
+			.styling(this.domNode, "background-color", "#222")
+			.styling(this.domNode, "position", "absolute")
+			.styling(this.domNode, "width", (function() {
+				return Math.floor(target.width + (target.width*.05));
+			})())
+			.styling(this.domNode, "height", (function() {
+				return Math.floor(target.height + (target.height*.05));
+			})())
+			.styling(this.domNode, "top", (function() {
+				return (windowHeight/2) - target.height;
+			})())
+			.styling(this.domNode, "left", (function() {
+				return (windowWidth/2) - target.width;
+			})())
+		
+		body = plaid.getDecendents(document, 'body');
+
+		this.domNode.appendChild(this.image);
+		body.appendChild(this.domNode);
+	};
 
 	// for better storage of image properties
 	function PlaidImage(src, w, h) {
@@ -337,8 +339,8 @@
 		// get array of Image objects
 		imagesObj = storeImages(collageEle);
 
-		selectedTheme = plaid.getAttr(collageEle, "plaid-theme")
-		inheritId = plaid.getAttr(collageEle, "plaid-inherit-backgroundColor");
+		selectedTheme = plaid.getAttr(collageEle, "plaidtheme")
+		inheritId = plaid.getAttr(collageEle, "plaidinheritbackgroundColor");
 
 		if(inheritId !== null) {
 			var inheritedBgColorElement = document.getElementById(inheritId);
