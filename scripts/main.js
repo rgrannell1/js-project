@@ -259,7 +259,8 @@
 	// create sepeate image for lightbox with new styles
 	function LightBox(target) {
 		// work in progress!!!
-		this.image = target;
+
+		this.target = target;
 		this.caption = target.getAttribute("caption") || null;
 
 		console.log(this.caption);
@@ -267,31 +268,34 @@
 
 	LightBox.prototype.create = function() {
 		var body;
+		var windowHeight = window.screen.availHeight,
+			windowWidth = window.screen.availWidth;
+		var tarWidth = this.target.width,
+			tarHeight = this.target.height;
 
-		var windowHeight = window.innerHeight,
-			windowWidth = window.innerWidth;
-			
+		console.log(windowHeight, windowWidth);
+
 		this.domNode = document.createElement("div");
 
 		plaid.styling(this.domNode, "border", "5px solid #ccc")
 			.styling(this.domNode, "background-color", "#222")
 			.styling(this.domNode, "position", "absolute")
 			.styling(this.domNode, "width", (function() {
-				return Math.floor(target.width + (target.width*.05));
+				return Math.floor(tarWidth + (tarWidth*.05));
 			})())
 			.styling(this.domNode, "height", (function() {
-				return Math.floor(target.height + (target.height*.05));
+				return Math.floor(tarWidth + (tarWidth*.05));
 			})())
 			.styling(this.domNode, "top", (function() {
-				return (windowHeight/2) - target.height;
+				return (windowHeight/2) - tarHeight;
 			})())
 			.styling(this.domNode, "left", (function() {
-				return (windowWidth/2) - target.width;
+				return (windowWidth/2) - tarWidth/2;
 			})())
 		
 		body = plaid.getDecendents(document, 'body');
 
-		this.domNode.appendChild(this.image);
+		this.domNode.appendChild(this.target);
 		body.appendChild(this.domNode);
 	};
 
