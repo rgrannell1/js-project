@@ -53,52 +53,91 @@
 		};
 	}
 
-	// DOM shothand methods
-	Plaid.prototype.getAttr = function(node, ref) {
-		return node.getAttribute(ref.toString());
-	};
+	var domUtil = {
+		getAttr : function(node, ref) {
+			return node.getAttribute(ref.toString());
+		},
 
-	Plaid.prototype.getDecendents = function(node, ref) {
-		var eles = node.getElementsByTagName(ref.toString());
+		getDecendents : function(node, ref) {
+			var eles = node.getElementsByTagName(ref.toString());
 
-		if(eles.length === 1) {
-			return eles[0];
-		} else {
-			return eles;
-		}
-	};
-
-
-	Plaid.prototype.styling = function(node, prop, val) {
-		node.style[prop.toString()] = val.toString();
-		return this;
-	};
-
-	// sets styles on object
-	Plaid.prototype.setStyle = function(node, style) {
-		var styleType;
-
-		if(node.tagName === 'DIV') {
-			styleType = 'canvasStyle';
-		} else {
-			styleType = 'imageStyle';
-		} 
-
-		for(var prop in style[styleType]) {
-			if(style[styleType].hasOwnProperty(prop)) {
-				node.style[prop] += style[styleType][prop];
+			if(eles.length === 1) {
+				return eles[0];
+			} else {
+				return eles;
 			}
+		},
+
+		styling : function(node, prop, val) {
+			node.style[prop.toString()] = val.toString();
+			return this;
+		},
+
+		setStyle : function(node, style) {
+			var styleType;
+
+			if(node.tagName === 'DIV') {
+				styleType = 'canvasStyle';
+			} else {
+				styleType = 'imageStyle';
+			} 
+
+			for(var prop in style[styleType]) {
+				if(style[styleType].hasOwnProperty(prop)) {
+					node.style[prop] += style[styleType][prop];
+				}
+			}
+		},
+
+		setHeight : function(node, h) {
+			node.style.height = h;
+		},
+
+		setWidth : function(node, w) {
+			node.style.width = w;
 		}
 	};
 
-	Plaid.prototype.setHeight = function(node, h) {
-		node.style.height = h;
-	}
+	var is = (function () {
+	// tests for certain types of values (functions, objects)
+	
+		return {
+			toType: function (val) {
+				// found online, better than typeof at determining
+				// the class of an object
 
-	Plaid.prototype.setWidth = function(node, w) {
-		node.style.width = w;
-	}
-
+				return ({}).toString.call(val).
+					match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+			},
+			closure: function (val) {
+				return this.toType(val) === "function";
+			},
+			array: function (val) {
+				return this.toType(val) === 'array';
+			},
+			object: function (val) {
+				return this.toType(val) === 'object';
+			},
+			undefn: function (val) {
+				return this.toType(val) === 'undefined';
+			},
+			string: function (val) {
+				return this.toType(val) === 'string';
+			},
+			number: function (val) {
+				return this.toType(val) === 'number';
+			},
+			logical: function (val) {
+				return this.toType(val) === 'boolean';
+			},
+			numeric: function (val) {
+				return !isNaN(parseFloat(val)) && isFinite(val);
+			},
+			nan: function (val) {
+				return val !== val;
+			}
+		};
+	})();
 // theme objects that can be refrenced by the user
 // the idea is that these themes are easily editable to users so simple themes can be easily created
 	var themes = {
@@ -233,27 +272,6 @@
 			}
 		}
 	};
-	// for better type checking
-	var is = (function() {
-		return {
-				toType: function (val) {
-					return ({}).toString.call(val).
-					match(/\s([a-zA-Z]+)/)[1].toLowerCase()
-				},
-				function: function (val) {
-					return toType(val) === "function";
-				},
-				array: function (val) {
-					return toType(val) === 'array';
-				},
-				object: function (val) {
-					toType(val) === 'object'
-				},
-				numeric: function (val) {
-					return !isNaN(parseFloat(val)) && isFinite(val);
-				}
-			};
-	})();
 
 	//util function to get original width and height of an image
 	var getOriginalImage = function(img, callback) {
@@ -289,7 +307,7 @@
 
 			this.domNode = document.createElement("div");
 
-			plaid.styling(this.domNode, "border", "5px solid #ccc")
+			domUtil.styling(this.domNode, "border", "5px solid #ccc")
 				.styling(this.domNode, "background-color", "#222")
 				.styling(this.domNode, "position", "absolute")
 				.styling(this.domNode, "width", (function() {
@@ -305,7 +323,7 @@
 					return (windowWidth/2) - tarWidth/2;
 				})())
 			
-			body = plaid.getDecendents(document, 'body');
+			body = domUtil.getDecendents(document, 'body');
 
 			this.domNode.appendChild(this.target);
 			body.appendChild(this.domNode);
@@ -350,14 +368,14 @@
 		// get collage element by id 
 		collageEle = _imageCollage(self.id);
 
-		plaid.setWidth(collageEle, self.width);
-		plaid.setHeight(collageEle, self.height);
+		domUtil.setWidth(collageEle, self.width);
+		domUtil.setHeight(collageEle, self.height);
 
 		// get array of Image objects
 		imagesObj = storeImages(collageEle);
 
-		selectedTheme = plaid.getAttr(collageEle, "plaidtheme")
-		inheritId = plaid.getAttr(collageEle, "plaidinheritbackgroundColor");
+		selectedTheme = domUtil.getAttr(collageEle, "plaidtheme")
+		inheritId = domUtil.getAttr(collageEle, "plaidinheritbackgroundColor");
 
 		if(inheritId !== null) {
 			var inheritedBgColorElement = document.getElementById(inheritId);
@@ -376,13 +394,13 @@
 			if(theme !== undefined) {
 				// apply styles to the collage and images
 				var self = this;
-				plaid.setStyle(collageEle, theme);
+				domUtil.setStyle(collageEle, theme);
 				
 				for(var i = 0; i < imagesObj.length ; i++) {
 					//_imageRef(images[0]);
 					var img = imagesObj[i].source;
 
-					plaid.setStyle(img, theme);
+					domUtil.setStyle(img, theme);
 					
 					for(var evt in theme.imageEvents) {
 						imagesObj[i].source[evt.toString()] = theme.imageEvents[evt.toString()];
@@ -458,6 +476,9 @@ var is = ( function () {
 		},
 		logical: function (val) {
 			return this.toType(val) === 'boolean';
+		},
+		numeric: function (val) {
+			return !isNaN(parseFloat(val)) && isFinite(val);
 		},
 		nan: function (val) {
 			return val !== val;
