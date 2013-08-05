@@ -1,5 +1,8 @@
 
-// TODO: fix issue in firefox where lightbox background-color is never set
+// TODO: 
+// 1. fix issue in firefox where lightbox background-color is never set
+// 2. make it so only one lightbox can be oopen at a time
+
 (function(window) {
 "use strict";
 	if(!Array.prototype.indexOf) {
@@ -16,12 +19,8 @@
 		}
 	}
 
-	function Plaid() {
-
-		this.on = function(ele) {
-			this.id = ele;
-			return this;
-		};
+	function Plaid(ele) {
+		this.id = ele;
 
 		this.dim = function(w, h) {
 			this.width = w;
@@ -40,6 +39,7 @@
 						images : this.images
 					};
 
+					// call backend algorithm
 					theBackend(config, function(val) {
 						render(self);
 					});
@@ -52,6 +52,8 @@
 			}
 		};
 	}
+
+	var lightBox_id = 0;
 
 	var domUtil = {
 		getAttr : function(node, ref) {
@@ -68,24 +70,9 @@
 			}
 		},
 
-		styling : function(node, prop, val) {
-			node.style[prop.toString()] = val.toString();
-			return this;
-		},
-
-		setStyle : function(node, style) {
-			var styleType;
-
-			if(node.tagName === 'DIV') {
-				styleType = 'canvasStyle';
-			} else {
-				styleType = 'imageStyle';
-			} 
-
-			for(var prop in style[styleType]) {
-				if(style[styleType].hasOwnProperty(prop)) {
-					node.style[prop] += style[styleType][prop];
-				}
+		style : function(node, props) {
+			for(var prop in props) {
+				node.style[prop.toString()] = props[prop.toString()];
 			}
 		},
 
@@ -95,6 +82,11 @@
 
 		setWidth : function(node, w) {
 			node.style.width = w;
+		},
+
+		remove : function(node) {
+			var elem = document.getElementById(node);
+			elem.parentNode.removeChild(elem);
 		}
 	};
 
@@ -138,6 +130,7 @@
 			}
 		};
 	})();
+
 // theme objects that can be refrenced by the user
 // the idea is that these themes are easily editable to users so simple themes can be easily created
 	var themes = {
@@ -252,7 +245,7 @@
 
 					getOriginalImage(img, function(imageO) {
 						var lightBox = new LightBox(imageO);
-						lightBox.create();
+						lightBox.start();
 					});
 					
 				},
@@ -283,7 +276,7 @@
 		};
 
 		image.onerror = function(){
-			console.log("failed");
+			console.error("failed to retreive image");
 		};
 
 		image.src = img.src;
@@ -292,12 +285,9 @@
 
 	// create sepeate image for lightbox with new styles
 	function LightBox(target) {
-		// work in progress!!!
-
 		this.target = target;
-		this.caption = target.getAttribute("caption") || null;
-
-		this.create = function() {
+		
+		this.start = function() {
 			var body;
 			var windowHeight = window.screen.availHeight,
 				windowWidth = window.screen.availWidth;
@@ -305,28 +295,34 @@
 			var tarWidth = this.target.width,
 				tarHeight = this.target.height;
 
-			this.domNode = document.createElement("div");
+			var caption = this.target.getAttribute("caption") || null;
+			var domNode = document.createElement("div");
 
-			domUtil.styling(this.domNode, "border", "5px solid #ccc")
-				.styling(this.domNode, "background-color", "#222")
-				.styling(this.domNode, "position", "absolute")
-				.styling(this.domNode, "width", (function() {
-					return Math.floor(tarWidth + (tarWidth*.05));
-				})())
-				.styling(this.domNode, "height", (function() {
-					return Math.floor(tarWidth + (tarWidth*.05));
-				})())
-				.styling(this.domNode, "top", (function() {
-					return (windowHeight/2) - tarHeight;
-				})())
-				.styling(this.domNode, "left", (function() {
-					return (windowWidth/2) - tarWidth/2;
-				})())
+			var idNo = ++lightBox_id;
+
+			// unique id for each node
+			domNode.id = "plaid_lb_" + idNo;
+			domUtil.style(
+				domNode,
+				{
+				"border" : "2px solid #ccc",
+				"position" : "absolute",
+				"width" : Math.floor(tarWidth),
+				"height" : Math.floor(tarHeight),
+				"top" : (windowHeight/2) - tarHeight,
+				"left" : (windowWidth/2) - tarWidth/2
+				}
+			);
 			
 			body = domUtil.getDecendents(document, 'body');
 
-			this.domNode.appendChild(this.target);
-			body.appendChild(this.domNode);
+			// add click event to remove the node when clicked
+			domNode.onclick = function(evt) {
+				domUtil.remove(evt.currentTarget.id);
+			};
+
+			domNode.appendChild(this.target);
+			body.appendChild(domNode);
 		}
 	}
 
@@ -365,6 +361,22 @@
 		var collageEle,
 			imagesObj;
 
+		var setStyle = function(node, style) {
+			var styleType;
+
+			if(node.tagName === 'DIV') {
+				styleType = 'canvasStyle';
+			} else {
+				styleType = 'imageStyle';
+			} 
+
+			for(var prop in style[styleType]) {
+				if(style[styleType].hasOwnProperty(prop)) {
+					node.style[prop] += style[styleType][prop];
+				}
+			}
+		};
+
 		// get collage element by id 
 		collageEle = _imageCollage(self.id);
 
@@ -383,7 +395,6 @@
 		}
 
 		if(selectedTheme !== null) {
-			
 			for(var t in themes) {
 				if(themes[t].name === selectedTheme) {
 					theme = themes[t];
@@ -394,13 +405,13 @@
 			if(theme !== undefined) {
 				// apply styles to the collage and images
 				var self = this;
-				domUtil.setStyle(collageEle, theme);
+				setStyle(collageEle, theme);
 				
 				for(var i = 0; i < imagesObj.length ; i++) {
 					//_imageRef(images[0]);
 					var img = imagesObj[i].source;
 
-					domUtil.setStyle(img, theme);
+					setStyle(img, theme);
 					
 					for(var evt in theme.imageEvents) {
 						imagesObj[i].source[evt.toString()] = theme.imageEvents[evt.toString()];
@@ -409,8 +420,6 @@
 				}
 			}
 		}
-
-		console.log(collageEle);
 	};
 
 	var theBackend = function(config, callback) {
@@ -423,15 +432,12 @@
 		return ele;
 	};
 
-	// return object to window
+	
 	var _plaid = window.plaid;
+	var plaid = function(id) {
+		return new Plaid(id)
+	};
 
-	/*var plaid = function(id, dimensions) {
-		return new Plaid(id, dimensions)
-	};*/
-
-	var plaid = new Plaid();
-	console.log(plaid);
 	window.plaid = plaid;
 
 })(window);
