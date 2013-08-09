@@ -10,46 +10,49 @@
 
 var is = ( function () {
 	// tests for certain types of values (functions, objects)
-	
+
 	return {
 		toType: function (val) {
 			// found online, better than typeof at determining
 			// the class of an object
 
 			return ({}).toString.call(val).
-				match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+				match(/\s([a-zA-Z]+)/)[1].toLowerCase();
+		},
+		hasType: function (val, type) {
+			return this.toType(val) === type;
 		},
 		closure: function (val) {
-			return this.toType(val) === "function";
+			return this.hasType(val, "function");
 		},
 		array: function (val) {
-			return this.toType(val) === 'array';
+			return this.hasType(val, "array");
 		},
 		object: function (val) {
-			return this.toType(val) === 'object';
+			return this.hasType(val, "object");
 		},
 		undefn: function (val) {
-			return this.toType(val) === 'undefined';
+			return this.hasType(val, "undefined");
 		},
 		string: function (val) {
-			return this.toType(val) === 'string';
+			return this.hasType(val, "string");
 		},
 		number: function (val) {
-			return this.toType(val) === 'number';
+			return this.hasType(val, "number");
 		},
 		logical: function (val) {
-			return this.toType(val) === 'boolean';
+			return this.hasType(val, "logical");
 		},
 		nan: function (val) {
 			return val !== val;
 		}
-	}
+	};
 } )();
 
 var lambda = ( function (is) {
 	// this object contains higher order functions for the
 	// terse manipulation of arrays
-	
+
 	return {
 		indMap: function (func, iter) {
 			// (integer -> a -> b) -> [a] -> [b]
@@ -80,7 +83,7 @@ var lambda = ( function (is) {
 			// inject an infix binary function func
 			// into the sequence first funct iter[0] func iter[2] func .... iter[n],
 			// returning a single value.
-			
+
 			var call = "fold";
 			if (!is.closure(func)) {
 				throw new TypeError(call + ": func must be a function");
@@ -110,7 +113,7 @@ var lambda = ( function (is) {
 		},
 		concatMap: function (func, iter) {
 			/* (a -> b) -> a -> [b]
-			   map a function over iter, and concatenate the 
+			   map a fucntion over iter, and concatenate the 
 			   results so that length iter is not necessarily the same length
 			   at the return value */ 
 
@@ -123,9 +126,10 @@ var lambda = ( function (is) {
 			}
 
 			if (iter.length === 0) {
-				return []
+				return [];
 			} else {
 				var call = "concatMap";
+
 				if (!is.closure(func)) {
 					throw new TypeError(call + ":" + "func must be a function");
 				}
@@ -317,8 +321,6 @@ var Rectangle = ( function () {
 		var call = "Rectangle";
 		var args = Array.prototype.slice.call(arguments);
 
-		console.log( args );
-
 		lambda.indMap(
 			function (val, ith) {
 				if (!is.number(val)) {
@@ -339,16 +341,12 @@ var Rectangle = ( function () {
 		that.xPlus = xPlus;
 		that.yMinus = yMinus;
 		that.yPlus = yPlus;
-		that.value = undefined;
-		
-		that._value = function (value) {
-			that.value = value;
-		};
+
 		that.width = function () {
-			return Math.abs(that.xPlus - that.xMinus)
+			return Math.abs(that.xPlus - that.xMinus);
 		},
 		that.height = function () {
-			return Math.abs(that.yPlus - that.yMinus)
+			return Math.abs(that.yPlus - that.yMinus);
 		},
 		that.asMatrix = function () {
 			// converts rectangle to a matrix,
@@ -365,8 +363,6 @@ var Rectangle = ( function () {
 	};
 } )()
 
-
-
 //# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 //# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 
@@ -378,7 +374,7 @@ var Grammar = ( function (is, lambda) {
 		/*  an object for holding grammar rules, returning 
 			terminals and non-terminals, and generating a string
 			in the language from an initial symbol and a ruleset */
-		
+
 		var call = "Grammar";
 		var that = {};
 		that.rules = rules;
@@ -714,3 +710,4 @@ var tilePlane = ( function (is, lambda) {
 } )(is, lambda)
 
 tilePlane(10, {width: 1000, height: 1000})
+
