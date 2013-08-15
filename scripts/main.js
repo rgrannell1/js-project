@@ -19,76 +19,61 @@
 		}
 	}
 
-	function Plaid(ele) {
-		this.id = ele;
-
-		this.dim = function(w, h) {
-			this.width = w;
-			this.height = h;
-			return this;
-		};
-
-		this.start = function() {
-			var self = this;
-
-			try {
-				if(this.id !== null || this.id.tagName === 'DIV') {
-					var config = {
-						width: this.width,
-						height : this.height,
-						images : this.images
-					};
-
-					// call backend algorithm
-					theBackend(config, function(val) {
-						render(self);
-					});
-
-				} else {
-					throw new TypeError("element used for collage must be a DIV");
-				}
-			} catch (e) {
-				console.error(e);
-			}
-		};
-	}
-
 	var lightBox_id = 0;
 
-	var domUtil = {
-		getAttr : function(node, ref) {
-			return node.getAttribute(ref.toString());
-		},
+	var domUtil = (function() {
+		return {
+			getAttr : function(node, ref) {
+				return node.getAttribute(ref.toString());
+			},
 
-		getDecendents : function(node, ref) {
-			var eles = node.getElementsByTagName(ref.toString());
+			getDecendents : function(node, ref) {
+				var eles = node.getElementsByTagName(ref.toString());
 
-			if(eles.length === 1) {
-				return eles[0];
-			} else {
-				return eles;
+				if(eles.length === 1) {
+					return eles[0];
+				} else {
+					return eles;
+				}
+			},
+
+			style : function(node, props) {
+				for(var prop in props) {
+					node.style[prop.toString()] = props[prop.toString()];
+				}
+			},
+
+			setHeight : function(node, h) {
+				node.style.height = h;
+			},
+
+			setWidth : function(node, w) {
+				node.style.width = w;
+			},
+
+			remove : function(node) {
+				var elem = document.getElementById(node);
+				elem.parentNode.removeChild(elem);
+			},
+
+			//util function to get original width and height of an image
+			getOriginalImage : function(img, callback) {
+				var image = new Image();
+				
+				image.onload = function() {
+					callback(image);
+					image.onload = image.onerror = null;
+				};
+
+				image.onerror = function(){
+					console.error("failed to retreive image");
+				};
+
+				image.src = img.src;
+				image.setAttribute("caption", img.getAttribute("plaidcaption"));	
 			}
-		},
-
-		style : function(node, props) {
-			for(var prop in props) {
-				node.style[prop.toString()] = props[prop.toString()];
-			}
-		},
-
-		setHeight : function(node, h) {
-			node.style.height = h;
-		},
-
-		setWidth : function(node, w) {
-			node.style.width = w;
-		},
-
-		remove : function(node) {
-			var elem = document.getElementById(node);
-			elem.parentNode.removeChild(elem);
-		}
-	};
+		};
+	})();
 
 	var is = (function () {
 	// tests for certain types of values (functions, objects)
@@ -133,155 +118,136 @@
 
 // theme objects that can be refrenced by the user
 // the idea is that these themes are easily editable to users so simple themes can be easily created
-	var themes = {
-		aqua : {
-			name : "aqua",
-			canvasStyle : {
-				padding : "4px",
-				border : 'border : 2px solid rgba(150,150,240,1);',
-				boxShadow : 'box-shadow : 2px 2px 8px rgba(20, 80, 200, 0.5);'
-			},
-			imageStyle : {
-				padding : 'padding: 2px 2px;'
-			},
+	var themes = (function() {
 
-			imageEvents : {
-				onclick : function(evt) {
-					var img = evt.currentTarget;
-
-					getOriginalImage(img, function(imageO) {
-						var lightBox = new LightBox(imageO);
-						lightBox.create();
-					});
+		return{
+			aqua : {
+				name : "aqua",
+				canvasStyle : {
+				
+				},
+				imageStyle : {
+					padding : 'padding: 2px 2px;'
 				},
 
-				onmouseover : function(evt) {
-					evt.currentTarget.style.transition = "yellow";
-				},
+				imageEvents : {
+					onclick : function(evt) {
+						var img = evt.currentTarget;
 
-				onmouseout : function(evt) {
-					evt.currentTarget.style.backgroundColor = "white";
+						domUtil.getOriginalImage(img, function(imageO) {
+							var lightBox = new LightBox(imageO);
+							lightBox.create();
+						});
+					},
+
+					onmouseover : function(evt) {
+						evt.currentTarget.style.transition = "yellow";
+					},
+
+					onmouseout : function(evt) {
+						evt.currentTarget.style.backgroundColor = "white";
+					}
 				}
-			}
-		},
-
-		ember : {
-			name : "ember",
-			canvasStyle : {
-				padding : "padding : 4px;",
-				border : 'border : 2px solid rgba(240,150,150, 1);',
-				boxShadow : 'box-shadow : 2px 2px 6px rgba(200, 20, 20, 0.5);'
 			},
-			imageStyle : {
-				padding: "padding: 2px 2px;"
-			},
-			
-			imageEvents : {
-				onclick : function(evt) {
-					var img = evt.currentTarget;
 
-					getOriginalImage(img, function(imageO) {
-						var lightBox = new LightBox(imageO);
-						lightBox.create();
-					});
+			ember : {
+				name : "ember",
+				canvasStyle : {
+					
+				},
+				imageStyle : {
+					padding: "padding: 2px 2px;"
+				},
+				
+				imageEvents : {
+					onclick : function(evt) {
+						var img = evt.currentTarget;
+
+						domUtil.getOriginalImage(img, function(imageO) {
+							var lightBox = new LightBox(imageO);
+							lightBox.create();
+						});
+						
+					},
+
+					onmouseover : function(evt) {
+						//evt.currentTarget.style.backgroundColor = "yellow";
+					},
+
+					onmouseout : function(evt) {
+						//evt.currentTarget.style.backgroundColor = "white";
+					}
+				}
+			},
+
+			vanilla : {
+				name : "vanilla",
+				canvasStyle : {
 					
 				},
 
-				onmouseover : function(evt) {
-					//evt.currentTarget.style.backgroundColor = "yellow";
+				imageStyle : {
+					padding : 'padding: 2px 2px;'
 				},
 
-				onmouseout : function(evt) {
-					//evt.currentTarget.style.backgroundColor = "white";
+				imageEvents : {
+					onclick : function(evt) {
+						var img = evt.currentTarget;
+
+						domUtil.getOriginalImage(img, function(imageO) {
+							var lightBox = new LightBox(imageO);
+							lightBox.create();
+						});
+					},
+
+					onmouseover : function(evt) {
+						evt.currentTarget.style.backgroundColor = "yellow";
+					},
+
+					onmouseout : function(evt) {
+						evt.currentTarget.style.backgroundColor = "white";
+					}
 				}
-			}
-		},
-
-		vanilla : {
-			name : "vanilla",
-			canvasStyle : {
-				padding : "padding : 4px;",
-				border : 'border : 1px solid rgba(180,180,180, 1);'
 			},
 
-			imageStyle : {
-				padding : 'padding: 2px 2px;'
-			},
-
-			imageEvents : {
-				onclick : function(evt) {
-					var img = evt.currentTarget;
-
-					getOriginalImage(img, function(imageO) {
-						var lightBox = new LightBox(imageO);
-						lightBox.create();
-					});
-				},
-
-				onmouseover : function(evt) {
-					evt.currentTarget.style.backgroundColor = "yellow";
-				},
-
-				onmouseout : function(evt) {
-					evt.currentTarget.style.backgroundColor = "white";
-				}
-			}
-		},
-
-		skylight : {
-			name : "skylight",
-			canvasStyle : {
-				padding : "4px",
-				border : '3px solid rgba(80, 80, 95, 1)'
-			},
-
-			imageStyle : {
-				padding: '2px 2px'
-			},
-
-			imageEvents : {
-				onclick : function(evt) {
-					var img = evt.currentTarget;
-
-					getOriginalImage(img, function(imageO) {
-						var lightBox = new LightBox(imageO);
-						lightBox.start();
-					});
+			skylight : {
+				name : "skylight",
+				canvasStyle : {
 					
 				},
 
-				onmouseover : function(evt) {
-					evt.currentTarget.style.transition = "1s ease";
-					evt.currentTarget.style.webkitTransition = "1s ease";
-
-					evt.currentTarget.style.transform = "scale(1.01)";
-					evt.currentTarget.style.webkitTransform = "scale(1.01)";
+				imageStyle : {
+					padding: '2px 2px'
 				},
 
-				onmouseout : function(evt) {
-					evt.currentTarget.style.transform = "scale(1)";
-					evt.currentTarget.style.webkitTransform = "scale(1)";
+				imageEvents : {
+					onclick : function(evt) {
+						var img = evt.currentTarget;
+
+						domUtil.getOriginalImage(img, function(imageO) {
+							var lightBox = new LightBox(imageO);
+							lightBox.start();
+						});
+						
+					},
+
+					onmouseover : function(evt) {
+						console.log("over")
+						evt.currentTarget.style.transition = "1s ease";
+						evt.currentTarget.style.webkitTransition = "1s ease";
+
+						evt.currentTarget.style.transform = "scale(1.01)";
+						evt.currentTarget.style.webkitTransform = "scale(1.01)";
+					},
+
+					onmouseout : function(evt) {
+						evt.currentTarget.style.transform = "scale(1)";
+						evt.currentTarget.style.webkitTransform = "scale(1)";
+					}
 				}
 			}
-		}
-	};
-
-	//util function to get original width and height of an image
-	var getOriginalImage = function(img, callback) {
-		var image = new Image();
-		
-		image.onload = function() {
-			callback(image);
-			image.onload = image.onerror = null;
 		};
-
-		image.onerror = function(){
-			console.error("failed to retreive image");
-		};
-
-		image.src = img.src;
-		image.setAttribute("caption", img.getAttribute("plaidcaption"));	
-	};
+	})();
 
 	// create sepeate image for lightbox with new styles
 	function LightBox(target) {
@@ -333,35 +299,17 @@
 		this.height = h;
 	}
 
-	// get images suppled by the user
-	var storeImages = function(id) {
-		// get elements within element supplied by the client
-		var imgs = id.getElementsByTagName('img'),
-			images = [];
-
-		for(var i = 0; i< imgs.length; i++) {
-			var src = imgs[i],
-				w = imgs[i].width,
-				h = imgs[i].height;
-
-			images.push(new PlaidImage(src, w, h));
-		}
-
-		return images;
-	};
-
+	// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
+	// 							render....
+	// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 	var render = function(self) {
 		var theme,
 			selectedTheme,
-			inheritId,
-			inheritedBgColor,
 			images;
 
-		// dom variables
-		var collageEle,
-			imagesObj;
-
 		var setStyle = function(node, style) {
+			console.log(node);
+			console.log(theme);
 			var styleType;
 
 			if(node.tagName === 'DIV') {
@@ -377,44 +325,30 @@
 			}
 		};
 
-		// get collage element by id 
-		collageEle = _imageCollage(self.id);
-
-		domUtil.setWidth(collageEle, self.width);
-		domUtil.setHeight(collageEle, self.height);
-
-		// get array of Image objects
-		imagesObj = storeImages(collageEle);
-
-		selectedTheme = domUtil.getAttr(collageEle, "plaidtheme")
-		inheritId = domUtil.getAttr(collageEle, "plaidinheritbackgroundColor");
-
-		if(inheritId !== null) {
-			var inheritedBgColorElement = document.getElementById(inheritId);
-			inheritedBgColorElement !== null? inheritedBgColor = inheritedBgColorElement.style.backgroundColor : inheritedBgColor = null;
-		}
-
-		if(selectedTheme !== null) {
+		domUtil.setWidth(self.id, self.width);
+		domUtil.setHeight(self.id, self.height);
+		
+		selectedTheme = self.id.getAttribute("plaid-theme");
+		if(themes !== null) {
 			for(var t in themes) {
+				console.log(t.name);
 				if(themes[t].name === selectedTheme) {
 					theme = themes[t];
+					console.log(theme);
 					break;
 				}
 			}
 
 			if(theme !== undefined) {
 				// apply styles to the collage and images
-				var self = this;
-				setStyle(collageEle, theme);
+				setStyle(self.id, theme);
 				
-				for(var i = 0; i < imagesObj.length ; i++) {
-					//_imageRef(images[0]);
-					var img = imagesObj[i].source;
-
+				for(var i = 0; i < self.images.length ; i++) {
+					var img = self.images[i].source;
 					setStyle(img, theme);
 					
 					for(var evt in theme.imageEvents) {
-						imagesObj[i].source[evt.toString()] = theme.imageEvents[evt.toString()];
+						self.images[i].source[evt.toString()] = theme.imageEvents[evt.toString()];
 					}
 					
 				}
@@ -425,20 +359,71 @@
 	var theBackend = function(config, callback) {
 		callback([{},{},{}]);
 	};
-
-	// gets canvas element return and sets it to the canvas attribute
-	var _imageCollage = function(e) {
-		var ele = document.getElementById(e);
-		return ele;
-	};
-
 	
-	var _plaid = window.plaid;
-	var plaid = function(id) {
-		return new Plaid(id)
+	// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
+	// 							plaid....
+	// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+	var plaid = function(ele, dim) {
+		var plaid = {};
+
+		// get images suppled by the user
+		var storeImages = function(id) {
+			// get elements within element supplied by the client
+			var imgs = id.getElementsByTagName('img'),
+				images = [];
+
+			for(var i = 0; i< imgs.length; i++) {
+				var src = imgs[i],
+					w = imgs[i].width,
+					h = imgs[i].height;
+
+				images.push(new PlaidImage(src, w, h));
+			}
+
+			return images;
+		};
+
+		plaid.id = document.getElementById(ele);
+		plaid.width = dim.width;
+		plaid.height = dim.height;
+		plaid.images;
+
+		plaid.start = function() {
+			plaid.images = storeImages(plaid.id);
+
+			try {
+				if(plaid.id !== null || plaid.id.tagName === 'DIV') {
+					var config = {
+						width: plaid.width,
+						height : plaid.width,
+						images : plaid.images
+					};
+
+					// call backend algorithm
+					theBackend(config, function(val) {
+						render(plaid);
+					});
+
+				} else {
+					throw new TypeError("element used for collage must be a DIV");
+				}
+			} catch (e) {
+				console.error(e);
+			}
+		};
+
+		return plaid;
 	};
 
-	window.plaid = plaid;
+	var _plaid = window.plaid,
+		_Pl = window.pl;
+
+	var pl = function(id, dimensions) {
+		return plaid(id, dimensions)
+	};
+
+	window.Pl = pl;
+	window.plaid = pl;
 
 })(window);
 
