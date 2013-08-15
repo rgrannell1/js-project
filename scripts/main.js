@@ -232,7 +232,6 @@
 					},
 
 					onmouseover : function(evt) {
-						console.log("over")
 						evt.currentTarget.style.transition = "1s ease";
 						evt.currentTarget.style.webkitTransition = "1s ease";
 
@@ -299,63 +298,6 @@
 		this.height = h;
 	}
 
-	// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
-	// 							render....
-	// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
-	var render = function(self) {
-		var theme,
-			selectedTheme,
-			images;
-
-		var setStyle = function(node, style) {
-			console.log(node);
-			console.log(theme);
-			var styleType;
-
-			if(node.tagName === 'DIV') {
-				styleType = 'canvasStyle';
-			} else {
-				styleType = 'imageStyle';
-			} 
-
-			for(var prop in style[styleType]) {
-				if(style[styleType].hasOwnProperty(prop)) {
-					node.style[prop] += style[styleType][prop];
-				}
-			}
-		};
-
-		domUtil.setWidth(self.id, self.width);
-		domUtil.setHeight(self.id, self.height);
-		
-		selectedTheme = self.id.getAttribute("plaid-theme");
-		if(themes !== null) {
-			for(var t in themes) {
-				console.log(t.name);
-				if(themes[t].name === selectedTheme) {
-					theme = themes[t];
-					console.log(theme);
-					break;
-				}
-			}
-
-			if(theme !== undefined) {
-				// apply styles to the collage and images
-				setStyle(self.id, theme);
-				
-				for(var i = 0; i < self.images.length ; i++) {
-					var img = self.images[i].source;
-					setStyle(img, theme);
-					
-					for(var evt in theme.imageEvents) {
-						self.images[i].source[evt.toString()] = theme.imageEvents[evt.toString()];
-					}
-					
-				}
-			}
-		}
-	};
-
 	var theBackend = function(config, callback) {
 		callback([{},{},{}]);
 	};
@@ -364,51 +306,101 @@
 	// 							plaid....
 	// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 	var plaid = function(ele, dim) {
-		var plaid = {};
+		var id = document.getElementById(ele);
+		var width = dim.width;
+		var height = dim.height;
 
-		// get images suppled by the user
-		var storeImages = function(id) {
+		var images = (function(id) {
 			// get elements within element supplied by the client
 			var imgs = id.getElementsByTagName('img'),
-				images = [];
+				imageArr = [];
 
 			for(var i = 0; i< imgs.length; i++) {
 				var src = imgs[i],
 					w = imgs[i].width,
 					h = imgs[i].height;
 
-				images.push(new PlaidImage(src, w, h));
+				imageArr.push(new PlaidImage(src, w, h));
 			}
 
-			return images;
+			return imageArr;
+		})(id);
+
+		// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
+		// 			render....
+		// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+		var render = function() {
+			var theme,
+				selectedTheme;
+
+			var setStyle = function(node, style) {
+				var styleType;
+
+				if(node.tagName === 'DIV') {
+					styleType = 'canvasStyle';
+				} else {
+					styleType = 'imageStyle';
+				} 
+
+				for(var prop in style[styleType]) {
+					if(style[styleType].hasOwnProperty(prop)) {
+						node.style[prop] += style[styleType][prop];
+					}
+				}
+			};
+
+			domUtil.setWidth(id, width);
+			domUtil.setHeight(id, height);
+			
+			selectedTheme = id.getAttribute("plaid-theme");
+
+			if(themes !== null) {
+				for(var t in themes) {
+					console.log(t.name);
+					if(themes[t].name === selectedTheme) {
+						theme = themes[t];
+						break;
+					}
+				}
+
+				if(theme !== undefined) {
+					// apply styles to the collage and images
+					setStyle(id, theme);
+					
+					for(var i = 0; i < images.length ; i++) {
+						var img = images[i].source;
+						setStyle(img, theme);
+						
+						for(var evt in theme.imageEvents) {
+							images[i].source[evt.toString()] = theme.imageEvents[evt.toString()];
+						}
+						
+					}
+				}
+			}
 		};
 
-		plaid.id = document.getElementById(ele);
-		plaid.width = dim.width;
-		plaid.height = dim.height;
-		plaid.images;
+		return {
+			start : function() {
+				try {
+					if(id !== null || id.tagName === 'DIV') {
+						var config = {
+							width: width,
+							height : width,
+							images : images
+						};
 
-		plaid.start = function() {
-			plaid.images = storeImages(plaid.id);
+						// call backend algorithm
+						theBackend(config, function(val) {
+							render();
+						});
 
-			try {
-				if(plaid.id !== null || plaid.id.tagName === 'DIV') {
-					var config = {
-						width: plaid.width,
-						height : plaid.width,
-						images : plaid.images
-					};
-
-					// call backend algorithm
-					theBackend(config, function(val) {
-						render(plaid);
-					});
-
-				} else {
-					throw new TypeError("element used for collage must be a DIV");
+					} else {
+						throw new TypeError("element used for collage must be a DIV");
+					}
+				} catch (e) {
+					console.error(e);
 				}
-			} catch (e) {
-				console.error(e);
 			}
 		};
 
