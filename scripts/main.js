@@ -3,10 +3,8 @@
 	"use strict";
 } )()
 
-// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
-// = # = # = # = Lambda and Is = # = # = # = # = # = # = # = # = # = # 
-// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
-// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+// ------------------------------- is -----------------------------------
+// tests the type of js values without using typeof, which is horrible.
 
 var is = ( function () {
 	// tests for certain types of values (functions, objects)
@@ -49,152 +47,169 @@ var is = ( function () {
 	};
 } )();
 
+// ------------------------------- lambda -----------------------------------
+// higher-order functions and utility functions, usually for working with arrays.
+
 var lambda = ( function (is) {
-	// this object contains higher order functions for the
-	// terse manipulation of arrays
 
 	return {
-		indMap: function (func, iter) {
-			// (integer -> a -> b) -> [a] -> [b]
-			// apply a binary function to each element of 
-			// an array or object, with the left argument being
-			// the value iter[ith] and the right argument being the index ith
+		indMap: function (fn, coll) {
+			/*
+				(a -> integer -> b) -> [a] -> [b]
+				like map, but also supplies the index to fn as its left argument.
+				useful when you need to access another part of an array by index
+				while iterating across an array of the same length.
+			*/
 
-			var call = "indMap";
-			if (!is.closure(func)) {
-				throw new TypeError(call + ": func must be a function");
+			var call = "Plaid.lambda.indMap";
+			if (!is.closure(fn)) {
+				throw new TypeError(call + ": fn must be a function");
 			}
-			if (!func.length === 2) {
-				throw new TypeError(call + ": func must be a binary function");
+			if (!fn.length === 2) {
+				throw new TypeError(call + ": fn must be a binary function");
 			}
-			if (!is.array(iter)) {
-				throw new TypeError(call + ": iter must be an array");
+			if (!is.array(coll)) {
+				throw new TypeError(call + ": coll must be an array");
 			}
 
 			var result = [];
 
-			for (var ith = 0; ith < iter.length; ith++) {
-				result[ith] = func(iter[ith], parseInt(ith, 10));
+			for (var ith = 0; ith < coll.length; ith++) {
+				result[ith] = fn(coll[ith], parseInt(ith, 10));
 			}
 			return result;
 		},
-		fold: function (func, first, iter) {
-			// (b -> b -> a) -> [b] -> a
-			// inject an infix binary function func
-			// into the sequence first funct iter[0] func iter[2] func .... iter[n],
-			// returning a single value.
+		fold: function (fn, first, coll) {
+			/* 
+				fold(+, 0, [1, 2, 3]) => [0 + 1 + 2 + 3]
 
-			var call = "fold";
-			if (!is.closure(func)) {
-				throw new TypeError(call + ": func must be a function");
+				swap the commas in [iter_0, iter_1, ..., iter_n] with 
+				a binary function. Useful for summing an array, finding a maximum
+				value in an array, 
+				or reducing arrays sequentially with a binary operator to a single value.
+			*/
+
+			var call = "Plaid.lambda.fold";
+			if (!is.closure(fn)) {
+				throw new TypeError(call + ": fn must be a function");
 			}
-			if (!is.array(iter)) {
-				throw new TypeError(call + ": iter must be an array");
+			if (!is.array(coll)) {
+				throw new TypeError(call + ": coll must be an array");
 			}
 
-			if (iter.length === 0) {
+			if (coll.length === 0) {
 				return first
 			} else {
-				var call = "fold";
-				if (!is.closure(func)) {
-					throw new TypeError(call + ": func must be a function");
+				if (!is.closure(fn)) {
+					throw new TypeError(call + ": fn must be a function");
 				}
-				if (!func.length === 2) {
-					throw new TypeError(call + ": func must be a binary function");
+				if (!fn.length === 2) {
+					throw new TypeError(call + ": fn must be a binary function");
 				}
-				if (!is.array(iter) && !is.object (iter)) {
-					throw new TypeError(call + ": iter must be an array or object");
+				if (!is.array(coll) && !is.object (coll)) {
+					throw new TypeError(call + ": coll must be an array or object");
 				}
-				for (var ith = 0; ith < iter.length; ith++) {
-					first = func(first, iter[ith]);
+				for (var ith = 0; ith < coll.length; ith++) {
+					first = fn(first, coll[ith]);
 				}
 				return first;
 			}
 		},
-		concatMap: function (func, iter) {
-			/* (a -> b) -> a -> [b]
-			   map a fucntion over iter, and concatenate the 
-			   results so that length iter is not necessarily the same length
-			   at the return value */ 
+		concatMap: function (fn, coll) {
+			/* 
+			    (a -> b) -> a -> [b]
+			    map a function over coll, and concatenate the 
+			    results at each step to the results of the previous step.
+			    the resulting length coll is not necessarily the same length
+			    at the return value, unlike map or indMap. More general than map.
+			    Useful for accumulating some but not all of the results obtained
+			    when mapping across an array.
+			*/ 
 
-			var call = "concatMap";
-			if (!is.closure(func)) {
-				throw new TypeError(call + ": func must be a function");
+			var call = "Plaid.lambda.concatMap";
+			if (!is.closure(fn)) {
+				throw new TypeError(call + ": fn must be a function");
 			}
-			if (!is.array(iter)) {
-				throw new TypeError(call + ": iter must be an array");
+			if (!is.array(coll)) {
+				throw new TypeError(call + ": coll must be an array");
 			}
 
-			if (iter.length === 0) {
+			if (coll.length === 0) {
 				return [];
 			} else {
-				var call = "concatMap";
+				var call = "Plaid.lambda.concatMap";
 
-				if (!is.closure(func)) {
-					throw new TypeError(call + ":" + "func must be a function");
+				if (!is.closure(fn)) {
+					throw new TypeError(call + ":" + "fn must be a function");
 				}
-				if (!func.length === 1) {
-					throw new TypeError(call + ":" + "func must be a unary function");
+				if (!fn.length === 1) {
+					throw new TypeError(call + ":" + "fn must be a unary function");
 				}
-				if (!is.array(iter) && !is.object (iter)) {
-					throw new TypeError(call + ":" + "iter must be an array or object");
+				if (!is.array(coll) && !is.object (coll)) {
+					throw new TypeError(call + ":" + "coll must be an array or object");
 				}
 
 				var result = [];
-				for (var ith = 0 ; ith < iter.length; ith++) {
-					if (!iter.hasOwnProperty(ith)) {
+				for (var ith = 0 ; ith < coll.length; ith++) {
+					if (!coll.hasOwnProperty(ith)) {
 						continue;
 					}
-					var val = iter[ith];
-					result = result.concat(func(val, ith));
+					var val = coll[ith];
+					result = result.concat(fn(val, ith));
 				}
 				return result;				
 			}
 
 		},
-		select: function (func, iter) {
-			/* (a -> boolean) -> a -> [a]
-			   takes a function and an array, and returns 
-			   an array containing only elements for which the function returns true
-			   upon application */
+		select: function (fn, coll) {
+			/*
+				(a -> boolean) -> a -> [a]
+				takes a function that returns true/false, and a collection.
+				selects the elements of the collection for which the function is true.
+			*/
 
-			var call = "select";
-			if (!is.closure(func)) {
-				throw new TypeError(call + ": func must be a function");
+			var call = "Plaid.lambda.select";
+			if (!is.closure(fn)) {
+				throw new TypeError(call + ": fn must be a function");
 			}
-			if (!func.length === 1) {
-				throw new TypeError(call + ": func must be a unary function");
+			if (!fn.length === 1) {
+				throw new TypeError(call + ": fn must be a unary function");
 			}
-			if (!is.array(iter) && !is.object (iter)) {
-				throw new TypeError(call + ": iter must be an array or object");
+			if (!is.array(coll) && !is.object (coll)) {
+				throw new TypeError(call + ": coll must be an array or object");
 			}
 
 			var result = [];
-			for (ith in iter) {
-				if (!iter.hasOwnProperty(ith)) {
+			for (ith in coll) {
+				if (!coll.hasOwnProperty(ith)) {
 					continue;
 				}
-				var val = iter[ith];
-				if (func(val)) {
+				var val = coll[ith];
+				if (fn(val)) {
 					result = result.concat(val);
 				}
 			}
 			return result;		
 		},
-		pickOne: function (iter) {
-			// [a] -> a
-			// return a single value from iter
+		pickOne: function (coll) {
+			/*
+				[a] -> a
+				pick a random value from coll.
+			*/
 
-			var call = "pickOne";
-			if (!is.array(iter) && !is.object (iter)) {
-				throw new TypeError(call + ": iter must be an array or object");
+			var call = "Plaid.lambda.pickOne";
+			if (!is.array(coll) && !is.object (coll)) {
+				throw new TypeError(call + ": coll must be an array or object");
 			}
 
-			return iter[Math.floor(Math.random() * iter.length)];
+			return coll[Math.floor(Math.random() * coll.length)];
 		},
 		sequence: function (from, to) {
-			/* integer -> integer -> [integer]
-			   return the sequence from...to */
+			/* 
+				integer -> integer -> [integer]
+				return the sequence from, from + 1,...to.
+				useful for creating indices to iterate over.
+			*/
 
 			var result = [];
 			for (var ith = from; ith <= to; ith++) {
@@ -203,10 +218,13 @@ var lambda = ( function (is) {
 			return result;
 		},
 		timer: function (seconds) {
-			// integer -> ( -> boolean)
-			// returns a function that returns true for
-			// seconds, em, seconds after its creation.
-			
+			/*
+				integer -> nullary boolean function.
+				returns a function that returns true for
+				seconds, em, seconds after its creation.
+				useful for counting elapsed time.
+			*/
+
 			var unixTime = function () {
 				return Math.round(new Date().getTime() / 1000.0);
 			}
@@ -221,14 +239,11 @@ var lambda = ( function (is) {
 	}
 } )(is);
 
-// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
-// = # = # = # = Prototypes = # = # = # = # = # = # = # = # = # = # 
-// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
-// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+// ------------------------------- prototype -----------------------------------
 
 if (!is.closure(Object.beget)) {
-	// a Crockfordian method for object instantiation.
-
+	// a Crockfordian method for creating objects without `new`.
+	
 	Object.beget = function (obj) {
 		var F = function () {};
 		F.prototype = obj;
@@ -236,12 +251,10 @@ if (!is.closure(Object.beget)) {
 	}
 }
 
-// Matrix Prototype
-// only implemented functions for 2 x 2 matrices, since all 
-// functions will be applied to xy points.
-
 var Matrix = ( function (is) {
 	return function (xs, ys) {
+		// create a 2 x 2 matrix, with several methods for adding and
+		// multiplying. Used for scaling and translating points on screen.
 
 		var that = {};
 		that.xs = xs;
@@ -253,41 +266,48 @@ var Matrix = ( function (is) {
 		that.cols = function () {
 			that.ys.length;
 		}
-		that.map = function (func) {
-			// (a - > b) -> Matrix a -> Matrix b
-			// element-wise mapping over matrix.
+		that.map = function (fn) {
+			/*
+				(a - > b) -> Matrix a -> Matrix b
+				apply a function to each element of a matrix.
+			*/
 
-			var call = "matrix.map";
-			if (!is.closure(func)) {
-				throw new TypeError(call + ": func must be a function");
+			var call = "Plaid.lambda.matrix.map";
+			if (!is.closure(fn)) {
+				throw new TypeError(call + ": fn must be a function");
 			}
 			var mapped = Matrix(
-				[func( that.xs[0] ), func( that.xs[1] )],
-				[func( that.ys[0] ), func( that.ys[1] )] );
+				[fn( that.xs[0] ), fn( that.xs[1] )],
+				[fn( that.ys[0] ), fn( that.ys[1] )] );
 
 			return mapped;
 		}
 		that.by = function (number) {
-			// (integer) -> Matrix integer
-			// scalar multiplication; linearly scale a 2 x 2 matrix
+			/*
+				(integer) -> Matrix integer
+				multiply a matrix by a scalar number (scale the matrix uniformly).
+			*/
 
 			return that.map( function (x) {
 				return x * number;
 			} );
 		}
 		that.add = function (number) {
-			// (integer) -> Matrix integer
-			// scalar addition; translate a 2 x 2 matrix
+			/*
+				(integer) -> Matrix integer
+				add a scalar number to a matrix (translate the matrix uniformly).
+			*/
 
 			return that.map( function (x) {
 				return x + number;
 			} );	
 		}
 		that.multiply = function (matrix) {
-			/* Matrix a -> Matrix -> a
-			 non-scalar multiplication.
-			 implemented directly for efficiency 
-			 (canvas needs redraw on every resize). */
+			/* 
+				Matrix a -> Matrix -> a
+			 	non-scalar multiplication.
+			 	implemented algebraicly, partly for efficiency.
+			*/
 
 			var product = Matrix(
 				[
@@ -300,7 +320,9 @@ var Matrix = ( function (is) {
 			return product;
 		}
 		that.asRectangle = function () {
-			/* for two-way conversion from Rectange <-> Matrix */
+			/* 
+				for two-way conversion from Rectange <-> Matrix 
+			*/
 
 			var converted = Rectangle(
 				xMinus = that.xs[0], xPlus = that.xs[1],
@@ -312,13 +334,12 @@ var Matrix = ( function (is) {
 	}
 } )(is)
 
-//# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
-//# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+// ------------------------------- rectangle -----------------------------------
 
 var Rectangle = ( function () {
 	return function (xMinus, xPlus, yMinus, yPlus) {
 
-		var call = "Rectangle";
+		var call = "Plaid.lambda.Rectangle";
 		var args = Array.prototype.slice.call(arguments);
 
 		lambda.indMap(
@@ -348,10 +369,31 @@ var Rectangle = ( function () {
 		that.height = function () {
 			return Math.abs(that.yPlus - that.yMinus);
 		},
+		that.join = function (rect) {
+			/*
+				join two adjacent 1 x 1 rectangles into a single,
+				larger rectangle (2 x 1) or (1 x 2).
+			*/
+			console.assert(
+				xor(
+					Math.abs(that.xMinus - rect.xPlus) === 2,
+					Math.abs(that.yMinus - rect.yPlus) === 2))
+
+			return Rectangle(
+				xMinus = Math.min(that.xMinus, rect.xMinus),
+				xPlus = Math.max(that.xPlus, rect.xPlus),
+				yMinus = Math.min(that.yMinus, rect.yMinus),
+				yPlus = Math.max(that.yPlus, rect.yPlus)
+			)
+
+		}
 		that.asMatrix = function () {
-			// converts rectangle to a matrix,
-			// with each row giving a component x, y
-			// and each column giving a coordinate
+			/*
+				converts rectangle to a matrix,
+				with row one giving the x components and 
+				row two giving the y components,
+				and each column giving a 2d xy coordinate.
+			*/
 
 			var converted = Matrix(
 				[that.xMinus, that.xPlus],
@@ -363,8 +405,8 @@ var Rectangle = ( function () {
 	};
 } )()
 
-//# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
-//# = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+// ------------------------------- grammar -----------------------------------
+
 
 // Grammar Prototype. Only used once, 
 // but seperated for modularity and testabilities sake.
@@ -375,7 +417,7 @@ var Grammar = ( function (is, lambda) {
 			terminals and non-terminals, and generating a string
 			in the language from an initial symbol and a ruleset */
 
-		var call = "Grammar";
+		var call = "Plaid.lambda.Grammar";
 		var that = {};
 		that.rules = rules;
 
@@ -407,7 +449,7 @@ var Grammar = ( function (is, lambda) {
 				returns the xs matching some pattern in rules.
 				return the non-terminal values in the grammar rules. */
 
-			var call = "nonTerminals";
+			var call = "Plaid.lambda.nonTerminals";
 			if (!is.array(xs)) {
 				throw new TypeError(call + ": xs must be an array");
 			}
@@ -435,7 +477,7 @@ var Grammar = ( function (is, lambda) {
 			   get the terminal symbols in xs
 			*/
 
-			var call = "nonTerminals"
+			var call = "Plaid.lambda.nonTerminals"
 			if (!is.array(xs)) {
 				throw new TypeError(call + ": xs must be an array");
 			}
@@ -508,9 +550,8 @@ var Grammar = ( function (is, lambda) {
 	}
 } )(is, lambda);
 
-// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
-// = # = # = # = Core Algorithm = # = # = # = # = # = # = # = # = # = # 
-// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
+// ------------------------------- core algorithm -----------------------------------
+
 
 var splitGrammar = ( function (lambda) {
 		/* context-free grammar for deciding
@@ -660,14 +701,16 @@ var splitGrammar = ( function (lambda) {
 
 var tilePlane = ( function (is, lambda) {	
 	return function (n, dimensions) {
-		/* integer -> {integer} -> [Rectangle]
-		 
-		   takes an integer n and an object
-		   whose .width and .height fields are positive integers.
-		   returns an array of Rectangles of length n. This array of rectangles
-		   will tile a plane of size dimensions.width x dimensions.height. */
+		/* 
+			integer -> {integer} -> [Rectangle]
 
-		var call = "tilePlane";
+			takes an integer n and an object
+			whose .width and .height fields are positive integers.
+			returns an array of Rectangles of length n. This array of rectangles
+			will tile a plane of size dimensions.width x dimensions.height. 
+		*/
+
+		var call = "Plaid.lambda.tilePlane";
 		if (!is.number(n)) {
 			throw new TypeError(call + ": n must be an number");
 		}
@@ -676,9 +719,11 @@ var tilePlane = ( function (is, lambda) {
 		}
 
 		var units = ( function (n, width, height) {
-			/* magic numbers, for the moment.
-			   later, units will be dynamically adjusted.
-			   important, determines how many columns/rows of tiles to have */
+			/*
+				magic numbers, for the moment.
+				later, units will be dynamically adjusted.
+				important, determines how many columns/rows of tiles to have. 
+			*/
 
 			return {x: 6, y: 6}; 
 
@@ -710,4 +755,3 @@ var tilePlane = ( function (is, lambda) {
 } )(is, lambda)
 
 tilePlane(10, {width: 1000, height: 1000})
-
