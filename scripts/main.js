@@ -531,116 +531,131 @@ var Rectangle = ( function () {
 	};
 } )()
 
-// ------------------------------- core algorithm -----------------------------------
+/* ------------------------------- core algorithm -----------------------------------
+	this blob of code allocates space on screen for each onput image, returing an 
+	array of tiles (Rectangle) that indiviually represent one picture on screen.
+	
+	Initially every tile is a square. The function mergeTiles() can take an
+	object with the structure 
 
-var units = { x: 7, y: 7 }
+	{squares: [Rectangle], horiz: [Rectangle], vert: [Rectangle]},
 
+	Grab two square tiles and generate
+	a non-square tile, returning an object with the same format as above but with less
+	square tiles and more rectangle tiles.
 
-var initTiles = function (units) {
-	/* 
-		{x: integer, y: integer} -> {squares: [Rectangle], horiz: [], vert: []}
+	Ultimately the array of tiles that are returned will have some square and 
+	some non-square tiles, which should hypothetically look pretty.
 
-		for convenience, the tiles will be partitioned into three sets; square (1 x 1), 
-		horizontal (2 x 1) and verical (1 x 2) tiles. 
+*/
 
-		Initially every tile is a square. The function mergeTiles() can take an
-		object with the same structure as that below, grab two square tiles and generate 
-		a non-square tile, return an object similar to the one below but with less
-		square tiles and more rectangle tiles.
-	*/
+var initTiles = ( function () {
+	return function (units) {
+		/* 
+			{x: integer, y: integer} -> {squares: [Rectangle], horiz: [], vert: []}
 
-	return {
-		squares: ( function () {
-
-			var res = [];
-			for (var ith = 0; ith < units.x; ith++) {
-				for(var jth = 0; jth < units.y; jth++) {
-					res.concat(
-						Rectangle(
-							ith, ith + 1,
-							jth, jth + 1))
-				}
-			}
-			return res
-
-		} )(),
-		horiz: [],
-		vert: []
-	}	
-} 
-
-var mergeTile = function (tiles, units) {
-	/*
-		{:squares, :horiz, :vert} -> {:squares, :horiz, :vert}
-		takes an object containing square tiles and horizonal and vertical tiles, and
-		merges two squares into a horizontal or vertical tile.
-
-		returns an object with squares, horiz, and vert fields.
-	*/
-
-	var areMergable = function (square1, square2) {
-		/*
-			Rect -> Rect -> Rect
-			Are two squares adjecent to each, and if so
-			is another horizontal or vertical join needed.
+			for convenience, the tiles will be partitioned into three sets; square (1 x 1), 
+			horizontal (2 x 1) and verical (1 x 2) tiles. 
 		*/
 
-		if (Math.abs(square1.width + square2.width) === 2) {
-			// is a horizontal merge needed? 
+		return {
+			squares: ( function () {
 
-			return tile.horiz.length < Math.floor((units.x * units.y) / 3);
+				var res = [];
+				for (var ith = 0; ith < units.x; ith++) {
+					for(var jth = 0; jth < units.y; jth++) {
+						res = res.concat(
+							Rectangle(
+								ith, ith + 1,
+								jth, jth + 1))
+					}
+				}
+				return res
 
-		} else if (Math.abs(square1.height + square2.height) === 2) {
-			// is a vertical merge needed?
+			} )(),
+			horiz: [],
+			vert: []
+		}	
+	} 	
+} )()
 
-			return tile.vert.length < Math.floor((units.x * units.y) / 3);
+var mergeTile = ( function (is, lambda) {
+	return function (tiles, units) {
+		/*
+			{:squares, :horiz, :vert} -> {:squares, :horiz, :vert}
+			takes an object containing square tiles and horizonal and vertical tiles, and
+			merges two squares into a horizontal or vertical tile.
 
-		}
-	}
+			returns an object with squares, horiz, and vert fields.
+		*/
 
-	var squares = tiles.squares;
+		var areMergable = function (square1, square2) {
+			/*
+				Rect -> Rect -> Rect
+				Are two squares adjecent to each, and if so
+				is another horizontal or vertical join needed.
+			*/
 
-	for (var ith in squares) {
-		for (var jth in squares) {
+			if (Math.abs(square1.width + square2.width) === 2) {
+				// is a horizontal tile needed? 
 
-			if (!squares.hasOwnProperty(ith) || !squares.hasOwnProperty(jth) ||
-				// merging a tile with itself would be silly.
-				ith === jth
-			) {
-				continue
+				return tile.horiz.length < Math.floor((units.x * units.y) / 3);
+
+			} else if (Math.abs(square1.height + square2.height) === 2) {
+				// is a vertical tile needed?
+
+				return tile.vert.length < Math.floor((units.x * units.y) / 3);
+
 			}
+		}
 
-			if (  areMergable(squares[ith], squares[jth]) ) {
-				// merge two of the tiles into one tile, and return the
-				// input of this function, slightly modified.
+		var squares = tiles.squares;
 
-				var merged = squares[ith].join(squares[jth]);
-				
-				if (merged.width === 2) {
-					// merge two adjacenct horizontal squares into a horizontal rectangle.
+		for (var ith in squares) {
+			for (var jth in squares) {
+
+				if (!squares.hasOwnProperty(ith) || !squares.hasOwnProperty(jth) ||
+					// merging a tile with itself would be silly.
+					ith === jth
+				) {
+					continue
+				}
+
+				if ( areMergable(squares[ith], squares[jth]) ) {
+					/*
+						merge two square tiles into one non-square tile, and return the
+						an object with the same fields as the input object, but with 
+						less squares and more non-squares.
+					*/
+
+					var merged = squares[ith].join(squares[jth]);
 					
-					return {
-						squares: lambda.subset(squares, [-ith, -jth]),
-						horiz: tiles.horiz.concat(merged),
-						vert: tiles.vert
-					}
+					if (merged.width === 2) {
+						// merge two adjacenct horizontal squares into a horizontal rectangle.
+						
+						return {
+							squares: lambda.subset(squares, [-ith, -jth]),
+							horiz: tiles.horiz.concat(merged),
+							vert: tiles.vert
+						}
 
-				} else if (merged.height === 2) {
-					// merge two adjacenct vertical squares into a vertical rectangle.
-					
-					return {
-						squares: lambda.subset(squares, [-ith, -jth]),
-						horiz: tiles.horiz,
-						vert: tiles.vert.concat(merged)
-					}
+					} else if (merged.height === 2) {
+						// merge two adjacenct vertical squares into a vertical rectangle.
+						
+						return {
+							squares: lambda.subset(squares, [-ith, -jth]),
+							horiz: tiles.horiz,
+							vert: tiles.vert.concat(merged)
+						}
 
+					}
 				}
 			}
 		}
+		throw new Error("no matches found! this part of the algorithm needs tweaking.")
 	}
-	throw new Error("no matches found! this part needs tweaking.")
-}
 
+} )(is, lambda);
 
 var tilePlane = ( function (is, lambda) {	
 	return function (amount, dimensions) {
@@ -675,8 +690,9 @@ var tilePlane = ( function (is, lambda) {
 		// initialise a grid of tiles to merge.
 		var tiles = initTiles(units);
 
+		// TODO: PRECISELY DEFINE WHEN TO KEEP RUNNING, factor this into a pair of functions.
 		while (false) {
-				// TODO; CREATE TILES ITERATIVELY
+			tiles = mergeTiles(tiles);
 		} 
 
 		var scaleMatrix = Matrix(
