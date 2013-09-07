@@ -370,14 +370,16 @@ var Matrix = ( function (is) {
 		that.ys = ys;
 		
 		that.rows = function () {
+			// Matrix -> integer
 			that.xs.length;
 		}
 		that.cols = function () {
+			// Matrix -> integer
 			that.ys.length;
 		}
 		that.map = function (fn) {
 			/*
-				(a - > b) -> Matrix a -> Matrix b
+				Matrix -> unary function -> Matrix
 				apply a function to each element of a matrix.
 			*/
 
@@ -393,8 +395,8 @@ var Matrix = ( function (is) {
 		}
 		that.by = function (number) {
 			/*
-				(integer) -> Matrix integer
-				multiply a matrix by a scalar number (scale the matrix uniformly).
+				Matrix -> number -> Matrix
+				multiply a matrix by a scalar (scale the matrix uniformly).
 			*/
 
 			return that.map( function (x) {
@@ -403,8 +405,8 @@ var Matrix = ( function (is) {
 		}
 		that.add = function (number) {
 			/*
-				(integer) -> Matrix integer
-				add a scalar number to a matrix (translate the matrix uniformly).
+				Matrix -> number -> Matrix
+				add a scalar to a matrix (translate the matrix uniformly).
 			*/
 
 			return that.map( function (x) {
@@ -413,7 +415,7 @@ var Matrix = ( function (is) {
 		}
 		that.multiply = function (matrix) {
 			/* 
-				Matrix a -> Matrix -> a
+				Matrix -> Matrix -> Matrix
 			 	non-scalar multiplication.
 			 	implemented algebraicly, partly for efficiency.
 			*/
@@ -430,7 +432,8 @@ var Matrix = ( function (is) {
 		}
 		that.asRectangle = function () {
 			/* 
-				for two-way conversion from Rectange <-> Matrix 
+				Matrix -> Rectangle
+				convert a matrix to a rectangle object.
 			*/
 
 			var converted = Rectangle(
@@ -451,6 +454,7 @@ var Rectangle = ( function () {
 		var call = "Plaid.lambda.Rectangle";
 		var args = Array.prototype.slice.call(arguments);
 
+		// check the inputs are non-NaN numbers.
 		lambda.indMap(
 			function (val, ith) {
 				if (!is.number(val)) {
@@ -473,35 +477,48 @@ var Rectangle = ( function () {
 		that.yPlus = yPlus;
 
 		that.width = function () {
+			// Rectangle -> number
+
 			return Math.abs(that.xPlus - that.xMinus);
 		},
 		that.height = function () {
+			// Rectangle -> number
+
 			return Math.abs(that.yPlus - that.yMinus);
 		},
 		that.join = function (rect) {
 			/*
+				Rectangle -> Rectangle -> Rectangle
+
 				join two adjacent 1 x 1 rectangles into a single,
 				larger rectangle (2 x 1) or (1 x 2).
 			*/
+
 			console.assert(
 				xor(
 					Math.abs(that.xMinus - rect.xPlus) === 2,
 					Math.abs(that.yMinus - rect.yPlus) === 2))
 
 			return Rectangle(
-				xMinus = Math.min(that.xMinus, rect.xMinus),
-				xPlus = Math.max(that.xPlus, rect.xPlus),
-				yMinus = Math.min(that.yMinus, rect.yMinus),
-				yPlus = Math.max(that.yPlus, rect.yPlus)
+				xMinus = 
+					Math.min(that.xMinus, rect.xMinus),
+				xPlus = 
+					Math.max(that.xPlus, rect.xPlus),
+				yMinus = 
+					Math.min(that.yMinus, rect.yMinus),
+				yPlus = 
+					Math.max(that.yPlus, rect.yPlus)
 			)
 
 		}
 		that.asMatrix = function () {
 			/*
+				Rectangle -> Matrix
+
 				converts rectangle to a matrix,
-				with row one giving the x components and 
-				row two giving the y components,
-				and each column giving a 2d xy coordinate.
+				with row1 giving the x components of the matrix and 
+				row2 giving the y components of the matrix,
+				and each column giving a 2d [x, y] coordinate.
 			*/
 
 			var converted = Matrix(
@@ -514,320 +531,137 @@ var Rectangle = ( function () {
 	};
 } )()
 
-// ------------------------------- grammar -----------------------------------
-
-
-// Grammar Prototype. Only used once, 
-// but seperated for modularity and testabilities sake.
-
-var Grammar = ( function (is, lambda) {
-	return function (rules) {
-		/*  an object for holding grammar rules, returning 
-			terminals and non-terminals, and generating a string
-			in the language from an initial symbol and a ruleset */
-
-		var call = "Plaid.lambda.Grammar";
-		var that = {};
-		that.rules = rules;
-
-		if (!is.array(rules)) {
-			throw new TypeError(call + ": rules must be an array")
-		}
-
-		lambda.indMap(
-			function (rulePair, ith) {
-	
-				if ( !is.closure(rulePair.pattern) ) {
-					throw new TypeError(call + ": every rule must be an object " +
-						" containing a function bound to .pattern and a function bound " +
-						" to .production ");
-				}
-				if ( !is.closure(rulePair.production) ) {
-					throw new TypeError(call + ": every rule must be an object " + 
-						"containing a function bound to .pattern and a function bound" +
-						"to .production");
-				}
-			},
-			that.rules
-		)
-
-		that.nonTerminals = function (xs) {
-			/* [a] -> [a]
-				takes a collection xs and an array rules of 
-				pattern : production object pairs.
-				returns the xs matching some pattern in rules.
-				return the non-terminal values in the grammar rules. */
-
-			var call = "Plaid.lambda.nonTerminals";
-			if (!is.array(xs)) {
-				throw new TypeError(call + ": xs must be an array");
-			}
-
-			return lambda.select(
-				function (x) {
-					// does x match at least one pattern in rules? 
-
-					for (ith in that.rules) {
-						if (!that.rules.hasOwnProperty(ith)) {
-							continue
-						}
-						var rule = that.rules[ith];
-						if (rule.pattern(x)) {
-							return true;
-						}
-					}
-					return false;
-				},
-				xs
-			);
-		}
-		that.terminals = function (xs) {
-			/* [a] -> [a] 
-			   get the terminal symbols in xs
-			*/
-
-			var call = "Plaid.lambda.nonTerminals"
-			if (!is.array(xs)) {
-				throw new TypeError(call + ": xs must be an array");
-			}
-
-			return lambda.select(
-				function (x) {
-
-					for (ith in that.rules) {
-						if (!that.rules.hasOwnProperty(ith)) {
-							continue
-						}
-						var rule = that.rules[ith];
-						if (rule.pattern(x)) {
-							return false;
-						}
-					}
-					return true;
-				},
-				xs);
-		}
-		that.generateOne = function (x) {
-			/*  x -> [x] 
-				takes a single terminal or non-terminal symbol,
-				and apply a production rule to it, if it exists.
-				otherwise, return the value */ 
-
-			for (ith in that.rules) {
-				if (!that.rules.hasOwnProperty(ith)) {
-					continue
-				}
-				var rule = that.rules[ith];
-				if (rule.pattern(x)) {
-					return rule.production(x);
-				}
-			}
-			//return x
-		}
-		that.generate = function (start) {
-			/*  x -> [{pattern: function, production: function}] -> [x]
-				take a starting symbol and apply a production rule repeatedly
-				until only terminal symbols are left. */
-
-			var stacks = {
-				nonTerminal: [start],
-				terminal: []
-			};
-
-			while (stacks.nonTerminal.length > 0) {
-				/* [{ nonTerminal: [a], terminal: [a] }] ->
-				   [{ nonTerminal: [a], terminal: [a] }] */
-					
-					var producable = stacks.nonTerminal[0];
-
-					// shorten the non-terminal stack by one element
-					stacks.nonTerminal = stacks.nonTerminal.splice(
-						1, stacks.nonTerminal.length);
-
-					// generate some more tiles from the 'producable'
-					var products = that.generateOne(producable);
-
-					stacks.nonTerminal = stacks.nonTerminal.concat(
-						that.nonTerminals(products));
-
-					stacks.terminal = stacks.terminal.concat(
-						that.terminals(products));
-			}
-			return stacks
-		}
-		return that;
-	}
-} )(is, lambda);
-
 // ------------------------------- core algorithm -----------------------------------
 
+var units = { x: 7, y: 7 }
 
-var splitGrammar = ( function (lambda) {
-		/* context-free grammar for deciding
-		how to divide the rectangles. Allows fine grained control
-		over rectangle subdivision.
 
-		There must always exist a composition f_i o f_j ... f_k of 
-		productions in the grammar of length n, otherwise 
-		no guarantees of tiling plane
-		
-		Start: 
-			(n x n)
-		Nonterminals: 
-			a x b, such that a, b > 1 and (a + b) > 3
+var initTiles = function (units) {
+	/* 
+		{x: integer, y: integer} -> {squares: [Rectangle], horiz: [], vert: []}
 
-		Terminals: 
-			(1 x 1) |
-			(1 x 2) |
-			(2 x 1)
+		for convenience, the tiles will be partitioned into three sets; square (1 x 1), 
+		horizontal (2 x 1) and verical (1 x 2) tiles. 
 
-		Production Rules: 
-			(1 x n) -> [ (1 x (n-a)), (1 x a) ]
-			(n x m) -> [
-				( (n - ) x (m - ) ), 
-				( (n - ) x (m - ) ),
-				( (n - ) x (m - ) )
-				( (n - ) x (m - ) )
-			]
+		Initially every tile is a square. The function mergeTiles() can take an
+		object with the same structure as that below, grab two square tiles and generate 
+		a non-square tile, return an object similar to the one below but with less
+		square tiles and more rectangle tiles.
+	*/
 
+	return {
+		squares: ( function () {
+
+			var res = [];
+			for (var ith = 0; ith < units.x; ith++) {
+				for(var jth = 0; jth < units.y; jth++) {
+					res.concat(
+						Rectangle(
+							ith, ith + 1,
+							jth, jth + 1))
+				}
+			}
+			return res
+
+		} )(),
+		horiz: [],
+		vert: []
+	}	
+} 
+
+var mergeTile = function (tiles, units) {
+	/*
+		{:squares, :horiz, :vert} -> {:squares, :horiz, :vert}
+		takes an object containing square tiles and horizonal and vertical tiles, and
+		merges two squares into a horizontal or vertical tile.
+
+		returns an object with squares, horiz, and vert fields.
+	*/
+
+	var areMergable = function (square1, square2) {
+		/*
+			Rect -> Rect -> Rect
+			Are two squares adjecent to each, and if so
+			is another horizontal or vertical join needed.
 		*/
 
-	// utility functions to close over
-	var xor = function (a, b) {
-		return (a || b) && !(a && b)
+		if (Math.abs(square1.width + square2.width) === 2) {
+			// is a horizontal merge needed? 
+
+			return tile.horiz.length < Math.floor((units.x * units.y) / 3);
+
+		} else if (Math.abs(square1.height + square2.height) === 2) {
+			// is a vertical merge needed?
+
+			return tile.vert.length < Math.floor((units.x * units.y) / 3);
+
+		}
 	}
-	var isDivisible = function (tile) {
-		/* Rectangle -> boolean */
 
-		return tile.width() > 1 && tile.height() > 1 && 
-			(tile.width() + tile.height()) > 3
-	}
+	var squares = tiles.squares;
 
-	return Grammar([
-		{
-			pattern: function (tile) {
-				// match 1 x n tiles only
+	for (var ith in squares) {
+		for (var jth in squares) {
 
-				return isDivisible(tile) && 
-					xor(tile.width() === 1, tile.height() === 1);
-			},
-			production: function (tile) {
-				// split an 1 x n tile into [ (1 x n-m), (1 x m) ],
-				// where m is a random number in 2...(n-1)
-
-				if (tile.width() === 1) {
-					// divide a vertical rectangle into two
-					// rectangles
-
-					var boundary = {
-						yMiddle: lambda.pickOne(
-							lambda.sequence(
-								from = tile.yMinus + 1,
-								to = tile.yPlus - 1
-						))
-					}
-
-					var product = [
-						Rectangle(
-							tile.xMinus, tile.xPlus,
-							boundary.yMiddle, tile.yPlus),
-						Rectangle(
-							tile.xMinus, tile.xPlus,
-							tile.yMinus, boundary.yMiddle)];
-
-				} else {
-					// divide a horizontal rectangle into two
-					// rectangles
-
-					var boundary = {
-						xMiddle: lambda.pickOne(
-							lambda.sequence(
-								from = tile.xMinus + 1,
-								to = tile.xPlus - 1
-						))
-					}
-					var product = [
-						Rectangle(
-							boundary.xMiddle, tile.xPlus,
-							boundary.yMiddle, tile.yPlus),
-						Rectangle(
-							tile.xMinus, boundary.xMiddle,
-							tile.yMinus, boundary.yMiddle)];
-				}
-
-				return product;
+			if (!squares.hasOwnProperty(ith) || !squares.hasOwnProperty(jth) ||
+				// merging a tile with itself would be silly.
+				ith === jth
+			) {
+				continue
 			}
-		},
-		{
-			pattern: function (tile) {
-				// matches a x b tiles
+
+			if (  areMergable(squares[ith], squares[jth]) ) {
+				// merge two of the tiles into one tile, and return the
+				// input of this function, slightly modified.
+
+				var merged = squares[ith].join(squares[jth]);
 				
-				return isDivisible(tile);
-			},
-			production: function (tile) {
-				// splits an a x b tile into four tiles,
-				// 
-				// where a, b > 2
+				if (merged.width === 2) {
+					// merge two adjacenct horizontal squares into a horizontal rectangle.
+					
+					return {
+						squares: lambda.subset(squares, [-ith, -jth]),
+						horiz: tiles.horiz.concat(merged),
+						vert: tiles.vert
+					}
 
-				var boundary = {
-					xMiddle: lambda.pickOne(
-						lambda.sequence(
-							from = tile.xMinus + 1,
-							to = tile.xPlus - 1
-					)),
-					yMiddle: lambda.pickOne(
-						lambda.sequence(
-							from = tile.yMinus + 1,
-							to = tile.yPlus - 1
-					))
-				};
+				} else if (merged.height === 2) {
+					// merge two adjacenct vertical squares into a vertical rectangle.
+					
+					return {
+						squares: lambda.subset(squares, [-ith, -jth]),
+						horiz: tiles.horiz,
+						vert: tiles.vert.concat(merged)
+					}
 
-				var product = [
-					// top-left tile
-					Rectangle(
-						tile.xMinus, boundary.xMiddle,
-						boundary.yMiddle, tile.yPlus),
-					// top-right tile
-					Rectangle(
-						boundary.xMiddle, tile.xPlus,
-						boundary.yMiddle, tile.yPlus),
-					// bottom-left tile
-					Rectangle(
-						tile.xMinus, boundary.xMiddle,
-						tile.yMinus, boundary.yMiddle),
-					// bottom-right tile
-					Rectangle(
-						boundary.xMiddle, tile.xPlus,
-						tile.yMinus, boundary.yMiddle)
-				];
-
-				return product;
+				}
 			}
 		}
-	]);
+	}
+	throw new Error("no matches found! this part needs tweaking.")
+}
 
-} )(lambda);
 
 var tilePlane = ( function (is, lambda) {	
-	return function (n, dimensions) {
+	return function (amount, dimensions) {
 		/* 
-			integer -> {integer} -> [Rectangle]
+			integer -> {width: integer, height: integer} -> [Rectangle]
 
-			takes an integer n and an object
-			whose .width and .height fields are positive integers.
-			returns an array of Rectangles of length n. This array of rectangles
-			will tile a plane of size dimensions.width x dimensions.height. 
+			tilePlane is the wrapper function for all the backend work. It takes a 
+			number 'amount' and an object dimensions with the pixel with and height of
+			the picture area. It returns an array of Rectangle objects, which represent
+			images on the picture area.
 		*/
 
 		var call = "Plaid.lambda.tilePlane";
-		if (!is.number(n)) {
-			throw new TypeError(call + ": n must be an number");
+		if (!is.number(amount)) {
+			throw new TypeError(call + ": amount must be an number");
 		}
-		if (Math.round(n) !== n || n < 0) {
+		if (Math.round(amount) !== amount || amount < 0) {
 			throw new Error(call + ": n must be a positive integer");
 		}
 
-		var units = ( function (n, width, height) {
+		var units = ( function (amount, width, height) {
 			/*
 				magic numbers, for the moment.
 				later, units will be dynamically adjusted.
@@ -836,28 +670,35 @@ var tilePlane = ( function (is, lambda) {
 
 			return {x: 6, y: 6}; 
 
-		} )(n, dimensions.width, dimensions.height);
+		} )(amount, dimensions.width, dimensions.height);
 
-		// the initial rectangle to subdivide
-		var pictureArea = Rectangle(0, units.x, 0, units.y);
+		// initialise a grid of tiles to merge.
+		var tiles = initTiles(units);
 
-		// tile -> [tile]
-		var tiles = splitGrammar.generate(pictureArea);
+		while (false) {
+				// TODO; CREATE TILES ITERATIVELY
+		} 
+
 		var scaleMatrix = Matrix(
 			[dimensions.width / units.x, 0],
 			[0, dimensions.height/ units.y]);
 
 		return lambda.indMap(
 			function (tile, ith) {
-				/* tile -> tile
-				modify a tile by applying matrix transformations */
+				/* 
+					Rectangle -> integer -> Rectangle
+
+					convert each tile (Rectangle) to its Matrix representation,
+					multiply it by a matrix that scales it to fit on the html page, 
+					and convert it back to a Rectangle, with its new dimensions intact.
+				*/
 
 				return tile.
 					asMatrix().
 					multiply(scaleMatrix).
 					asRectangle();
 			},
-			tiles.terminal
+			tiles
 		);
 	}
 
