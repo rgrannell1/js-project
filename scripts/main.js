@@ -43,6 +43,10 @@ var is = ( function () {
 		},
 		nan: function (val) {
 			return val !== val;
+		},
+		negZero: function (val) {
+			// is the number 0 internally represented by +0 or -0?
+			return val === 0 && (1/val < 0);
 		}
 	};
 } )();
@@ -235,9 +239,114 @@ var lambda = ( function (is) {
 				var timeSinceCreation = unixTime() - genesis;
 				return timeSinceCreation < seconds;
 			}
+		},
+		subset: function (array, indices) {
+			// subset an array with an array of indices.
+			// if all of 'indices' are positive, then grab 
+			// array at those indices. If all of indices is negative,
+			// then exclude array at those indices.
+
+			var call = "Plaid.lambda.subset";
+
+			if (indices.length == 0) {
+				return array;
+			} else if (array.length == 0) {
+				return [];
+			}
+
+			var sign = {
+				allPos: true,
+				allNeg: true
+			}
+
+			// check whether the indices are positive or negative (not a mix however).
+
+			for (ith in indices) {
+				var indexToCheck = indices[ith];
+
+				if (indexToCheck > 0) {
+					sign.allPos = sign.allPos && true;
+					sign.allNeg = sign.allNeg && false;
+
+				} else if (indexToCheck < 0 || is.negZero(indexToCheck)) {
+					sign.allNeg = sign.allNeg && true;
+					sign.allPos = sign.allNeg && false;
+				}	
+			}
+
+			if (!(sign.allPos || sign.allNeg)) {
+				throw new Error(call + ": cannot mix positive and negative indexing.")
+			}
+			if (array.length < indices.length) {
+				throw new Error(call + ": too many indices given.")
+			}
+
+			if (!sign.allPos) {
+				// work harder. create a set of indices along 
+				// 'array' that exclude all the values in 'indices'. 
+				// [-0, -4] -> [1, 2, 3] for a length five array.
+
+				var res = [];
+				var seqArray = lambda.sequence(0, array.length - 1);
+
+				for (ith in seqArray) {
+					if (!seqArray.hasOwnProperty(ith)) {
+						continue;
+					}
+					// assume that the array will be subsetted at this position.
+					var candidate = seqArray[ith];
+					var shouldSubset = true;
+
+					for (jth in indices) {
+						if (!indices.hasOwnProperty(jth)) {
+							continue;
+						}
+						var toExclude = Math.abs(indices[jth]);
+
+						// the candidate is one of the indices we are excluding. Remove.
+						if (candidate === toExclude) {
+							shouldSubset = false;
+						}
+					}
+
+					if (shouldSubset) {
+						res = res.concat(ith);
+					}
+				}
+				indices = res
+			}
+
+			// accumulate the elements of the array that are being subsetted.
+			return lambda.concatMap(
+				function (ith) {
+					return array[ith];
+				},
+				indices
+			);
 		}
 	}
 } )(is);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ------------------------------- prototype -----------------------------------
 
