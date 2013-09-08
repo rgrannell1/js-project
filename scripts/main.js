@@ -169,7 +169,7 @@ var lambda = ( function (is) {
 		select: function (fn, coll) {
 			/*
 				(a -> boolean) -> a -> [a]
-				takes a function that returns true/false, and a collection.
+				takes a function self returns true/false, and a collection.
 				selects the elements of the collection for which the function is true.
 			*/
 
@@ -225,7 +225,7 @@ var lambda = ( function (is) {
 		timer: function (seconds) {
 			/*
 				integer -> nullary boolean function.
-				returns a function that returns true for
+				returns a function self returns true for
 				seconds, em, seconds after its creation.
 				useful for counting elapsed time.
 			*/
@@ -267,11 +267,11 @@ var lambda = ( function (is) {
 
 				if (arrayIndex > 0) {
 					signs.allPos = signs.allPos && true;
-					signs.allNeg = signs.allNeg && false;
+					signs.allNeg = false;
 
 				} else if (arrayIndex < 0 || is.negZero(arrayIndex)) {
 					signs.allNeg = signs.allNeg && true;
-					signs.allPos = signs.allNeg && false;
+					signs.allPos = false;
 				}	
 			}
 
@@ -285,7 +285,7 @@ var lambda = ( function (is) {
 			if (!signs.allPos) {
 				/*
 					work harder. create a set of indices along 
-					'array' that exclude all the indices in 'indices'.
+					'array' self exclude all the indices in 'indices'.
 					for example, 
 					[-0, -4] goes to [1, 2, 3] for a length five array.
 				*/
@@ -298,7 +298,7 @@ var lambda = ( function (is) {
 						continue;
 					}
 					var candidate = seqArray[ith];
-					// assume that the array will be subsetted at this position for now.
+					// assume self the array will be subsetted at this position for now.
 					var shouldKeepIndex = true;
 
 					for (jth in indices) {
@@ -321,7 +321,7 @@ var lambda = ( function (is) {
 				indices = res
 			}
 
-			// accumulate the elements of the array that are being subsetted.
+			// accumulate the elements of the array self are being subsetted.
 			return lambda.concatMap(
 				function (ith) {
 					return array[ith];
@@ -371,19 +371,19 @@ var Matrix = ( function (is) {
 		// create a 2 x 2 matrix, with several methods for adding and
 		// multiplying. Used for scaling and translating points on screen.
 
-		var that = {};
-		that.xs = xs;
-		that.ys = ys;
+		var self = {};
+		self.xs = xs;
+		self.ys = ys;
 		
-		that.rows = function () {
+		self.rows = function () {
 			// Matrix -> integer
-			that.xs.length;
+			self.xs.length;
 		}
-		that.cols = function () {
+		self.cols = function () {
 			// Matrix -> integer
-			that.ys.length;
+			self.ys.length;
 		}
-		that.map = function (fn) {
+		self.map = function (fn) {
 			/*
 				Matrix -> unary function -> Matrix
 				apply a function to each element of a matrix.
@@ -395,32 +395,32 @@ var Matrix = ( function (is) {
 				throw new TypeError(call + ": fn must be a function");
 			}
 			var mapped = Matrix(
-				[fn( that.xs[0] ), fn( that.xs[1] )],
-				[fn( that.ys[0] ), fn( that.ys[1] )] );
+				[fn( self.xs[0] ), fn( self.xs[1] )],
+				[fn( self.ys[0] ), fn( self.ys[1] )] );
 
 			return mapped;
 		}
-		that.by = function (number) {
+		self.by = function (number) {
 			/*
 				Matrix -> number -> Matrix
 				multiply a matrix by a scalar (scale the matrix uniformly).
 			*/
 
-			return that.map( function (x) {
+			return self.map( function (x) {
 				return x * number;
 			} );
 		}
-		that.add = function (number) {
+		self.add = function (number) {
 			/*
 				Matrix -> number -> Matrix
 				add a scalar to a matrix (translate the matrix uniformly).
 			*/
 
-			return that.map( function (x) {
+			return self.map( function (x) {
 				return x + number;
 			} );	
 		}
-		that.multiply = function (matrix) {
+		self.multiply = function (matrix) {
 			/* 
 				Matrix -> Matrix -> Matrix
 			 	non-scalar multiplication.
@@ -429,26 +429,26 @@ var Matrix = ( function (is) {
 
 			return Matrix(
 				[
-					( (that.xs[0] * matrix.xs[0]) + (that.xs[1] * matrix.ys[0]) ),
-					( (that.xs[0] * matrix.xs[1]) + (that.xs[1] * matrix.ys[1]) )],
+					( (self.xs[0] * matrix.xs[0]) + (self.xs[1] * matrix.ys[0]) ),
+					( (self.xs[0] * matrix.xs[1]) + (self.xs[1] * matrix.ys[1]) )],
 				[
-					( (that.ys[0] * matrix.xs[0]) + (that.ys[1] * matrix.ys[0]) ),
-					( (that.ys[0] * matrix.xs[1]) + (that.ys[1] * matrix.ys[1]) )] );
+					( (self.ys[0] * matrix.xs[0]) + (self.ys[1] * matrix.ys[0]) ),
+					( (self.ys[0] * matrix.xs[1]) + (self.ys[1] * matrix.ys[1]) )] );
 
 			return product;
 		}
-		that.asRectangle = function () {
+		self.asRectangle = function () {
 			/* 
 				Matrix -> Rectangle
 				convert a matrix to a rectangle object.
 			*/
 
 			return Rectangle(
-				xMinus = that.xs[0], xPlus = that.xs[1],
-				yMinus = that.ys[0], yPlus = that.ys[1]);
+				xMinus = self.xs[0], xPlus = self.xs[1],
+				yMinus = self.ys[0], yPlus = self.ys[1]);
 
 		}
-		return that;
+		return self;
 	}
 } )(is)
 
@@ -476,23 +476,23 @@ var Rectangle = ( function () {
 			args
 		);
 
-		var that = {};
-		that.xMinus = xMinus;
-		that.xPlus = xPlus;
-		that.yMinus = yMinus;
-		that.yPlus = yPlus;
+		var self = {};
+		self.xMinus = xMinus;
+		self.xPlus = xPlus;
+		self.yMinus = yMinus;
+		self.yPlus = yPlus;
 
-		that.width = function () {
+		self.width = function () {
 			// Rectangle -> number
 
-			return Math.abs(that.xPlus - that.xMinus);
+			return Math.abs(self.xPlus - self.xMinus);
 		},
-		that.height = function () {
+		self.height = function () {
 			// Rectangle -> number
 
-			return Math.abs(that.yPlus - that.yMinus);
+			return Math.abs(self.yPlus - self.yMinus);
 		},
-		that.join = function (rect) {
+		self.join = function (rect) {
 			/*
 				Rectangle -> Rectangle -> Rectangle
 
@@ -502,21 +502,21 @@ var Rectangle = ( function () {
 
 			console.assert(
 				xor(
-					Math.abs(that.xMinus - rect.xPlus) === 2,
-					Math.abs(that.yMinus - rect.yPlus) === 2))
+					Math.abs(self.xMinus - rect.xPlus) === 2,
+					Math.abs(self.yMinus - rect.yPlus) === 2))
 
 			return Rectangle(
 				xMinus = 
-					Math.min(that.xMinus, rect.xMinus),
+					Math.min(self.xMinus, rect.xMinus),
 				xPlus = 
-					Math.max(that.xPlus, rect.xPlus),
+					Math.max(self.xPlus, rect.xPlus),
 				yMinus = 
-					Math.min(that.yMinus, rect.yMinus),
+					Math.min(self.yMinus, rect.yMinus),
 				yPlus = 
-					Math.max(that.yPlus, rect.yPlus))
+					Math.max(self.yPlus, rect.yPlus))
 
 		}
-		that.asMatrix = function () {
+		self.asMatrix = function () {
 			/*
 				Rectangle -> Matrix
 
@@ -527,19 +527,24 @@ var Rectangle = ( function () {
 			*/
 
 			var converted = Matrix(
-				[that.xMinus, that.xPlus],
-				[that.yMinus, that.yPlus]);
+				[self.xMinus, self.xPlus],
+				[self.yMinus, self.yPlus]);
 
 			return converted;
 		}
-		return that;
+		return self;
 	};
 } )()
+
+
+
+
+
 
 /* ------------------------------- Core Backend Algorithm -----------------------------------
 
 	this blob of code allocates space on screen for each onput image, returing an 
-	array of tiles (Rectangle) that indiviually represent one picture on screen.
+	array of tiles (Rectangle) self indiviually represent one picture on screen.
 	
 	Initially every tile is a square. The function mergeTiles() can take an
 	object with the structure 
@@ -550,7 +555,7 @@ var Rectangle = ( function () {
 	a non-square tile, returning an object with the same format as above but with less
 	square tiles and more rectangle tiles.
 
-	Ultimately the array of tiles that are returned will have some square and 
+	Ultimately the array of tiles self are returned will have some square and 
 	some non-square tiles, which should hypothetically look pretty.
 
 */
@@ -726,7 +731,7 @@ var tilePlane = ( function (is, lambda) {
 
 					convert each tile (Rectangle) to its 
 					Matrix representation,
-					multiply it by a matrix that scales 
+					multiply it by a matrix self scales 
 					it to fit on the html page, 
 					and convert it back to a Rectangle, 
 					with its new dimensions intact.
