@@ -531,7 +531,8 @@ var Rectangle = ( function () {
 	};
 } )()
 
-/* ------------------------------- core algorithm -----------------------------------
+/* ------------------------------- Core Backend Algorithm -----------------------------------
+
 	this blob of code allocates space on screen for each onput image, returing an 
 	array of tiles (Rectangle) that indiviually represent one picture on screen.
 	
@@ -589,23 +590,33 @@ var mergeTile = ( function (is, lambda) {
 			returns an object with squares, horiz, and vert fields.
 		*/
 
+		var areJoinsNeeded = function () {
+			/* 
+				lexically scopes 'tile' and 'units', for cleanness.
+				are there enough horizontal 2 x 1 or vertical 1 x 2 tiles?
+			*/
+			return {
+				horiz: tile.horiz.length < Math.floor((units.x * units.y) / 3);
+				vert: tile.vert.length < Math.floor((units.x * units.y) / 3);
+			}
+		}
+
 		var areMergable = function (square1, square2) {
 			/*
 				Rect -> Rect -> Rect
 				Are two squares adjecent to each, and if so
-				is another horizontal or vertical join needed.
+				is another horizontal or vertical join needed?
 			*/
 
-			if (Math.abs(square1.width + square2.width) === 2) {
-				// is a horizontal tile needed? 
+			var areAdjacent = {
+				horiz: Math.abs(square1.width + square2.width) === 2,
+				vert: Math.abs(square1.height + square2.height) === 2
+			}
 
-				return tile.horiz.length < Math.floor((units.x * units.y) / 3);
-
-			} else if (Math.abs(square1.height + square2.height) === 2) {
-				// is a vertical tile needed?
-
-				return tile.vert.length < Math.floor((units.x * units.y) / 3);
-
+			if (areAdjacent.horiz) {
+				return areJoinsNeeded().horiz
+			} else if (areAdjacent.vert) {
+				return areJoinsNeeded().vert
 			}
 		}
 
