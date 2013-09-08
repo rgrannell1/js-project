@@ -590,7 +590,7 @@ var mergeTile = ( function (is, lambda) {
 			returns an object with squares, horiz, and vert fields.
 		*/
 
-		var areJoinsNeeded = function () {
+		var areMergesNeeded = function () {
 			/* 
 				lexically scopes 'tile' and 'units', for cleanness.
 				are there enough horizontal 2 x 1 or vertical 1 x 2 tiles?
@@ -598,25 +598,6 @@ var mergeTile = ( function (is, lambda) {
 			return {
 				horiz: tile.horiz.length < Math.floor((units.x * units.y) / 3);
 				vert: tile.vert.length < Math.floor((units.x * units.y) / 3);
-			}
-		}
-
-		var areMergable = function (square1, square2) {
-			/*
-				Rect -> Rect -> Rect
-				Are two squares adjecent to each, and if so
-				is another horizontal or vertical join needed?
-			*/
-
-			var areAdjacent = {
-				horiz: Math.abs(square1.width + square2.width) === 2,
-				vert: Math.abs(square1.height + square2.height) === 2
-			}
-
-			if (areAdjacent.horiz) {
-				return areJoinsNeeded().horiz
-			} else if (areAdjacent.vert) {
-				return areJoinsNeeded().vert
 			}
 		}
 
@@ -663,7 +644,9 @@ var mergeTile = ( function (is, lambda) {
 				}
 			}
 		}
-		throw new Error("no matches found! this part of the algorithm needs tweaking.")
+		throw new Error(
+			"no matches found! this part of the algorithm needs tweaking."
+		)
 	}
 
 } )(is, lambda);
@@ -679,6 +662,25 @@ var tilePlane = ( function (is, lambda) {
 			images on the picture area.
 		*/
 
+		var areMergable = function (square1, square2) {
+			/*
+				Rect -> Rect -> Rect
+				Are two squares adjecent to each, and if so
+				is another horizontal or vertical join needed?
+			*/
+
+			var areAdjacent = {
+				horiz: Math.abs(square1.width + square2.width) === 2,
+				vert: Math.abs(square1.height + square2.height) === 2
+			}
+
+			if (areAdjacent.horiz) {
+				return areMergesNeeded().horiz
+			} else if (areAdjacent.vert) {
+				return areMergesNeeded().vert
+			}
+		}
+
 		var call = "Plaid.lambda.tilePlane";
 		if (!is.number(amount)) {
 			throw new TypeError(call + ": amount must be an number");
@@ -687,22 +689,24 @@ var tilePlane = ( function (is, lambda) {
 			throw new Error(call + ": n must be a positive integer");
 		}
 
-		var units = ( function (amount, width, height) {
+		var units = ( function (amount, dimensions) {
 			/*
 				magic numbers, for the moment.
 				later, units will be dynamically adjusted.
 				important, determines how many columns/rows of tiles to have. 
+				won't be in an invoked anonymous function later, just a placeholder.
 			*/
 
 			return {x: 6, y: 6}; 
 
-		} )(amount, dimensions.width, dimensions.height);
+		} )(amount, dimensions);
 
 		// initialise a grid of tiles to merge.
 		var tiles = initTiles(units);
 
-		// TODO: PRECISELY DEFINE WHEN TO KEEP RUNNING, factor this into a pair of functions.
-		while (false) {
+		// iteratively merge tiles until there are a few
+		// 2 x 1 and 1 x 2 tiles as well.
+		while (areMergesNeeded().horiz || areMergesNeeded().vert) {
 			tiles = mergeTiles(tiles);
 		} 
 
