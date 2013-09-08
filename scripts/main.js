@@ -305,17 +305,17 @@ var lambda = ( function (is) {
 						if (!indices.hasOwnProperty(jth)) {
 							continue;
 						}
-						var negIndex = Math.abs(indices[jth]);
+						var negIndex = indices[jth])
 
 						// the candidate is one of the indices we are excluding. 
-						// Don't use it for subsetting..
-						if (candidate === negIndex) {
+						// Don't use it for subsetting.
+						if (candidate === Math.abs(negIndex)) {
 							shouldKeepIndex = false;
 						}
 					}
 
 					if (shouldKeepIndex) {
-						res = res.concat(ith);
+						res = res.concat(candidate);
 					}
 				}
 				indices = res
@@ -427,13 +427,13 @@ var Matrix = ( function (is) {
 			 	implemented algebraicly, partly for efficiency.
 			*/
 
-			var product = Matrix(
+			return Matrix(
 				[
 					( (that.xs[0] * matrix.xs[0]) + (that.xs[1] * matrix.ys[0]) ),
 					( (that.xs[0] * matrix.xs[1]) + (that.xs[1] * matrix.ys[1]) )],
 				[
-						( (that.ys[0] * matrix.xs[0]) + (that.ys[1] * matrix.ys[0]) ),
-						( (that.ys[0] * matrix.xs[1]) + (that.ys[1] * matrix.ys[1]) )]);
+					( (that.ys[0] * matrix.xs[0]) + (that.ys[1] * matrix.ys[0]) ),
+					( (that.ys[0] * matrix.xs[1]) + (that.ys[1] * matrix.ys[1]) )] );
 
 			return product;
 		}
@@ -443,11 +443,10 @@ var Matrix = ( function (is) {
 				convert a matrix to a rectangle object.
 			*/
 
-			var converted = Rectangle(
+			return Rectangle(
 				xMinus = that.xs[0], xPlus = that.xs[1],
 				yMinus = that.ys[0], yPlus = that.ys[1]);
 
-			return converted;
 		}
 		return that;
 	}
