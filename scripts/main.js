@@ -3,8 +3,9 @@
 	"use strict";
 } )()
 
-// ------------------------------- is -----------------------------------
-// tests the type of js values without using typeof, which is horrible.
+// ------------------------------- Is -----------------------------------
+// tests the type of js values without using typeof( ), which is horrible.
+// also includes tests for NaN, -0 and other values.
 
 var is = ( function () {
 	// tests for certain types of values (functions, objects)
@@ -42,11 +43,12 @@ var is = ( function () {
 			return this.hasType(val, "logical");
 		},
 		nan: function (val) {
+			// seriously, javascript. What the hell.
 			return val !== val;
 		},
 		negZero: function (val) {
 			// is the number 0 internally represented by +0 or -0?
-			return val === 0 && (1/val < 0);
+			return val === 0 && (1 / val < 0);
 		}
 	};
 } )();
@@ -87,10 +89,9 @@ var lambda = ( function (is) {
 			/* 
 				fold(+, 0, [1, 2, 3]) => [0 + 1 + 2 + 3]
 
-				swap the commas in [iter_0, iter_1, ..., iter_n] with 
-				a binary function. Useful for summing an array, finding a maximum
-				value in an array, 
-				or reducing arrays sequentially with a binary operator to a single value.
+				swap the commas in [coll0, coll1, coll2, ..., colln] with 
+				a binary function such as plus, max, or mean. Repeatedly applies 
+				a binary function to two elements of coll, eventually returning a single value.
 			*/
 
 			var call = "Plaid.lambda.fold";
@@ -102,7 +103,7 @@ var lambda = ( function (is) {
 			}
 
 			if (coll.length === 0) {
-				return first
+				return first;
 			} else {
 				if (!is.closure(fn)) {
 					throw new TypeError(call + ": fn must be a function");
@@ -241,50 +242,53 @@ var lambda = ( function (is) {
 			}
 		},
 		subset: function (array, indices) {
-			// subset an array with an array of indices.
-			// if all of 'indices' are positive, then grab 
-			// array at those indices. If all of indices is negative,
-			// then exclude array at those indices.
+			/*
+				[any] -> [whole numbers] -> [any]
+
+				subset an array with an array of indices, rather than a single number.
+				if all elements in 'indices' are positive, then grab 
+				array at those indices. If all of indices is negative (-0 is included),
+				then exclude array at those indices.
+			*/
 
 			var call = "Plaid.lambda.subset";
 
-			if (indices.length == 0) {
+			if (indices.length === 0) {
 				return array;
-			} else if (array.length == 0) {
+			} else if (array.length === 0) {
 				return [];
 			}
 
-			var sign = {
-				allPos: true,
-				allNeg: true
-			}
-
+			var signs = { allPos: true, allNeg: true }
 			// check whether the indices are positive or negative (not a mix however).
 
 			for (ith in indices) {
-				var indexToCheck = indices[ith];
+				var arrayIndex = indices[ith];
 
-				if (indexToCheck > 0) {
-					sign.allPos = sign.allPos && true;
-					sign.allNeg = sign.allNeg && false;
+				if (arrayIndex > 0) {
+					signs.allPos = signs.allPos && true;
+					signs.allNeg = signs.allNeg && false;
 
-				} else if (indexToCheck < 0 || is.negZero(indexToCheck)) {
-					sign.allNeg = sign.allNeg && true;
-					sign.allPos = sign.allNeg && false;
+				} else if (arrayIndex < 0 || is.negZero(arrayIndex)) {
+					signs.allNeg = signs.allNeg && true;
+					signs.allPos = signs.allNeg && false;
 				}	
 			}
 
-			if (!(sign.allPos || sign.allNeg)) {
+			if (!(signs.allPos || signs.allNeg)) {
 				throw new Error(call + ": cannot mix positive and negative indexing.")
 			}
 			if (array.length < indices.length) {
 				throw new Error(call + ": too many indices given.")
 			}
 
-			if (!sign.allPos) {
-				// work harder. create a set of indices along 
-				// 'array' that exclude all the values in 'indices'. 
-				// [-0, -4] -> [1, 2, 3] for a length five array.
+			if (!signs.allPos) {
+				/*
+					work harder. create a set of indices along 
+					'array' that exclude all the indices in 'indices'.
+					for example, 
+					[-0, -4] goes to [1, 2, 3] for a length five array.
+				*/
 
 				var res = [];
 				var seqArray = lambda.sequence(0, array.length - 1);
@@ -293,23 +297,24 @@ var lambda = ( function (is) {
 					if (!seqArray.hasOwnProperty(ith)) {
 						continue;
 					}
-					// assume that the array will be subsetted at this position.
 					var candidate = seqArray[ith];
-					var shouldSubset = true;
+					// assume that the array will be subsetted at this position for now.
+					var shouldKeepIndex = true;
 
 					for (jth in indices) {
 						if (!indices.hasOwnProperty(jth)) {
 							continue;
 						}
-						var toExclude = Math.abs(indices[jth]);
+						var negIndex = Math.abs(indices[jth]);
 
-						// the candidate is one of the indices we are excluding. Remove.
-						if (candidate === toExclude) {
-							shouldSubset = false;
+						// the candidate is one of the indices we are excluding. 
+						// Don't use it for subsetting..
+						if (candidate === negIndex) {
+							shouldKeepIndex = false;
 						}
 					}
 
-					if (shouldSubset) {
+					if (shouldKeepIndex) {
 						res = res.concat(ith);
 					}
 				}
@@ -351,7 +356,8 @@ var lambda = ( function (is) {
 // ------------------------------- prototype -----------------------------------
 
 if (!is.closure(Object.beget)) {
-	// a Crockfordian method for creating objects without `new`.
+	// a Crockfordian method for creating objects without 
+	// the `new` keyword.
 	
 	Object.beget = function (obj) {
 		var F = function () {};
@@ -384,6 +390,7 @@ var Matrix = ( function (is) {
 			*/
 
 			var call = "Plaid.lambda.matrix.map";
+	
 			if (!is.closure(fn)) {
 				throw new TypeError(call + ": fn must be a function");
 			}
@@ -446,7 +453,7 @@ var Matrix = ( function (is) {
 	}
 } )(is)
 
-// ------------------------------- rectangle -----------------------------------
+// ------------------------------- Rectangle -----------------------------------
 
 var Rectangle = ( function () {
 	return function (xMinus, xPlus, yMinus, yPlus) {
@@ -507,8 +514,7 @@ var Rectangle = ( function () {
 				yMinus = 
 					Math.min(that.yMinus, rect.yMinus),
 				yPlus = 
-					Math.max(that.yPlus, rect.yPlus)
-			)
+					Math.max(that.yPlus, rect.yPlus))
 
 		}
 		that.asMatrix = function () {
@@ -566,12 +572,10 @@ var initTiles = ( function () {
 				for (var ith = 0; ith < units.x; ith++) {
 					for(var jth = 0; jth < units.y; jth++) {
 						res = res.concat(
-							Rectangle(
-								ith, ith + 1,
-								jth, jth + 1))
+							Rectangle(ith, ith + 1, jth, jth + 1))
 					}
 				}
-				return res
+				return res;
 
 			} )(),
 			horiz: [],
@@ -580,26 +584,36 @@ var initTiles = ( function () {
 	} 	
 } )()
 
-var mergeTile = ( function (is, lambda) {
+var areMergeable = function (square1, square2) {
+	/*
+		Rect -> Rect -> boolean
+
+		Are two squares adjecent to each, and if so
+		is another horizontal or vertical join needed?
+	*/
+
+	var areAdjacent = {
+		horiz: Math.abs(square1.width + square2.width) === 2,
+		vert: Math.abs(square1.height + square2.height) === 2
+	}
+
+	if (areAdjacent.horiz) {
+		return areMergesNeeded(tiles, units).horiz
+	} else if (areAdjacent.vert) {
+		return areMergesNeeded(tiles, units).vert
+	}
+}
+
+var mergeTiles = ( function (is, lambda) {
 	return function (tiles, units) {
 		/*
 			{:squares, :horiz, :vert} -> {:squares, :horiz, :vert}
-			takes an object containing square tiles and horizonal and vertical tiles, and
+			takes an object containing square tiles and 
+			horizonal and vertical tiles, and
 			merges two squares into a horizontal or vertical tile.
 
 			returns an object with squares, horiz, and vert fields.
 		*/
-
-		var areMergesNeeded = function () {
-			/* 
-				lexically scopes 'tile' and 'units', for cleanness.
-				are there enough horizontal 2 x 1 or vertical 1 x 2 tiles?
-			*/
-			return {
-				horiz: tile.horiz.length < Math.floor((units.x * units.y) / 3);
-				vert: tile.vert.length < Math.floor((units.x * units.y) / 3);
-			}
-		}
 
 		var squares = tiles.squares;
 
@@ -607,23 +621,25 @@ var mergeTile = ( function (is, lambda) {
 			for (var jth in squares) {
 
 				if (!squares.hasOwnProperty(ith) || !squares.hasOwnProperty(jth) ||
-					// merging a tile with itself would be silly.
 					ith === jth
 				) {
 					continue
 				}
 
-				if ( areMergable(squares[ith], squares[jth]) ) {
+				if ( areMergeable(squares[ith], squares[jth]) ) {
 					/*
-						merge two square tiles into one non-square tile, and return the
-						an object with the same fields as the input object, but with 
+						merge two square tiles into one 
+						non-square tile, and return the
+						an object with the same fields as 
+						the input object, but with 
 						less squares and more non-squares.
 					*/
 
 					var merged = squares[ith].join(squares[jth]);
 					
 					if (merged.width === 2) {
-						// merge two adjacenct horizontal squares into a horizontal rectangle.
+						// merge two adjacenct horizontal 
+						// squares into a horizontal rectangle.
 						
 						return {
 							squares: lambda.subset(squares, [-ith, -jth]),
@@ -632,7 +648,8 @@ var mergeTile = ( function (is, lambda) {
 						}
 
 					} else if (merged.height === 2) {
-						// merge two adjacenct vertical squares into a vertical rectangle.
+						// merge two adjacenct vertical 
+						// squares into a vertical rectangle.
 						
 						return {
 							squares: lambda.subset(squares, [-ith, -jth]),
@@ -645,8 +662,7 @@ var mergeTile = ( function (is, lambda) {
 			}
 		}
 		throw new Error(
-			"no matches found! this part of the algorithm needs tweaking."
-		)
+			"no matches found! this part of the algorithm needs tweaking.")
 	}
 
 } )(is, lambda);
@@ -656,32 +672,28 @@ var tilePlane = ( function (is, lambda) {
 		/* 
 			integer -> {width: integer, height: integer} -> [Rectangle]
 
-			tilePlane is the wrapper function for all the backend work. It takes a 
-			number 'amount' and an object dimensions with the pixel with and height of
-			the picture area. It returns an array of Rectangle objects, which represent
+			tilePlane is the wrapper function for all 
+			the backend work. It takes a 
+			number 'amount' and an object dimensions 
+			with the pixel with and height of
+			the picture area. It returns an array of 
+			Rectangle objects, which represent
 			images on the picture area.
 		*/
 
-		var areMergable = function (square1, square2) {
-			/*
-				Rect -> Rect -> Rect
-				Are two squares adjecent to each, and if so
-				is another horizontal or vertical join needed?
+		var areMergesNeeded = function (tiles, units) {
+			/* 
+				are there enough horizontal 2 x 1 or 
+				vertical 1 x 2 tiles?
 			*/
-
-			var areAdjacent = {
-				horiz: Math.abs(square1.width + square2.width) === 2,
-				vert: Math.abs(square1.height + square2.height) === 2
-			}
-
-			if (areAdjacent.horiz) {
-				return areMergesNeeded().horiz
-			} else if (areAdjacent.vert) {
-				return areMergesNeeded().vert
+			return {
+				horiz: tiles.horiz.length < Math.floor((units.x * units.y) / 3),
+				vert: tiles.vert.length < Math.floor((units.x * units.y) / 3)
 			}
 		}
 
 		var call = "Plaid.lambda.tilePlane";
+
 		if (!is.number(amount)) {
 			throw new TypeError(call + ": amount must be an number");
 		}
@@ -689,24 +701,18 @@ var tilePlane = ( function (is, lambda) {
 			throw new Error(call + ": n must be a positive integer");
 		}
 
-		var units = ( function (amount, dimensions) {
-			/*
-				magic numbers, for the moment.
-				later, units will be dynamically adjusted.
-				important, determines how many columns/rows of tiles to have. 
-				won't be in an invoked anonymous function later, just a placeholder.
-			*/
-
-			return {x: 6, y: 6}; 
-
-		} )(amount, dimensions);
+		// todo make return value of functon.
+		var units = {x: 6, y: 6} 
 
 		// initialise a grid of tiles to merge.
 		var tiles = initTiles(units);
 
 		// iteratively merge tiles until there are a few
 		// 2 x 1 and 1 x 2 tiles as well.
-		while (areMergesNeeded().horiz || areMergesNeeded().vert) {
+		while (
+			areMergesNeeded(tiles, units).horiz || 
+			areMergesNeeded(tiles, units).vert) {
+
 			tiles = mergeTiles(tiles);
 		} 
 
@@ -719,9 +725,12 @@ var tilePlane = ( function (is, lambda) {
 				/* 
 					Rectangle -> integer -> Rectangle
 
-					convert each tile (Rectangle) to its Matrix representation,
-					multiply it by a matrix that scales it to fit on the html page, 
-					and convert it back to a Rectangle, with its new dimensions intact.
+					convert each tile (Rectangle) to its 
+					Matrix representation,
+					multiply it by a matrix that scales 
+					it to fit on the html page, 
+					and convert it back to a Rectangle, 
+					with its new dimensions intact.
 				*/
 
 				return tile.
