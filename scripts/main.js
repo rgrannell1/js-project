@@ -53,6 +53,15 @@ var is = ( function () {
 	};
 } )();
 
+
+
+
+
+
+
+
+
+
 // ------------------------------- lambda -----------------------------------
 // higher-order functions and utility functions, usually for working with arrays.
 
@@ -366,6 +375,11 @@ if (!is.closure(Object.beget)) {
 	}
 }
 
+
+
+
+
+
 var Matrix = ( function (is) {
 	return function (xs, ys) {
 		// create a 2 x 2 matrix, with several methods for adding and
@@ -451,6 +465,17 @@ var Matrix = ( function (is) {
 		return self;
 	}
 } )(is)
+
+
+
+
+
+
+
+
+
+
+
 
 // ------------------------------- Rectangle -----------------------------------
 
@@ -565,6 +590,9 @@ var initTiles = ( function () {
 		/* 
 			{x: integer, y: integer} -> {squares: [Rectangle], horiz: [], vert: []}
 
+			create a rectangular grid of square tiles, with units.x tiles per row, and units.y
+			rows per column.
+
 			for convenience, the tiles will be partitioned into three sets; square (1 x 1), 
 			horizontal (2 x 1) and verical (1 x 2) tiles. 
 		*/
@@ -593,7 +621,8 @@ var areMergeable = function (square1, square2) {
 		Rect -> Rect -> boolean
 
 		Are two squares adjecent to each, and if so
-		is another horizontal or vertical join needed?
+		is another horizontal or vertical join needed
+		according to areMergesNeeded( )?
 	*/
 
 	var areAdjacent = {
@@ -612,6 +641,7 @@ var mergeTiles = ( function (is, lambda) {
 	return function (tiles, units) {
 		/*
 			{:squares, :horiz, :vert} -> {:squares, :horiz, :vert}
+
 			takes an object containing square tiles and 
 			horizonal and vertical tiles, and
 			merges two squares into a horizontal or vertical tile.
@@ -632,6 +662,7 @@ var mergeTiles = ( function (is, lambda) {
 
 				if ( areMergeable(squares[ith], squares[jth]) ) {
 					/*
+						the tiles are mergable, so
 						merge two square tiles into one 
 						non-square tile, and return the
 						an object with the same fields as 
@@ -671,6 +702,17 @@ var mergeTiles = ( function (is, lambda) {
 
 } )(is, lambda);
 
+
+
+
+
+
+
+
+
+
+
+
 var tilePlane = ( function (is, lambda) {	
 	return function (amount, dimensions) {
 		/* 
@@ -679,7 +721,7 @@ var tilePlane = ( function (is, lambda) {
 			tilePlane is the wrapper function for all 
 			the backend work. It takes a 
 			number 'amount' and an object dimensions 
-			with the pixel with and height of
+			with the pixel width and height of
 			the picture area. It returns an array of 
 			Rectangle objects, which represent
 			images on the picture area.
