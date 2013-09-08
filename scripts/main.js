@@ -3,6 +3,49 @@
 	"use strict";
 } )()
 
+
+var Plaid = ( function () {
+	/*
+		the entire Plaid application, which ultimately 
+		returns a single object containing public methods, while
+		hiding utility namespaces and other minutia.
+
+		Exports (* some are currently their for testing purposes, liable to change.):
+
+			is: * 
+				type checking namespace.
+			lambda: *
+				higher order functions & utility methods.
+			Matrix:
+				2 x 2 matrix constructor.
+			Rectangle:  *
+				constructor for creating new rectangles.
+
+			initTiles: *
+				creates a grid of squares.
+			
+			areMergeable: *
+				are two squares in a grid adjacent, and is another 2x1 or 1x2 string needed?
+
+			mergeTiles: *
+				takes an object {:squares, :horiz, :vert}, merge two squares 
+				into a horiz or vert and returns. See definition.
+
+			tilePlane:
+				takes a (n x m) pixel area and the number of pictures to
+				tiles that area with. Returns an array of 1x1, 2x1, 1x2 rectangles
+				tiling the plane.
+
+		Top-level code inside plaid is not indented, excluding the return 
+		statement of this invoked anonymous function.
+	*/
+
+
+
+
+
+
+
 // ------------------------------- Is -----------------------------------
 // tests the type of js values without using typeof( ), which is horrible.
 // also includes tests for NaN, -0 and other values.
@@ -291,7 +334,7 @@ var lambda = ( function (is) {
 				throw new Error(call + ": too many indices given.")
 			}
 
-			if (!signs.allPos) {
+			if (signs.allNeg) {
 				/*
 					work harder. create a set of indices along 
 					'array' self exclude all the indices in 'indices'.
@@ -299,7 +342,7 @@ var lambda = ( function (is) {
 					[-0, -4] goes to [1, 2, 3] for a length five array.
 				*/
 
-				var res = [];
+				var result = [];
 				var seqArray = lambda.sequence(0, array.length - 1);
 
 				for (ith in seqArray) {
@@ -314,7 +357,7 @@ var lambda = ( function (is) {
 						if (!indices.hasOwnProperty(jth)) {
 							continue;
 						}
-						var negIndex = indices[jth])
+						var negIndex = indices([jth]);
 
 						// the candidate is one of the indices we are excluding. 
 						// Don't use it for subsetting.
@@ -324,10 +367,10 @@ var lambda = ( function (is) {
 					}
 
 					if (shouldKeepIndex) {
-						res = res.concat(candidate);
+						result = result.concat(candidate);
 					}
 				}
-				indices = res
+				indices = result
 			}
 
 			// accumulate the elements of the array self are being subsetted.
@@ -566,6 +609,9 @@ var Rectangle = ( function () {
 
 
 
+
+
+
 /* ------------------------------- Core Backend Algorithm -----------------------------------
 
 	this blob of code allocates space on screen for each onput image, returing an 
@@ -600,14 +646,14 @@ var initTiles = ( function () {
 		return {
 			squares: ( function () {
 
-				var res = [];
+				var result = [];
 				for (var ith = 0; ith < units.x; ith++) {
 					for(var jth = 0; jth < units.y; jth++) {
-						res = res.concat(
+						result = result.concat(
 							Rectangle(ith, ith + 1, jth, jth + 1))
 					}
 				}
-				return res;
+				return result;
 
 			} )(),
 			horiz: [],
@@ -616,26 +662,28 @@ var initTiles = ( function () {
 	} 	
 } )()
 
-var areMergeable = function (square1, square2) {
-	/*
-		Rect -> Rect -> boolean
+var areMergeable = ( function () {
+	return function (square1, square2) {
+		/*
+			Rect -> Rect -> boolean
 
-		Are two squares adjecent to each, and if so
-		is another horizontal or vertical join needed
-		according to areMergesNeeded( )?
-	*/
+			Are two squares adjecent to each, and if so
+			is another horizontal or vertical join needed
+			according to areMergesNeeded( )?
+		*/
 
-	var areAdjacent = {
-		horiz: Math.abs(square1.width + square2.width) === 2,
-		vert: Math.abs(square1.height + square2.height) === 2
+		var areAdjacent = {
+			horiz: Math.abs(square1.width + square2.width) === 2,
+			vert: Math.abs(square1.height + square2.height) === 2
+		}
+
+		if (areAdjacent.horiz) {
+			return areMergesNeeded(tiles, units).horiz
+		} else if (areAdjacent.vert) {
+			return areMergesNeeded(tiles, units).vert
+		}
 	}
-
-	if (areAdjacent.horiz) {
-		return areMergesNeeded(tiles, units).horiz
-	} else if (areAdjacent.vert) {
-		return areMergesNeeded(tiles, units).vert
-	}
-}
+} )()
 
 var mergeTiles = ( function (is, lambda) {
 	return function (tiles, units) {
@@ -790,4 +838,34 @@ var tilePlane = ( function (is, lambda) {
 
 } )(is, lambda)
 
-tilePlane(10, {width: 1000, height: 1000})
+
+	/*
+		The End.
+
+		export user facing methods, with Rectangle, lambda and other 
+		utility modules closed over but not directly accessable.
+	*/
+
+
+	return {
+		is:
+			is,
+		lambda:
+			lambda,
+		tilePlane:
+			tilePlane,
+		Matrix:
+			Matrix,
+		Rectangle:
+			Rectangle,
+		initTiles:
+			initTiles,
+		areMergeable:
+			areMergeable,
+		mergeTiles:
+			mergeTiles,
+		tilePlane:
+			tilePlane
+	}
+
+} )()
