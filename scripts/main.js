@@ -662,6 +662,17 @@ var initTiles = ( function () {
 	} 	
 } )()
 
+var areMergesNeeded = function (tiles, units) {
+	/* 
+		are there enough horizontal 2 x 1 or 
+		vertical 1 x 2 tiles?
+	*/
+	return {
+		horiz: tiles.horiz.length < Math.floor((units.x * units.y) / 3),
+		vert: tiles.vert.length < Math.floor((units.x * units.y) / 3)
+	}
+}
+
 var areMergeable = ( function () {
 	return function (square1, square2) {
 		/*
@@ -673,8 +684,12 @@ var areMergeable = ( function () {
 		*/
 
 		var areAdjacent = {
-			horiz: Math.abs(square1.width + square2.width) === 2,
-			vert: Math.abs(square1.height + square2.height) === 2
+			horiz: 
+				square1.xPlus === square2.xMinus ||
+				square1.xMinus === square2.xPlus,
+			vert: 
+				square1.yPlus === square2.yMinus ||
+				square1.yMinus === square2.yPlus,
 		}
 
 		if (areAdjacent.horiz) {
@@ -775,17 +790,6 @@ var tilePlane = ( function (is, lambda) {
 			images on the picture area.
 		*/
 
-		var areMergesNeeded = function (tiles, units) {
-			/* 
-				are there enough horizontal 2 x 1 or 
-				vertical 1 x 2 tiles?
-			*/
-			return {
-				horiz: tiles.horiz.length < Math.floor((units.x * units.y) / 3),
-				vert: tiles.vert.length < Math.floor((units.x * units.y) / 3)
-			}
-		}
-
 		var call = "Plaid.lambda.tilePlane";
 
 		if (!is.number(amount)) {
@@ -869,3 +873,9 @@ var tilePlane = ( function (is, lambda) {
 	}
 
 } )()
+
+
+Plaid.tilePlane(10, {
+	width: 1000, 
+	height: 1000 
+})
