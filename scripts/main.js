@@ -21,16 +21,6 @@ var Plaid = ( function () {
 			Rectangle:  *
 				constructor for creating new rectangles.
 
-			initTiles: *
-				creates a grid of squares.
-			
-			areMergeable: *
-				are two squares in a grid adjacent, and is another 2x1 or 1x2 string needed?
-
-			mergeTiles: *
-				takes an object {:squares, :horiz, :vert}, merge two squares 
-				into a horiz or vert and returns. See definition.
-
 			tilePlane:
 				takes a (n x m) pixel area and the number of pictures to
 				tiles that area with. Returns an array of 1x1, 2x1, 1x2 rectangles
@@ -568,6 +558,9 @@ var Rectangle = ( function () {
 				larger rectangle (2 x 1) or (1 x 2).
 			*/
 
+			var xor = function (a, b) {
+				return (a || b) && !(a && b)
+			}
 			console.assert(
 				xor(
 					Math.abs(self.xMinus - rect.xPlus) === 2,
@@ -611,7 +604,6 @@ var Rectangle = ( function () {
 
 
 
-
 /* ------------------------------- Core Backend Algorithm -----------------------------------
 
 	this blob of code allocates space on screen for each onput image, returing an 
@@ -631,50 +623,27 @@ var Rectangle = ( function () {
 
 */
 
-var initTiles = ( function () {
-	return function (units) {
+
+
+
+
+var tilePlane = ( function (is, lambda) {	
+
+	var areMergesNeeded = function (tiles, units) {
 		/* 
-			{x: integer, y: integer} -> {squares: [Rectangle], horiz: [], vert: []}
-
-			create a rectangular grid of square tiles, with units.x tiles per row, and units.y
-			rows per column.
-
-			for convenience, the tiles will be partitioned into three sets; square (1 x 1), 
-			horizontal (2 x 1) and verical (1 x 2) tiles. 
+			are there enough horizontal 2 x 1 or 
+			vertical 1 x 2 tiles, or should we stop merging tiles?
+			metric is liable to change.
 		*/
-
 		return {
-			squares: ( function () {
-
-				var result = [];
-				for (var ith = 0; ith < units.x; ith++) {
-					for(var jth = 0; jth < units.y; jth++) {
-						result = result.concat(
-							Rectangle(ith, ith + 1, jth, jth + 1))
-					}
-				}
-				return result;
-
-			} )(),
-			horiz: [],
-			vert: []
-		}	
-	} 	
-} )()
-
-var areMergesNeeded = function (tiles, units) {
-	/* 
-		are there enough horizontal 2 x 1 or 
-		vertical 1 x 2 tiles?
-	*/
-	return {
-		horiz: tiles.horiz.length < Math.floor((units.x * units.y) / 3),
-		vert: tiles.vert.length < Math.floor((units.x * units.y) / 3)
+			horiz: 
+				tiles.horiz.length < Math.floor((units.x * units.y) / 3),
+			vert: 
+				tiles.vert.length < Math.floor((units.x * units.y) / 3)
+		}
 	}
-}
 
-var areMergeable = ( function () {
-	return function (square1, square2) {
+	var areMergeable = function (square1, square2, tiles, units) {
 		/*
 			Rect -> Rect -> boolean
 
@@ -698,85 +667,7 @@ var areMergeable = ( function () {
 			return areMergesNeeded(tiles, units).vert
 		}
 	}
-} )()
 
-var mergeTiles = ( function (is, lambda) {
-	return function (tiles, units) {
-		/*
-			{:squares, :horiz, :vert} -> {:squares, :horiz, :vert}
-
-			takes an object containing square tiles and 
-			horizonal and vertical tiles, and
-			merges two squares into a horizontal or vertical tile.
-
-			returns an object with squares, horiz, and vert fields.
-		*/
-
-		var squares = tiles.squares;
-
-		for (var ith in squares) {
-			for (var jth in squares) {
-
-				if (!squares.hasOwnProperty(ith) || !squares.hasOwnProperty(jth) ||
-					ith === jth
-				) {
-					continue
-				}
-
-				if ( areMergeable(squares[ith], squares[jth]) ) {
-					/*
-						the tiles are mergable, so
-						merge two square tiles into one 
-						non-square tile, and return the
-						an object with the same fields as 
-						the input object, but with 
-						less squares and more non-squares.
-					*/
-
-					var merged = squares[ith].join(squares[jth]);
-					
-					if (merged.width === 2) {
-						// merge two adjacenct horizontal 
-						// squares into a horizontal rectangle.
-						
-						return {
-							squares: lambda.subset(squares, [-ith, -jth]),
-							horiz: tiles.horiz.concat(merged),
-							vert: tiles.vert
-						}
-
-					} else if (merged.height === 2) {
-						// merge two adjacenct vertical 
-						// squares into a vertical rectangle.
-						
-						return {
-							squares: lambda.subset(squares, [-ith, -jth]),
-							horiz: tiles.horiz,
-							vert: tiles.vert.concat(merged)
-						}
-
-					}
-				}
-			}
-		}
-		throw new Error(
-			"no matches found! this part of the algorithm needs tweaking.")
-	}
-
-} )(is, lambda);
-
-
-
-
-
-
-
-
-
-
-
-
-var tilePlane = ( function (is, lambda) {	
 	return function (amount, dimensions) {
 		/* 
 			integer -> {width: integer, height: integer} -> [Rectangle]
@@ -801,9 +692,100 @@ var tilePlane = ( function (is, lambda) {
 
 		// todo make return value of functon.
 		var units = {x: 6, y: 6} 
+		var tiles = ( function () {
+			/* 
+				{x: integer, y: integer} -> {squares: [Rectangle], horiz: [], vert: []}
 
-		// initialise a grid of tiles to merge.
-		var tiles = initTiles(units);
+				create a rectangular grid of square tiles, with units.x tiles per row, and units.y
+				rows per column.
+
+				for convenience, the tiles will be partitioned into three sets; square (1 x 1), 
+				horizontal (2 x 1) and verical (1 x 2) tiles. 
+			*/
+
+			return {
+				squares: ( function () {
+
+					var result = [];
+					for (var ith = 0; ith < units.x; ith++) {
+						for(var jth = 0; jth < units.y; jth++) {
+							result = result.concat(
+								Rectangle(ith, ith + 1, jth, jth + 1))
+						}
+					}
+					return result;
+
+				} )(),
+				horiz: [],
+				vert: []
+			}	
+		} )();
+
+		// ---------------- functions used below ---------------- //
+
+		var mergeTiles = function (tiles, units) {
+			/*
+				{:squares, :horiz, :vert} -> {:squares, :horiz, :vert}
+
+				takes an object containing square tiles and 
+				horizonal and vertical tiles, and
+				merges two squares into a horizontal or vertical tile.
+
+				returns an object with squares, horiz, and vert fields.
+			*/
+
+			var squares = tiles.squares;
+
+			for (var ith in squares) {
+				for (var jth in squares) {
+
+					if (!squares.hasOwnProperty(ith) || !squares.hasOwnProperty(jth) ||
+						ith === jth
+					) {
+						continue
+					}
+
+					if ( areMergeable(squares[ith], squares[jth]) ) {
+						/*
+							the tiles are mergable, so
+							merge two square tiles into one 
+							non-square tile, and return the
+							an object with the same fields as 
+							the input object, but with 
+							less squares and more non-squares.
+						*/
+
+						var merged = squares[ith].join(squares[jth]);
+						
+						if (merged.width === 2) {
+							// merge two adjacenct horizontal 
+							// squares into a horizontal rectangle.
+							
+							return {
+								squares: lambda.subset(squares, [-ith, -jth]),
+								horiz: tiles.horiz.concat(merged),
+								vert: tiles.vert
+							}
+
+						} else if (merged.height === 2) {
+							// merge two adjacenct vertical 
+							// squares into a vertical rectangle.
+							
+							return {
+								squares: lambda.subset(squares, [-ith, -jth]),
+								horiz: tiles.horiz,
+								vert: tiles.vert.concat(merged)
+							}
+
+						}
+					}
+				}
+			}
+			throw new Error(
+				"no matches found! this part of the algorithm needs tweaking.")
+		}
+
+		//---------------- the above subroutines are called here ---------------- //
 
 		// iteratively merge tiles until there are a few
 		// 2 x 1 and 1 x 2 tiles as well.
@@ -862,12 +844,6 @@ var tilePlane = ( function (is, lambda) {
 			Matrix,
 		Rectangle:
 			Rectangle,
-		initTiles:
-			initTiles,
-		areMergeable:
-			areMergeable,
-		mergeTiles:
-			mergeTiles,
 		tilePlane:
 			tilePlane
 	}
