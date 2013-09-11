@@ -521,7 +521,6 @@ var Matrix = ( function (is, lambda) {
 			// and the same number of nrow as the reciever.
 
 			for (var ith = 0; ith < self.nrow(); ith++) {
-				product[ith] = [];
 				for (var jth = 0; jth < matrix.ncol(); jth++) {
 
 					var row = self.row(ith)
@@ -532,14 +531,19 @@ var Matrix = ( function (is, lambda) {
 					// sum of element-wise multiplication of two vectors.
 					var dotProduct = lambda.
 						sequence(from = 0, to = row.length - 1).
-						map( function (i) {return row[i] * col[i]} ).
-						reduce( function (a, b) {return a + b}, 0 )
+						map( function (i) {
+							return row[i] * col[i]
+						} ).
+						reduce( function (a, b) {
+							return a + b
+						}, 0 )
 
-						product[ith][jth] = dotProduct;
+						product[kth] = dotProduct;
+						kth += 1
 					}
 				}
 
-				return product;
+				return Matrix(product, {nrow: self.nrow(), ncol: matrix.ncol()});
 			}
 
 		// type-convert the matrix.
@@ -550,7 +554,7 @@ var Matrix = ( function (is, lambda) {
 				convert a 2 x 2 matrix to a rectangle representation.
 			*/
 
-			console.assert( 
+			console.assert(
 				self.nrow() === 2 && 
 				self.ncol() === 2)
 
