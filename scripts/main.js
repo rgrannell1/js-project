@@ -527,7 +527,6 @@ var Matrix = ( function (is, lambda) {
 					var row = self.row(ith)
 					var col = matrix.col(jth)
 
-					console.log(col)
 					console.assert( row.length === col.length )
 
 					// sum of element-wise multiplication of two vectors.
@@ -556,8 +555,8 @@ var Matrix = ( function (is, lambda) {
 				self.ncol() === 2)
 
 			return Rectangle(
-				xMinus = self.elems[0], xPlus = self.elems[2],
-				yMinus = self.elems[3], yPlus = self.elems[4])
+				xMinus = self.elems[0], xPlus = self.elems[1],
+				yMinus = self.elems[2], yPlus = self.elems[3])
 		}
 
 		return self
@@ -654,8 +653,8 @@ var Rectangle = ( function () {
 			*/
 
 			var converted = Matrix(
-				[self.xMinus, self.xPlus],
-				[self.yMinus, self.yPlus]);
+				[self.xMinus, self.xPlus, self.yMinus, self.yPlus],
+				{nrow: 2, ncol: 2});
 
 			return converted;
 		}
@@ -695,44 +694,6 @@ var Rectangle = ( function () {
 
 var tilePlane = ( function (is, lambda) {	
 
-	var areMergesNeeded = function (tiles, units) {
-		/* 
-			are there enough horizontal 2 x 1 or 
-			vertical 1 x 2 tiles, or should we stop merging tiles?
-			metric is liable to change.
-		*/
-		return {
-			horiz: 
-				tiles.horiz.length < Math.floor((units.x * units.y) / 3),
-			vert: 
-				tiles.vert.length < Math.floor((units.x * units.y) / 3)
-		}
-	}
-
-	var areMergeable = function (square1, square2, tiles, units) {
-		/*
-			Rect -> Rect -> boolean
-
-			Are two squares adjecent to each, and if so
-			is another horizontal or vertical join needed
-			according to areMergesNeeded( )?
-		*/
-
-		var areAdjacent = {
-			horiz: 
-				square1.xPlus === square2.xMinus ||
-				square1.xMinus === square2.xPlus,
-			vert: 
-				square1.yPlus === square2.yMinus ||
-				square1.yMinus === square2.yPlus,
-		}
-
-		if (areAdjacent.horiz) {
-			return areMergesNeeded(tiles, units).horiz
-		} else if (areAdjacent.vert) {
-			return areMergesNeeded(tiles, units).vert
-		}
-	}
 
 	return function (amount, dimensions) {
 		/* 
@@ -747,6 +708,51 @@ var tilePlane = ( function (is, lambda) {
 			images on the picture area.
 		*/
 
+		var areMergesNeeded = function () {
+			/* 
+				are there enough horizontal 2 x 1 or 
+				vertical 1 x 2 tiles, or should we stop merging tiles?
+				metric is liable to change.
+			*/
+			return {
+				horiz: 
+					tiles.horiz.length < Math.floor((units.x * units.y) / 3),
+				vert: 
+					tiles.vert.length < Math.floor((units.x * units.y) / 3),
+				either:
+					this.horiz || this.vert
+			}
+		}
+
+		var areMergeable = function (square1, square2, tiles, units) {
+			/*
+				Rect -> Rect -> boolean
+
+				Are two squares adjecent to each, and if so
+				is another horizontal or vertical join needed
+				according to areMergesNeeded( )?
+			*/
+
+			var areAdjacent = {
+				horiz: 
+					square1.xPlus === square2.xMinus ||
+					square1.xMinus === square2.xPlus,
+				vert: 
+					square1.yPlus === square2.yMinus ||
+					square1.yMinus === square2.yPlus,
+			}
+
+			if (areAdjacent.horiz) {
+				
+				return areMergesNeeded().horiz
+
+			} else if (areAdjacent.vert) {
+				
+				return areMergesNeeded().vert
+
+			}
+		}
+
 		var call = "Plaid.lambda.tilePlane";
 
 		if (!is.number(amount)) {
@@ -755,37 +761,6 @@ var tilePlane = ( function (is, lambda) {
 		if (Math.round(amount) !== amount || amount < 0) {
 			throw new Error(call + ": n must be a positive integer");
 		}
-
-		// todo make return value of functon.
-		var units = {x: 6, y: 6} 
-		var tiles = ( function () {
-			/* 
-				{x: integer, y: integer} -> {squares: [Rectangle], horiz: [], vert: []}
-
-				create a rectangular grid of square tiles, with units.x tiles per row, and units.y
-				rows per column.
-
-				for convenience, the tiles will be partitioned into three sets; square (1 x 1), 
-				horizontal (2 x 1) and verical (1 x 2) tiles. 
-			*/
-
-			return {
-				squares: ( function () {
-
-					var result = [];
-					for (var ith = 0; ith < units.x; ith++) {
-						for(var jth = 0; jth < units.y; jth++) {
-							result = result.concat(
-								Rectangle(ith, ith + 1, jth, jth + 1))
-						}
-					}
-					return result;
-
-				} )(),
-				horiz: [],
-				vert: []
-			}	
-		} )();
 
 		// ---------------- functions used below ---------------- //
 
@@ -851,20 +826,43 @@ var tilePlane = ( function (is, lambda) {
 				"no matches found! this part of the algorithm needs tweaking.")
 		}
 
-		//---------------- the above subroutines are called here ---------------- //
+		// todo make return value of functon.
+		var units = {x: 6, y: 6} 
+
+		/* 
+			create a rectangular grid of square tiles, with units.x tiles per row, and units.y
+			rows per column.
+
+			for convenience, the tiles will be partitioned into three sets; square (1 x 1), 
+			horizontal (2 x 1) and verical (1 x 2) tiles. 
+		*/
+		var tiles = {
+			squares: ( function () {
+
+				var result = [];
+				for (var ith = 0; ith < units.x; ith++) {
+					for(var jth = 0; jth < units.y; jth++) {
+						result = result.concat(
+							Rectangle(ith, ith + 1, jth, jth + 1))
+					}
+				}
+				return result;
+
+			} )(),
+			horiz: [],
+			vert: []
+		}
 
 		// iteratively merge tiles until there are a few
 		// 2 x 1 and 1 x 2 tiles as well.
-		while (
-			areMergesNeeded(tiles, units).horiz || 
-			areMergesNeeded(tiles, units).vert) {
-
+		while (areMergesNeeded(tiles, units).either) {
 			tiles = mergeTiles(tiles);
-		} 
+		}
 
 		var scaleMatrix = Matrix(
-			[dimensions.width / units.x, 0],
-			[0, dimensions.height/ units.y]);
+			[dimensions.width / units.x, 0,
+			0, dimensions.height/ units.y], 
+			{nrow: 2, ncol: 2});
 
 		return lambda.indMap(
 			function (tile, ith) {
@@ -879,25 +877,26 @@ var tilePlane = ( function (is, lambda) {
 					with its new dimensions intact.
 				*/
 
+				console.log( tile.asMatrix().multiply(scaleMatrix) )
+
 				return tile.
 					asMatrix().
 					multiply(scaleMatrix).
 					asRectangle();
 			},
-			tiles
+			tiles.squares.
+			concat(tiles.horiz).
+			concat(tiles.vert)
 		);
 	}
 
 } )(is, lambda)
-
-
 	/*
 		The End.
 
 		export user facing methods, with Rectangle, lambda and other 
 		utility modules closed over but not directly accessable.
 	*/
-
 
 	return {
 		is:
@@ -912,12 +911,9 @@ var tilePlane = ( function (is, lambda) {
 			Rectangle,
 		tilePlane:
 			tilePlane
-	}
+	};
 
 } )()
 
 
-Plaid.tilePlane(10, {
-	width: 1000, 
-	height: 1000 
-})
+Plaid.tilePlane(10, { width: 1000, height: 1000 });
