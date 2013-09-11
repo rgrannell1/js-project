@@ -411,93 +411,159 @@ if (!is.closure(Object.beget)) {
 
 
 
-
-
-var Matrix = ( function (is) {
-	return function (xs, ys) {
-		// create a 2 x 2 matrix, with several methods for adding and
-		// multiplying. Used for scaling and translating points on screen.
-
-		var self = {};
-		self.xs = xs;
-		self.ys = ys;
+var Matrix = ( function (is, lambda) {
+	return function (elems, dims) {
 		
-		self.rows = function () {
-			// Matrix -> integer
-			self.xs.length;
+		var self = {}
+		
+		console.assert(elems.length === dims.nrow * dims.ncol)
+
+		self.elems = elems
+		self.dims = dims
+		
+		// generate the matrix, as an array of arrays.
+		var kth = 0
+		self.structure = []
+
+		for (var ith = 0; ith < self.dims.nrow; ith++) {
+			self.structure[ith] = [];
+			for (var jth = 0; jth < self.dims.ncol; jth++) {
+				self.structure[ith][jth] = self.elems[kth]
+				kth += 1
+			}
 		}
-		self.cols = function () {
-			// Matrix -> integer
-			self.ys.length;
+
+		self.row = function (num) {
+			/*
+				Matrix -> number -> array
+				select a column from the matrix.
+			*/
+
+			console.assert(num > 0 && self.nrow() >= num)
+			
+			return self.structure[num]
 		}
+		self.col = function (num) {
+			/*
+				Matrix -> number -> array
+				select a column from the matrix.
+			*/
+
+			console.assert(num > 0 && self.ncol() >= num)
+			
+			var col = [];
+			for (var ith = 0; ith < self.nrow(); ith++) {
+				col[ith] = self.structure[ith][num];
+			}
+			return col
+		}
+
+		// how many nrow or ncol does a matrix have?
+
+		self.nrow = function () {
+			/*
+				Matrix -> number
+				how many nrow does the matrix have?
+			*/
+			return dims.nrow
+		}
+		self.ncol = function () {
+			/*
+				Matrix -> number
+				how many columns does the matrix have?
+			*/
+			return dims.ncol
+		}
+
+		// apply a function to a matrix.
+
 		self.map = function (fn) {
 			/*
-				Matrix -> unary function -> Matrix
-				apply a function to each element of a matrix.
+				Matrix -> function -> Matrix
+				map a function over each element of a matrix,
+				returning the result. Preserve dimensions.
 			*/
-
-			var call = "Plaid.lambda.matrix.map";
-	
-			if (!is.closure(fn)) {
-				throw new TypeError(call + ": fn must be a function");
-			}
-			var mapped = Matrix(
-				[fn( self.xs[0] ), fn( self.xs[1] )],
-				[fn( self.ys[0] ), fn( self.ys[1] )] );
-
-			return mapped;
+			return Matrix(self.elems.map(fn), self.dims)
 		}
-		self.by = function (number) {
+		self.by = function (num) {
 			/*
 				Matrix -> number -> Matrix
-				multiply a matrix by a scalar (scale the matrix uniformly).
+				multiply a matrix with a scalar.
 			*/
-
 			return self.map( function (x) {
-				return x * number;
-			} );
+				return x * num
+			} )
 		}
-		self.add = function (number) {
+		self.add = function (num) {
 			/*
 				Matrix -> number -> Matrix
-				add a scalar to a matrix (translate the matrix uniformly).
+				add a matrix with a scalar.
 			*/
-
 			return self.map( function (x) {
-				return x + number;
-			} );	
+				return x + num
+			} )
 		}
+
 		self.multiply = function (matrix) {
-			/* 
+			/*
 				Matrix -> Matrix -> Matrix
-			 	non-scalar multiplication.
-			 	implemented algebraicly, partly for efficiency.
+				convert a 2 x 2 matrix to a rectangle representation.
 			*/
 
-			return Matrix(
-				[
-					( (self.xs[0] * matrix.xs[0]) + (self.xs[1] * matrix.ys[0]) ),
-					( (self.xs[0] * matrix.xs[1]) + (self.xs[1] * matrix.ys[1]) )],
-				[
-					( (self.ys[0] * matrix.xs[0]) + (self.ys[1] * matrix.ys[0]) ),
-					( (self.ys[0] * matrix.xs[1]) + (self.ys[1] * matrix.ys[1]) )] );
+			console.assert(
+				self.nrow() === matrix.ncol() &&
+				self.ncol() === matrix.nrow())
 
-			return product;
-		}
+			var kth = 0;
+			var product = [];
+
+			// create a matrix with the same number of columns as 'matrix',
+			// and the same number of nrow as the reciever.
+
+			for (var ith = 0; ith < self.nrow(); ith++) {
+				product[ith] = [];
+				for (var jth = 0; jth < matrix.ncol(); jth++) {
+
+					var row = self.row(ith)
+					var col = matrix.col(jth)
+
+					console.log(col)
+					console.assert( row.length === col.length )
+
+					// sum of element-wise multiplication of two vectors.
+					var dotProduct = lambda.
+						sequence(from = 0, to = row.length - 1).
+						map( function (i) {return row[i] * col[i]} ).
+						reduce( function (a, b) {return a + b}, 0 )
+
+						product[ith][jth] = dotProduct;
+					}
+				}
+
+				return product;
+			}
+
+		// type-convert the matrix.
+
 		self.asRectangle = function () {
-			/* 
+			/*
 				Matrix -> Rectangle
-				convert a matrix to a rectangle object.
+				convert a 2 x 2 matrix to a rectangle representation.
 			*/
+
+			console.assert( 
+				self.nrow() === 2 && 
+				self.ncol() === 2)
 
 			return Rectangle(
-				xMinus = self.xs[0], xPlus = self.xs[1],
-				yMinus = self.ys[0], yPlus = self.ys[1]);
-
+				xMinus = self.elems[0], xPlus = self.elems[2],
+				yMinus = self.elems[3], yPlus = self.elems[4])
 		}
-		return self;
+
+		return self
 	}
-} )(is)
+} )(is, lambda)
+
 
 
 
