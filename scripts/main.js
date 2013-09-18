@@ -6,7 +6,7 @@
 // always use
 (function () {
 	"use strict";
-})();
+})()
 
 // is x
 var is = ( function () {
@@ -156,25 +156,10 @@ var is = ( function () {
 
 				imageEvents : {
 					onclick : function(evt) {
-						var s = {
-							"position" : "absolute",
-							"width" : target.width,
-							"height" : target.height,
-							"top" : (win.outerHeight/2) - evt.currentTarget.height,
-							"left" : (win.outerWidth/2) - evt.currentTarget.width
-						};
-
+						
 						originalImage(evt.currentTarget, function(imageO) {
-							Box(imageO, s);
+							Box(imageO);
 						});
-					},
-
-					onmouseover : function(evt) {
-						evt.currentTarget.style.transition = "yellow";
-					},
-
-					onmouseout : function(evt) {
-						evt.currentTarget.style.backgroundColor = "white";
 					}
 				}
 			},
@@ -190,27 +175,11 @@ var is = ( function () {
 				
 				imageEvents : {
 					onclick : function(evt) {
-						var img = evt.currentTarget;
-						var s = {
-							"position" : "absolute",
-							"width" : target.width,
-							"height" : target.height,
-							"top" : (win.outerHeight/2) - evt.currentTarget.height,
-							"left" : (win.outerWidth/2) - evt.currentTarget.width
-						};
-
+						
 						originalImage(evt.currentTarget, function(imageO) {
-							Box(imageO, s);
+							Box(imageO);
 						});
 						
-					},
-
-					onmouseover : function(evt) {
-						//evt.currentTarget.style.backgroundColor = "yellow";
-					},
-
-					onmouseout : function(evt) {
-						//evt.currentTarget.style.backgroundColor = "white";
 					}
 				}
 			},
@@ -227,25 +196,10 @@ var is = ( function () {
 
 				imageEvents : {
 					onclick : function(evt) {
-						var s = {
-							"position" : "absolute",
-							"width" : target.width,
-							"height" : target.height,
-							"top" : (win.outerHeight/2) - evt.currentTarget.height,
-							"left" : (win.outerWidth/2) - evt.currentTarget.width
-						};
 
 						originalImage(evt.currentTarget, function(imageO) {
-							Box(imageO, s);
+							Box(imageO);
 						});
-					},
-
-					onmouseover : function(evt) {
-						evt.currentTarget.style.backgroundColor = "yellow";
-					},
-
-					onmouseout : function(evt) {
-						evt.currentTarget.style.backgroundColor = "white";
 					}
 				}
 			},
@@ -262,31 +216,11 @@ var is = ( function () {
 
 				imageEvents : {
 					onclick : function(evt) {
-						var s = {
-							"position" : "absolute",
-							"width" : evt.currentTarget.width,
-							"height" : evt.currentTarget.height,
-							"top" : (win.outerHeight/2) - evt.currentTarget.height,
-							"left" : (win.outerWidth/2) - evt.currentTarget.width
-						};
-
+						
 						originalImage(evt.currentTarget, function(imageO) {
-							Box(imageO, s);
+							Box(imageO);
 						});
 						
-					},
-
-					onmouseover : function(evt) {
-						evt.currentTarget.style.transition = "1s ease";
-						evt.currentTarget.style.webkitTransition = "1s ease";
-
-						evt.currentTarget.style.transform = "scale(1.01)";
-						evt.currentTarget.style.webkitTransform = "scale(1.01)";
-					},
-
-					onmouseout : function(evt) {
-						evt.currentTarget.style.transform = "scale(1)";
-						evt.currentTarget.style.webkitTransform = "scale(1)";
 					}
 				}
 			}
@@ -298,7 +232,7 @@ var is = ( function () {
 		// hold the next unique id to be used
 		var lightboxId = 0;
 		
-		// gets windows width and height dimensions
+		
 		var windowDims = (function() {
 			var dims = {};
 
@@ -318,17 +252,24 @@ var is = ( function () {
 			return domUtil.attr(lb, "caption") || null;
 		};
 
-		return function(target, styles) {
+		return function(target) {
 			var body;
 			var domNode;
 			var capt;
 			var boxId;
 
+			// gets windows width and height dimensions
+			var defaultS = {
+				"position" : "absolute",
+				"top" : (windowDims.height/2) -	target.height/2,
+				"left" : (windowDims.width/2) - target.width/2
+			};
+
 			capt = caption(target);
 			
 			/* to finish */
 			boxId = "plaid_lb_" + (++lightboxId);
-			domNode = d.create("div", boxId, styles);
+			domNode = d.create("div", boxId, defaultS);
 			body = d.decendents(document, 'body');
 
 			// add click event to remove the node when clicked
