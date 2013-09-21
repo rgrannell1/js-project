@@ -1,14 +1,15 @@
 
 // TODO: 
-// 1. fix issue in firefox where lightbox background-color is never set
-// 2. make it so only one lightbox can be open at a time
+// 1. make it so only one lightbox can be open at a time
 
 // always use
 (function () {
 	"use strict";
 })()
 
-// is x
+// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+// 						Is
+// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 var is = ( function () {
 	// tests for certain types of values (functions, objects)
 	
@@ -50,8 +51,71 @@ var is = ( function () {
 	}
 } )();
 
-// front-end api
-(function(win, doc) {
+// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+// 						Dom Util
+// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+var domUtil = (function(D) {
+	var applyStyle = function(node, props) {
+		for(var prop in props) {
+			node.style[prop.toString()] = props[prop.toString()];
+		}
+	};
+
+	return {
+		create : function(ele, id, props) {
+			var ele = D.createElement(ele);
+			ele.id = id;
+			applyStyle(ele, props);
+
+			return ele;
+		},
+
+		byId : function(ele) {
+			return D.getElementById(ele);
+		},
+
+		attr : function(node, ref) {
+			return node.getAttribute(ref);
+		},
+
+		_attr : function(node, name, val) {
+			node.setAttribute(name, val);
+		},
+
+		decendents : function(node, ref) {
+			var eles = node.getElementsByTagName(ref);
+
+			if(eles.length === 1) {
+				return eles[0];
+			} else {
+				return eles;
+			}
+		},
+
+		remove : function(node) {
+			var elem = D.getElementById(node);
+			elem.parentNode.removeChild(elem);
+		},
+
+		// move height, width to one method
+		height : function(node, h) {
+			node.style.height = h;
+		},
+
+		width : function(node, w) {
+			node.style.width = w;
+		},
+
+		child : function(parent, child) {
+			parent.appendChild(child);
+		},
+	};
+})(document);
+
+// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+// 						A P I
+// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
+(function(W, D) {
 	// utility functions
 	var support = (function() {
 		return {
@@ -65,61 +129,6 @@ var is = ( function () {
 				}
 				return -1;
 			}
-		};
-	})();
-
-	// object to help access the dom
-	var domUtil = (function() {
-		var applyStyle = function(node, props) {
-			for(var prop in props) {
-				node.style[prop.toString()] = props[prop.toString()];
-			}
-		};
-
-		return {
-			create : function(ele, id, props) {
-				var ele = doc.createElement(ele);
-				ele.id = id;
-				applyStyle(ele, props);
-
-				return ele;
-			},
-
-			byId : function(ele) {
-				return doc.getElementById(ele);
-			},
-
-			attr : function(node, ref) {
-				return node.getAttribute(ref.toString());
-			},
-
-			decendents : function(node, ref) {
-				var eles = node.getElementsByTagName(ref.toString());
-
-				if(eles.length === 1) {
-					return eles[0];
-				} else {
-					return eles;
-				}
-			},
-
-			remove : function(node) {
-				var elem = doc.getElementById(node);
-				elem.parentNode.removeChild(elem);
-			},
-
-			// move height, width to one method
-			height : function(node, h) {
-				node.style.height = h;
-			},
-
-			width : function(node, w) {
-				node.style.width = w;
-			},
-
-			child : function(parent, child) {
-				parent.appendChild(child);
-			},
 		};
 	})();
 
@@ -140,7 +149,7 @@ var is = ( function () {
 			};
 
 			image.src = img.src;
-			image.setAttribute("caption", img.getAttribute("plaidcaption"));	
+			D._attr(image, "caption", D.attr(img, "plaidcaption"));	
 		};
 
 		return{
@@ -151,6 +160,7 @@ var is = ( function () {
 				
 				},
 				imageStyle : {
+
 					padding : 'padding: 2px 2px;'
 				},
 
@@ -170,6 +180,7 @@ var is = ( function () {
 					
 				},
 				imageStyle : {
+
 					padding: "padding: 2px 2px;"
 				},
 				
@@ -191,6 +202,7 @@ var is = ( function () {
 				},
 
 				imageStyle : {
+
 					padding : 'padding: 2px 2px;'
 				},
 
@@ -207,10 +219,11 @@ var is = ( function () {
 			skylight : {
 				name : "skylight",
 				canvasStyle : {
-					// TODO
+					
 				},
 
 				imageStyle : {
+
 					padding: '2px 2px'
 				},
 
@@ -228,7 +241,7 @@ var is = ( function () {
 	})();
 
 	// create sepeate image for lightbox with new styles
-	var Box = (function(d) {
+	var Box = (function() {
 		// hold the next unique id to be used
 		var lightboxId = 0;
 		
@@ -236,12 +249,12 @@ var is = ( function () {
 		var windowDims = (function() {
 			var dims = {};
 
-			if(typeof( window.innerWidth ) == 'number') {
-				dims.width = window.innerWidth;
-				dims.height = window.innerHeight;
+			if(typeof( W.innerWidth ) == 'number') {
+				dims.width = W.innerWidth;
+				dims.height = W.innerHeight;
 			} else {
-				dims.width = doc.documentElement.clientWidth;
-				dims.height = doc.documentElement.clientHeight;
+				dims.width = document.documentElement.clientWidth;
+				dims.height = document.documentElement.clientHeight;
 			}
 
 			return dims;
@@ -249,7 +262,7 @@ var is = ( function () {
 
 		// check if a caption had been supplied with the image
 		var caption = function(lb) {
-			return domUtil.attr(lb, "caption") || null;
+			return D.attr(lb, "caption") || null;
 		};
 
 		return function(target) {
@@ -269,18 +282,18 @@ var is = ( function () {
 			
 			/* to finish */
 			boxId = "plaid_lb_" + (++lightboxId);
-			domNode = d.create("div", boxId, defaultS);
-			body = d.decendents(document, 'body');
+			domNode = D.create("div", boxId, defaultS);
+			body = D.decendents(document, 'body');
 
 			// add click event to remove the node when clicked
 			domNode.onclick = function(evt) {
-				d.remove(evt.currentTarget.id);
+				D.remove(evt.currentTarget.id);
 			};
 
-			d.child(domNode, target);
-			d.child(body, domNode);
+			D.child(domNode, target);
+			D.child(body, domNode);
 		};
-	})(domUtil);
+	})();
 	
 	// handles the creation and storage of all images objects
 	var imgs = function() {
@@ -313,13 +326,13 @@ var is = ( function () {
 	// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
 	// 						plaid....
 	// = # = # = # = # = # = # = # = # = # = # = # = # = # = # = #
-	var Plaid = (function(th, dom, imgs) {
+	var Plaid = (function(th, imgs) {
 
 		//= # = # = # = # = # = # = # = # 
 		//= # = # = render = # = # = #
 		//= # = # = # = # = # = # = # = #
 		return function(ele, dims) {
-			var id = doc.getElementById(ele);
+			var id = D.byId(ele);
 			var width = dims.width;
 			var height = dims.height;
 
@@ -340,11 +353,11 @@ var is = ( function () {
 				};
 
 				// set width and height for the collage
-				dom.width(id, width);
-				dom.height(id, height);
+				D.width(id, width);
+				D.height(id, height);
 				
 				// find the theme
-				selectedTheme = dom.attr(id, "plaid-theme");
+				selectedTheme = D.attr(id, "plaid-theme");
 
 				if(themes !== null) {
 					for(var theme in th) {
@@ -400,19 +413,19 @@ var is = ( function () {
 				}
 			};
 		};
-	})(themes, domUtil, imgs());
+	})(themes, imgs());
 
-	var _plaid = win.plaid,
-		_P = win.pl;
+	var _plaid = W.plaid,
+		_P = W.pl;
 
 	var pl = function(id, dimensions) {
 		return Plaid(id, dimensions)
 	};
 
-	win.P = pl;
-	win.plaid = pl;
+	W.P = pl;
+	W.plaid = pl;
 
-})(window, document);
+})(window, domUtil);
 
 // = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # = # 
 // = # = # = # = Lambda = # = # = # = # = # = # = # = # = # = # = # 
